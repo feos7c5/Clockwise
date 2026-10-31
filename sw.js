@@ -1,5 +1,5 @@
 // Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v7';
+const CACHE = 'clockwise-v8';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
@@ -33,7 +33,8 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+  // Nur App-Dateien der eigenen Seite – API-Aufrufe (Sync-Server) laufen am Service Worker vorbei
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request, { cache: 'no-cache' })
       .then(res => {
