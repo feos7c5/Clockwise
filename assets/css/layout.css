@@ -3,10 +3,24 @@
   display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-3);
   max-width: var(--content-w); margin: 0 auto;
   padding: calc(env(safe-area-inset-top) + var(--sp-5)) var(--gutter) var(--sp-3);
-  background: var(--bg); transition: box-shadow .2s;
+  background: var(--bg);
 }
-body[data-tab="month"] .top, body[data-tab="year"] .top { position: sticky; top: 0; }
-body.scrolled[data-tab="month"] .top, body.scrolled[data-tab="year"] .top { box-shadow: 0 1px 0 var(--line); }
+.compact-bar {
+  position: fixed; z-index: 20; top: 0; left: 0; right: 0; padding-top: env(safe-area-inset-top);
+  background: var(--glass); box-shadow: 0 1px 0 var(--line);
+  backdrop-filter: saturate(1.8) blur(20px); -webkit-backdrop-filter: saturate(1.8) blur(20px);
+  opacity: 0; transform: translateY(-.5rem); pointer-events: none; transition: opacity .2s, transform .2s;
+}
+body.scrolled .compact-bar { opacity: 1; transform: none; pointer-events: auto; }
+.compact-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  max-width: var(--content-w); height: 3rem; margin: 0 auto; padding: 0 var(--gutter);
+}
+#compactTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.compact-bar .chip { height: 1.875rem; box-shadow: none; background: var(--fill); font-size: var(--fs-xs); }
+.compact-bar .nav-group { padding: 2px; box-shadow: none; background: var(--fill); }
+.compact-bar .nav-group .btn { height: 1.75rem; }
+.compact-bar .nav-group .btn-icon { width: 1.75rem; }
 .top small { display: block; min-height: 1.1em; color: var(--muted); font-size: var(--fs-sm); font-weight: var(--fw-medium); }
 .top h1 { margin: 0; font-size: var(--fs-2xl); line-height: var(--lh-tight); font-weight: var(--fw-bold); letter-spacing: -.02em; }
 .chip {

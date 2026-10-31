@@ -26,22 +26,30 @@ const VIEWS = {
   settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
 
-function renderHeadActions() {
-  const el = $('#headRight');
+function headActionsHtml() {
   if (nav.tab === 'today') {
     const b = balance(store.state, todayStr(), now());
-    el.innerHTML = `<div class="chip"><span class="muted">${t('head.balance')}</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
-  } else if (nav.tab === 'month' || nav.tab === 'year') {
-    el.innerHTML = `<div class="nav-group">
-      <button class="btn btn-icon btn-sm" id="navPrev" aria-label="${t('nav.back')}">${ICON.left}</button>
-      <button class="btn btn-sm" id="navNow" ${isCurrentPeriod() ? 'disabled' : ''}>${t('nav.current')}</button>
-      <button class="btn btn-icon btn-sm" id="navNext" aria-label="${t('nav.forward')}">${ICON.right}</button></div>`;
-    $('#navPrev').onclick = () => stepPeriod(-1);
-    $('#navNext').onclick = () => stepPeriod(1);
-    $('#navNow').onclick = resetPeriod;
-  } else {
-    el.innerHTML = '';
+    return `<div class="chip"><span class="muted">${t('head.balance')}</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
   }
+  if (nav.tab === 'month' || nav.tab === 'year') {
+    return `<div class="nav-group">
+      <button class="btn btn-icon btn-sm" data-nav="prev" aria-label="${t('nav.back')}">${ICON.left}</button>
+      <button class="btn btn-sm" data-nav="now" ${isCurrentPeriod() ? 'disabled' : ''}>${t('nav.current')}</button>
+      <button class="btn btn-icon btn-sm" data-nav="next" aria-label="${t('nav.forward')}">${ICON.right}</button></div>`;
+  }
+  return '';
+}
+
+function renderHeadActions(title, subtitle) {
+  const html = headActionsHtml();
+  $('#headRight').innerHTML = html;
+  $('#compactRight').innerHTML = html;
+  $('#compactTitle').textContent = nav.tab === 'month' ? `${title} ${subtitle}` : title;
+}
+
+const NAV_ACTIONS = { prev: () => stepPeriod(-1), next: () => stepPeriod(1), now: resetPeriod };
+for (const el of [$('#headRight'), $('#compactRight')]) {
+  el.addEventListener('click', e => { const b = e.target.closest('[data-nav]'); if (b && !b.disabled) NAV_ACTIONS[b.dataset.nav](); });
 }
 
 function renderTabs() {
@@ -63,7 +71,7 @@ function render() {
   $('#subtitle').textContent = subtitle;
   renderTabs();
   view.render($('#view'));
-  renderHeadActions();
+  renderHeadActions(title, subtitle);
   renderBanner();
 }
 
@@ -78,8 +86,14 @@ function renderBanner() {
 
 setRenderer(render);
 
-const markScrolled = () => document.body.classList.toggle('scrolled', window.scrollY > 4);
-window.addEventListener('scroll', markScrolled, { passive: true });
+let scrollFrame = 0;
+function markScrolled() {
+  if (document.body.style.position === 'fixed') return;
+  const collapsed = $('.top').getBoundingClientRect().bottom < $('.compact-inner').offsetHeight + 8;
+  document.body.classList.toggle('scrolled', collapsed);
+  $('.compact-bar').inert = !collapsed;
+}
+window.addEventListener('scroll', () => { cancelAnimationFrame(scrollFrame); scrollFrame = requestAnimationFrame(markScrolled); }, { passive: true });
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
 onSyncChange(() => { if (nav.tab === 'settings') render(); });
 const typing = () => document.activeElement?.matches('textarea, input, select');
