@@ -75,14 +75,62 @@
   --accent-soft: #26262a;
 }
 
-.swatches { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+:root {
+  --sw-sage: #2f6b55;
+  --sw-sage-on: #ffffff;
+  --sw-ocean: #2b5f8a;
+  --sw-ocean-on: #ffffff;
+  --sw-lavender: #5b4f9a;
+  --sw-lavender-on: #ffffff;
+  --sw-terracotta: #a4553a;
+  --sw-terracotta-on: #ffffff;
+  --sw-graphite: #3a3a40;
+  --sw-graphite-on: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sw-sage: #8fbfa6;
+    --sw-sage-on: #10201a;
+    --sw-ocean: #8db6d9;
+    --sw-ocean-on: #0f1c27;
+    --sw-lavender: #b1a8e0;
+    --sw-lavender-on: #1b1730;
+    --sw-terracotta: #e2a48c;
+    --sw-terracotta-on: #2a160f;
+    --sw-graphite: #c9c9cf;
+    --sw-graphite-on: #18181b;
+  }
+}
+:root[data-theme="dark"] {
+  --sw-sage: #8fbfa6;
+  --sw-sage-on: #10201a;
+  --sw-ocean: #8db6d9;
+  --sw-ocean-on: #0f1c27;
+  --sw-lavender: #b1a8e0;
+  --sw-lavender-on: #1b1730;
+  --sw-terracotta: #e2a48c;
+  --sw-terracotta-on: #2a160f;
+  --sw-graphite: #c9c9cf;
+  --sw-graphite-on: #18181b;
+}
+
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); column-gap: var(--sp-1); align-items: start; }
 .swatch {
-  display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
-  border: 0; background: none; padding: 0; cursor: pointer; font-size: var(--fs-xs); color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); min-width: 0;
+  border: 0; background: none; padding: 0; cursor: pointer; color: var(--muted);
+  font-size: var(--fs-xs); font-weight: var(--fw-medium);
 }
 .swatch i {
-  display: block; width: 2.25rem; height: 2.25rem; border-radius: var(--r-full); background: var(--c);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); transition: box-shadow .2s;
+  display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--r-full);
+  background: var(--c); color: var(--c-on); transition: box-shadow .2s, transform .15s;
 }
+.swatch i svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .15s; }
+.swatch span { max-width: 100%; text-align: center; line-height: 1.2; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+.swatch:active i { transform: scale(.92); }
 .swatch.on { color: var(--ink); font-weight: var(--fw-semibold); }
 .swatch.on i { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
+.swatch.on i svg { opacity: 1; }
+@media (max-width: 22rem) {
+  .swatch { font-size: .625rem; }
+  .swatch i { width: 2.125rem; height: 2.125rem; }
+}

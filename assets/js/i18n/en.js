@@ -54,7 +54,7 @@ export default {
 
   settings: {
     appearance: 'Appearance', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
-    accent: 'Color', accents: { sage: 'Sage', ocean: 'Ocean', lavender: 'Lavender', terracotta: 'Terracotta', graphite: 'Graphite' },
+    accent: 'Color', accents: { sage: 'Sage', ocean: 'Ocean', lavender: 'Lavender', terracotta: 'Clay', graphite: 'Graphite' },
     language: 'Language', languageSystem: 'System',
     reminders: 'Reminders', notifications: 'Notifications', notifyTarget: 'Notify when target is reached',
     remindAt: 'Clock in by', forgotAfter: 'Clock out after', off: 'off',

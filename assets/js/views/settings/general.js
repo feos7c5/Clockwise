@@ -8,7 +8,8 @@ import { notify, notificationPermission, checkReminders } from '../../features/r
 
 const s = () => store.state.settings;
 
-const ACCENTS = [['sage', '#2f6b55'], ['ocean', '#2b5f8a'], ['lavender', '#5b4f9a'], ['terracotta', '#a4553a'], ['graphite', '#3a3a40']];
+const ACCENTS = ['sage', 'ocean', 'lavender', 'terracotta', 'graphite'];
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const update = fn => { fn(s()); save(); };
 
 const segment = (attr, current, options) =>
@@ -18,7 +19,7 @@ export const appearance = {
   html: () => `<section class="card">${cardHead(t('settings.appearance'))}
     ${segment('th', s().theme, [['system', t('settings.themeSystem')], ['light', t('settings.themeLight')], ['dark', t('settings.themeDark')]])}
     <div class="card-head sub"><h2>${t('settings.accent')}</h2></div>
-    <div class="swatches">${ACCENTS.map(([k, color]) => `<button class="swatch ${(s().accent || 'sage') === k ? 'on' : ''}" data-accent-pick="${k}" style="--c:${color}" aria-label="${t(`settings.accents.${k}`)}"><i></i>${t(`settings.accents.${k}`)}</button>`).join('')}</div>
+    <div class="swatches" role="radiogroup" aria-label="${t('settings.accent')}">${ACCENTS.map(k => `<button class="swatch ${(s().accent || 'sage') === k ? 'on' : ''}" role="radio" aria-checked="${(s().accent || 'sage') === k}" data-accent-pick="${k}" style="--c:var(--sw-${k});--c-on:var(--sw-${k}-on)"><i>${CHECK}</i><span>${t(`settings.accents.${k}`)}</span></button>`).join('')}</div>
     <div class="card-head sub"><h2>${t('settings.language')}</h2></div>
     ${segment('lang', s().language, [['system', t('settings.languageSystem')], ['de', 'Deutsch'], ['en', 'English']])}
   </section>`,

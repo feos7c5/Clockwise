@@ -54,7 +54,7 @@ export default {
 
   settings: {
     appearance: 'Darstellung', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel',
-    accent: 'Farbe', accents: { sage: 'Salbei', ocean: 'Ozean', lavender: 'Lavendel', terracotta: 'Terrakotta', graphite: 'Graphit' },
+    accent: 'Farbe', accents: { sage: 'Salbei', ocean: 'Ozean', lavender: 'Lavendel', terracotta: 'Ziegel', graphite: 'Graphit' },
     language: 'Sprache', languageSystem: 'System',
     reminders: 'Erinnerungen', notifications: 'Benachrichtigungen', notifyTarget: 'Melden, wenn Soll erreicht',
     remindAt: 'Einstempeln bis', forgotAfter: 'Ausstempeln nach', off: 'aus',
