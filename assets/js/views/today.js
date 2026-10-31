@@ -12,6 +12,7 @@ import { rerender } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
 import { openJoinDialog } from './cloud-dialogs.js';
 import { installNotice, bindInstallNotice } from './install-notice.js';
+import { notice, isDismissed, bindNotices } from '../ui/notice.js';
 import { SYNC_AVAILABLE } from '../sync/config.js';
 import { syncEnabled } from '../sync/engine.js';
 
@@ -116,9 +117,9 @@ function codesCard(day) {
 
 // Neues Gerät ohne Daten: Angebot, Daten von einem anderen Gerät zu holen
 function onboardingNotice() {
-  if (!SYNC_AVAILABLE || syncEnabled() || Object.keys(store.state.days).length) return '';
-  return `<div class="notice info"><div><b>${t('cloud.onboardTitle')}</b>${t('cloud.onboardText')}</div>
-    <button class="btn btn-sm btn-primary" id="onboardJoin">${t('cloud.onboardAction')}</button></div>`;
+  if (!SYNC_AVAILABLE || syncEnabled() || Object.keys(store.state.days).length || isDismissed('onboard')) return '';
+  const action = `<button class="btn btn-sm btn-primary" id="onboardJoin">${t('cloud.onboardAction')}</button>`;
+  return notice({ id: 'onboard', title: t('cloud.onboardTitle'), text: t('cloud.onboardText'), action });
 }
 
 export function renderToday(view) {
@@ -132,7 +133,7 @@ export function renderToday(view) {
   view.innerHTML = `<div class="stack">
     ${installNotice()}
     ${onboardingNotice()}
-    ${missingStamp() ? `<div class="notice"><div class="ic">${ICON.bell}</div><div><b>${t('today.missingTitle')}</b>${t('today.missingText')}</div></div>` : ''}
+    ${missingStamp() && !isDismissed('missing', ds) ? notice({ id: 'missing', value: ds, tone: 'warning', icon: ICON.bell, title: t('today.missingTitle'), text: t('today.missingText') }) : ''}
     <section class="card clock">
       ${statusLine(r, brk, day, ds)}
       <div class="timer" id="timer">${fmtSec(liveSeconds(activeDs))}</div>
@@ -151,6 +152,7 @@ export function renderToday(view) {
   $('#editToday', view).onclick = () => openDayDialog(ds);
   $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
   bindInstallNotice(view);
+  bindNotices(view, rerender);
   $$('[data-code]', view).forEach(b => (b.onclick = () => {
     const d = getDay(ds);
     if (d.code === b.dataset.code) delete d.code; else d.code = b.dataset.code;

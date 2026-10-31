@@ -6,7 +6,7 @@ export default {
   nav: { today: 'Today', month: 'Month', year: 'Year', settings: 'Settings', main: 'Main navigation', back: 'Back', forward: 'Forward', current: 'Today' },
   head: { balance: 'Balance', yearOverview: 'Year overview' },
   common: {
-    hours: '{v} h', close: 'Close', cancel: 'Cancel', save: 'Save', edit: 'Edit',
+    dismiss: 'Dismiss', hours: '{v} h', close: 'Close', cancel: 'Cancel', save: 'Save', edit: 'Edit',
     note: 'Note', dayType: 'Day type', normal: 'Regular', ist: 'Actual', soll: 'Target', diff: 'Diff',
     balance: 'Balance', total: 'Total', istSoll: 'Actual {ist} · Target {soll}',
   },
@@ -81,6 +81,8 @@ export default {
     reset: 'Reset', resetButton: 'Delete all data', resetHint: 'Deletes everything recorded in the app – on all devices if sync is on. Save a backup first.',
     confirmReset: 'Really delete ALL recorded data? This cannot be undone.',
   },
+
+  update: { title: 'New version available', text: 'Updating reloads the app – your data is kept.', action: 'Update' },
 
   install: {
     title: 'Install as app', action: 'Install', dismiss: 'Dismiss',

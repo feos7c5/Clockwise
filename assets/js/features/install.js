@@ -1,5 +1,5 @@
 // Installation als App: Safari zeigt keinen eigenen Hinweis, Chrome/Edge liefern beforeinstallprompt.
-const DISMISSED_KEY = 'clockwise-install-dismissed';
+import { isDismissed, dismiss } from '../ui/notice.js';
 
 let deferredPrompt = null;
 const listeners = new Set();
@@ -16,8 +16,7 @@ const isInstalled = () => matchMedia('(display-mode: standalone)').matches || na
 
 // 'prompt' (Chrome/Edge), 'ios', 'mac' oder null (installiert, ausgeblendet, nicht möglich)
 export function installMode() {
-  if (isInstalled()) return null;
-  try { if (localStorage.getItem(DISMISSED_KEY)) return null; } catch { /* privat */ }
+  if (isInstalled() || isDismissed('install')) return null;
   if (deferredPrompt) return 'prompt';
   if (isIOS) return 'ios';
   if (isMacSafari) return 'mac';
@@ -25,7 +24,7 @@ export function installMode() {
 }
 
 export function dismissInstall() {
-  try { localStorage.setItem(DISMISSED_KEY, '1'); } catch { /* privat */ }
+  dismiss('install');
   changed();
 }
 

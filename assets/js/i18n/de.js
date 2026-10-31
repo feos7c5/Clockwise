@@ -6,7 +6,7 @@ export default {
   nav: { today: 'Heute', month: 'Monat', year: 'Jahr', settings: 'Einstellungen', main: 'Hauptnavigation', back: 'Zurück', forward: 'Weiter', current: 'Heute' },
   head: { balance: 'Saldo', yearOverview: 'Jahresübersicht' },
   common: {
-    hours: '{v} h', close: 'Schließen', cancel: 'Abbrechen', save: 'Speichern', edit: 'Bearbeiten',
+    dismiss: 'Ausblenden', hours: '{v} h', close: 'Schließen', cancel: 'Abbrechen', save: 'Speichern', edit: 'Bearbeiten',
     note: 'Bemerkung', dayType: 'Tagesart', normal: 'Normal', ist: 'Ist', soll: 'Soll', diff: 'Diff',
     balance: 'Saldo', total: 'Gesamt', istSoll: 'Ist {ist} · Soll {soll}',
   },
@@ -81,6 +81,8 @@ export default {
     reset: 'Zurücksetzen', resetButton: 'Alle Daten löschen', resetHint: 'Löscht alles, was in der App erfasst ist – bei aktivem Sync auf allen Geräten. Vorher ein Backup sichern.',
     confirmReset: 'Wirklich ALLE erfassten Daten löschen? Das lässt sich nicht rückgängig machen.',
   },
+
+  update: { title: 'Neue Version verfügbar', text: 'Aktualisieren lädt sie – deine Daten bleiben erhalten.', action: 'Aktualisieren' },
 
   install: {
     title: 'Als App installieren', action: 'Installieren', dismiss: 'Ausblenden',
