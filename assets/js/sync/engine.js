@@ -14,7 +14,8 @@ const POLL_MS = 2 * 60_000;
 const MIN_PULL_GAP_MS = 20_000;
 const RETRY_MS = [5_000, 15_000, 60_000, 5 * 60_000];
 const REMOVED_KEY = 'clockwise-removed';
-const LOCAL_DATA_KEYS = ['stempeluhr-v1', CONFIG_KEY, 'stempeluhr-notified'];
+const DEVICE_KEY = 'clockwise-device';
+const LOCAL_DATA_KEYS = ['stempeluhr-v1', CONFIG_KEY, 'stempeluhr-notified', DEVICE_KEY];
 
 export const syncState = { status: 'off', last: null, error: '', pending: false };
 
@@ -27,9 +28,24 @@ const setStatus = (status, error = '') => {
 };
 
 let config = null, keys = null, running = null, again = null;
-let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0;
+let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0, leaving = false;
 
-const newDeviceId = () => [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+function deviceId() {
+  let id = localStorage.getItem(DEVICE_KEY);
+  if (!id) {
+    id = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(DEVICE_KEY, id);
+  }
+  return id;
+}
+
+let fingerprint = '';
+async function computeFingerprint() {
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(keys.token)));
+  const hex = [...hash.slice(0, 3)].map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  fingerprint = `${hex.slice(0, 3)}-${hex.slice(3)}`;
+}
+export const syncFingerprint = () => fingerprint;
 
 const readConfig = () => { try { return JSON.parse(localStorage.getItem(CONFIG_KEY)); } catch { return null; } };
 const writeConfig = () => (config ? localStorage.setItem(CONFIG_KEY, JSON.stringify(config)) : localStorage.removeItem(CONFIG_KEY));
@@ -144,9 +160,10 @@ function defaultDeviceName() {
 }
 
 function registerDevice() {
+  if (leaving) return;
   const devices = (store.state.devices ||= {});
   const me = devices[config.device], today = iso(new Date());
-  if (me && me.seen === today) return;
+  if (me && me.seen === today && !me.left) return;
   devices[config.device] = { name: me?.name || defaultDeviceName(), seen: today, updated: Date.now() };
   save();
 }
@@ -167,7 +184,7 @@ export const removedNotice = () => localStorage.getItem(REMOVED_KEY);
 export function listDevices() {
   if (!config) return [];
   return Object.entries(store.state.devices || {})
-    .filter(([, d]) => !d.removed)
+    .filter(([, d]) => !d.removed && !d.left)
     .map(([id, d]) => ({ id, ...d, self: id === config.device }))
     .sort((a, b) => (b.self - a.self) || (b.seen || '').localeCompare(a.seen || ''));
 }
@@ -198,15 +215,19 @@ export async function initSync() {
   if (!config) return;
   config.version ??= 0;
   config.dirty ??= false;
-  if (!config.device) { config.device = newDeviceId(); writeConfig(); }
+  if (config.device && !localStorage.getItem(DEVICE_KEY)) localStorage.setItem(DEVICE_KEY, config.device);
+  config.device = deviceId();
+  writeConfig();
   keys = await deriveKeys(config.secret);
+  await computeFingerprint();
   syncNow({ forcePull: true });
 }
 
 async function activate(secret, { fresh }) {
-  config = { secret, version: 0, dirty: fresh, device: newDeviceId() };
+  config = { secret, version: 0, dirty: fresh, device: deviceId() };
   writeConfig();
   keys = await deriveKeys(secret);
+  await computeFingerprint();
   return syncNow({ forcePull: true });
 }
 
@@ -235,6 +256,15 @@ export const recoveryKey = () => (config ? toRecoveryKey(config.secret) : null);
 
 export async function disableSync({ wipe = false } = {}) {
   if (wipe && keys) await api.deleteVault(keys.token);
+  else if (keys && store.state.devices?.[config.device]) {
+    leaving = true;
+    Object.assign(store.state.devices[config.device], { left: true, updated: Date.now() });
+    save();
+    clearTimeout(pushTimer);
+    pushTimer = null;
+    await syncNow().catch(() => {});
+  }
+  leaving = false;
   clearTimeout(pushTimer);
   clearTimeout(retryTimer);
   config = null; keys = null;

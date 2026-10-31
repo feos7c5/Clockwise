@@ -93,6 +93,7 @@ export default {
   },
 
   cloud: {
+    fingerprint: 'ID {id}', fingerprintHint: 'All devices in the same sync show the same ID. If a device is missing or shows a different ID: turn sync off there and pair again via “Connect to a device”.',
     devices: 'Devices', thisDevice: 'This device', lastSeen: 'Last active: {when}',
     rename: 'Rename', renameTitle: 'Rename device', deviceName: 'Name', remove: 'Remove',
     confirmRemove: 'Remove “{name}”?\n\nThe device signs out on its next sync and deletes its local data.',

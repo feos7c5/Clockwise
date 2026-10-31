@@ -93,6 +93,7 @@ export default {
   },
 
   cloud: {
+    fingerprint: 'Kennung {id}', fingerprintHint: 'Alle Geräte im selben Sync zeigen dieselbe Kennung. Steht ein Gerät nicht in der Liste oder hat eine andere Kennung: dort Sync ausschalten und über „Mit Gerät verbinden“ neu koppeln.',
     devices: 'Geräte', thisDevice: 'Dieses Gerät', lastSeen: 'Zuletzt aktiv: {when}',
     rename: 'Umbenennen', renameTitle: 'Gerät umbenennen', deviceName: 'Name', remove: 'Entfernen',
     confirmRemove: '„{name}“ entfernen?\n\nDas Gerät meldet sich beim nächsten Abgleich ab und löscht dabei seine lokalen Daten.',

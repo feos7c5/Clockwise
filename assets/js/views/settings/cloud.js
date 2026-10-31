@@ -1,5 +1,5 @@
 import { SYNC_AVAILABLE } from '../../sync/config.js';
-import { syncEnabled, syncState, enableSync, listDevices, removeDevice } from '../../sync/engine.js';
+import { syncEnabled, syncState, enableSync, listDevices, removeDevice, syncFingerprint } from '../../sync/engine.js';
 import { hhmm } from '../../core/session.js';
 import { t, language } from '../../i18n/index.js';
 import { parseISO } from '../../core/time.js';
@@ -17,16 +17,17 @@ function lastSeen(seen) {
 function deviceList() {
   const devices = listDevices();
   if (!devices.length) return '';
-  return `<div class="card-head sub"><h2>${t('cloud.devices')}</h2></div>
+  return `<div class="card-head sub"><h2>${t('cloud.devices')}</h2><span class="muted fingerprint">${t('cloud.fingerprint', { id: syncFingerprint() })}</span></div>
     <ul class="devices">${devices.map(d => `<li>
       <div class="device-info">
-        <div class="device-name">${esc(d.name)}${d.self ? ` <span class="tag accent">${t('cloud.thisDevice')}</span>` : ''}</div>
+        <div class="device-name">${esc(d.name)}${d.self ? ` <span class="muted">· ${t('cloud.thisDevice')}</span>` : ''}</div>
         <div class="hint flush">${t('cloud.lastSeen', { when: lastSeen(d.seen) })}</div>
       </div>
       <div class="btn-group">
         <button class="btn btn-icon btn-sm btn-ghost" data-rename="${d.id}" aria-label="${t('cloud.rename')}">${ICON.edit}</button>
         ${d.self ? '' : `<button class="btn btn-sm btn-ghost danger" data-remove="${d.id}">${t('cloud.remove')}</button>`}
-      </div></li>`).join('')}</ul>`;
+      </div></li>`).join('')}</ul>
+    <p class="hint">${t('cloud.fingerprintHint')}</p>`;
 }
 
 function statusLine() {
