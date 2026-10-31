@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://feos7c5.github.io/clockwise/"><b>App öffnen →</b></a>
+  <a href="https://feos7c5.github.io/Clockwise/"><b>App öffnen →</b></a>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@
 
 ## Installation auf dem iPhone
 
-1. [feos7c5.github.io/clockwise](https://feos7c5.github.io/clockwise/) in **Safari** öffnen
+1. [feos7c5.github.io/Clockwise](https://feos7c5.github.io/Clockwise/) in **Safari** öffnen
 2. **Teilen → Zum Home-Bildschirm**
 3. Optional: vorhandene Daten über *Einstellungen → Backup laden* einspielen
 
