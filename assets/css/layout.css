@@ -1,11 +1,15 @@
 /* Layout: Kopfzeile, Inhalt, Karten, Tab-Leiste. */
 
 .top {
-  position: sticky; top: 0; z-index: 5;
+  position: relative; z-index: 5;
   display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-3);
-  max-width: var(--content-w); margin: 0 auto; padding: var(--sp-5) var(--gutter) var(--sp-3);
-  background: var(--bg);
+  max-width: var(--content-w); margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + var(--sp-5)) var(--gutter) var(--sp-3);
+  background: var(--bg); transition: box-shadow .2s;
 }
+/* Monat und Jahr: Kopfzeile mit Blättern bleibt beim Scrollen oben */
+body[data-tab="month"] .top, body[data-tab="year"] .top { position: sticky; top: 0; }
+body.scrolled[data-tab="month"] .top, body.scrolled[data-tab="year"] .top { box-shadow: 0 1px 0 var(--line); }
 .top small { display: block; min-height: 1.1em; color: var(--muted); font-size: var(--fs-sm); font-weight: var(--fw-medium); }
 .top h1 { margin: 0; font-size: var(--fs-2xl); line-height: var(--lh-tight); font-weight: var(--fw-bold); letter-spacing: -.02em; }
 .chip {

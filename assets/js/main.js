@@ -58,6 +58,7 @@ function renderTabs() {
 
 function render() {
   setLanguage(store.state.settings.language);
+  document.body.dataset.tab = nav.tab;
   const view = VIEWS[nav.tab];
   const [title, subtitle] = view.title();
   $('#title').textContent = title;
@@ -79,6 +80,10 @@ function renderBanner() {
 }
 
 setRenderer(render);
+
+// Trennlinie unter der festen Kopfzeile, sobald Inhalt darunter durchscrollt
+const markScrolled = () => document.body.classList.toggle('scrolled', window.scrollY > 4);
+window.addEventListener('scroll', markScrolled, { passive: true });
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
 onSyncChange(() => { if (nav.tab === 'settings') render(); });
 const typing = () => document.activeElement?.matches('textarea, input, select');
