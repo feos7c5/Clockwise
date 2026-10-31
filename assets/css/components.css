@@ -29,6 +29,7 @@
 .btn-block { width: 100%; }
 
 .btn-row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--sp-3); }
+.btn-row > .btn { min-width: 0; height: auto; min-height: var(--ctl-md); padding-block: var(--sp-2); white-space: normal; text-align: center; line-height: 1.2; }
 .btn-group { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .nav-group { display: flex; align-items: center; gap: var(--sp-1); background: var(--surface); border-radius: var(--r-full); padding: var(--sp-1); box-shadow: var(--shadow); }
 .nav-group .btn { background: transparent; }
