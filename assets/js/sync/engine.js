@@ -2,6 +2,7 @@ import { store, onSave, applyMerged, save } from '../core/store.js';
 import { iso } from '../core/time.js';
 import { SYNC_AVAILABLE } from './config.js';
 import * as api from './api.js';
+import { openLive, closeLive, liveConnected } from './live.js';
 import { merge, payload, canonical } from './merge.js';
 import {
   deriveKeys, seal, unseal, newSecret, newPairCode, formatPairCode, normalizePairCode,
@@ -11,6 +12,7 @@ import {
 const CONFIG_KEY = 'clockwise-sync';
 const PUSH_DELAY_MS = 3_000;
 const POLL_MS = 2 * 60_000;
+const LIVE_POLL_MS = 10 * 60_000;
 const MIN_PULL_GAP_MS = 20_000;
 const RETRY_MS = [5_000, 15_000, 60_000, 5 * 60_000];
 const REMOVED_KEY = 'clockwise-removed';
@@ -139,6 +141,11 @@ export function syncNow(options = {}) {
   return running;
 }
 
+function startLive() {
+  if (!keys || document.hidden) return;
+  openLive(keys.token, version => { if (config && version > config.version) syncNow({ forcePull: true }); });
+}
+
 function schedulePush() {
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => { pushTimer = null; syncNow(); }, PUSH_DELAY_MS);
@@ -171,6 +178,7 @@ function registerDevice() {
 const wasRemoved = () => Boolean(store.state.devices?.[config.device]?.removed);
 
 function wipeRemovedDevice() {
+  closeLive();
   clearTimeout(pushTimer);
   clearTimeout(retryTimer);
   config = null; keys = null;
@@ -206,11 +214,16 @@ export function removeDevice(id) {
 export async function initSync() {
   if (!SYNC_AVAILABLE) return;
   onSave(() => { if (keys) { markDirty(); schedulePush(); } });
-  window.addEventListener('online', () => syncNow({ forcePull: true }));
-  window.addEventListener('offline', () => { if (keys) setStatus('offline'); });
-  document.addEventListener('visibilitychange', () => (document.hidden ? flush() : syncNow()));
+  window.addEventListener('online', () => { syncNow({ forcePull: true }); startLive(); });
+  window.addEventListener('offline', () => { if (keys) setStatus('offline'); closeLive(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { flush(); closeLive(); } else { syncNow(); startLive(); }
+  });
   window.addEventListener('pagehide', flush);
-  setInterval(() => { if (!document.hidden) syncNow(); }, POLL_MS);
+  setInterval(() => {
+    if (document.hidden) return;
+    if (!liveConnected() || Date.now() - lastPull > LIVE_POLL_MS) syncNow();
+  }, POLL_MS);
   config = readConfig();
   if (!config) return;
   config.version ??= 0;
@@ -221,6 +234,7 @@ export async function initSync() {
   keys = await deriveKeys(config.secret);
   await computeFingerprint();
   syncNow({ forcePull: true });
+  startLive();
 }
 
 async function activate(secret, { fresh }) {
@@ -228,6 +242,7 @@ async function activate(secret, { fresh }) {
   writeConfig();
   keys = await deriveKeys(secret);
   await computeFingerprint();
+  startLive();
   return syncNow({ forcePull: true });
 }
 
@@ -267,6 +282,7 @@ export async function disableSync({ wipe = false } = {}) {
   leaving = false;
   clearTimeout(pushTimer);
   clearTimeout(retryTimer);
+  closeLive();
   config = null; keys = null;
   writeConfig();
   setStatus('off');

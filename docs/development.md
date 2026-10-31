@@ -44,6 +44,8 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 - **Recovery key:** for when all devices are lost.
 - **Offline first:** everything works without a connection. Changes are buffered for 3 seconds, sent in one
   upload and remembered as pending until the server confirms them – also across restarts.
+- **Live updates:** open apps keep a WebSocket to a Durable Object per vault. After an upload the server
+  broadcasts only the new version number; listening devices then pull the encrypted data.
 - **Few requests:** uploads go straight to the server with the last known version (a conflict returns the
   newer state to merge). Polling happens on open and every 2 minutes while visible; unchanged data answers 304.
 
