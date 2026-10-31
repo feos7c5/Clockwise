@@ -1,5 +1,6 @@
-// Zustand im localStorage. Alle Änderungen laufen über save().
+// Zustand im localStorage. Alle Änderungen laufen über save(), das geänderte Tage für den Sync stempelt.
 import { DEFAULT_STATE } from './defaults.js';
+import { snapshot, stamp } from '../sync/merge.js';
 import { t } from '../i18n/index.js';
 
 const KEY = 'stempeluhr-v1';
@@ -18,18 +19,31 @@ function load() {
 }
 
 export const store = { state: load() };
+let lastSnapshot = snapshot(store.state);
 
-export function save() {
+function persist() {
   store.state.savedAt = Date.now();
   try {
     localStorage.setItem(KEY, JSON.stringify(store.state));
   } catch (e) {
     alert(t('backup.saveFailed', { error: e.message }));
   }
+}
+
+// Lokale Änderung: stempeln, speichern, Beobachter informieren (z. B. Sync)
+export function save() {
+  lastSnapshot = stamp(store.state, lastSnapshot);
+  persist();
   listeners.forEach(fn => fn(store.state));
 }
 
-// Wird nach jedem Speichern aufgerufen (z. B. Datei-Sync)
+// Zusammengeführter Stand vom Server: übernehmen, ohne neu zu stempeln
+export function applyMerged(state) {
+  store.state = withDefaults(state);
+  lastSnapshot = snapshot(store.state);
+  persist();
+}
+
 export const onSave = fn => listeners.add(fn);
 
 export function isValidState(data) {
@@ -37,13 +51,14 @@ export function isValidState(data) {
 }
 
 export function replaceState(data) {
-  store.state = withDefaults(data);
+  store.state = withDefaults({ ...data, meta: store.state.meta });
   save();
 }
 
 export function resetState() {
-  localStorage.removeItem(KEY);
-  store.state = load();
+  const meta = store.state.meta;
+  store.state = withDefaults(structuredClone(DEFAULT_STATE));
+  store.state.meta = meta; // gelöschte Tage als gelöscht stempeln
   save();
 }
 
