@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Clockwise</title>
+  <meta name="description" content="Arbeitszeit erfassen – Kommen, Gehen, Überstunden-Saldo">
+  <meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111112" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clockwise">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/views.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div><small id="subtitle"></small><h1 id="title">Heute</h1></div>
+    <div id="headRight"></div>
+  </header>
+
+  <main id="view"></main>
+
+  <nav class="tabs" aria-label="Hauptnavigation">
+    <button data-tab="heute"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Heute</button>
+    <button data-tab="monat"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Monat</button>
+    <button data-tab="jahr"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Jahr</button>
+    <button data-tab="einst"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellungen</button>
+  </nav>
+
+  <dialog id="dialog"></dialog>
+  <div id="print"></div>
+</body>
+</html>
