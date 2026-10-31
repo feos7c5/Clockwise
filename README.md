@@ -27,6 +27,7 @@
 - **Soll-Zeiten** je Wochentag mit „gilt ab“-Zeiträumen (z. B. bei Stundenänderung)
 - **Abwesenheiten** für Zeiträume eintragen, Wochenenden und Feiertage werden übersprungen
 - **Monatsnachweis** als PDF mit Unterschriftszeilen, **CSV-Export** für Excel
+- **Sync zwischen Geräten** per Kopplungscode – Ende-zu-Ende-verschlüsselt, ohne Konto
 - **Erinnerungen**, wenn an einem Arbeitstag noch nicht eingestempelt ist
 - **Hell/Dunkel** nach Systemeinstellung
 - **Sprachen**: Deutsch und Englisch, folgt der Systemsprache oder fest einstellbar
@@ -44,6 +45,27 @@ Am Mac funktioniert dasselbe in Safari (*Ablage → Zum Dock hinzufügen*) oder 
 Es gibt keinen Server und kein Tracking. Alle Daten liegen im Browser-Speicher des Geräts.
 Zur Sicherung dienen *Backup sichern* (JSON-Datei, z. B. nach iCloud Drive) und in Chrome/Edge
 die automatische Speicherung in eine Datei.
+
+## Sync
+
+Optional und ohne Konto: Auf dem ersten Gerät *Einstellungen → Sync einschalten*, auf jedem weiteren
+*Mit Gerät verbinden* und den angezeigten Code eingeben (wie beim Koppeln eines Fernsehers).
+
+- **Ende-zu-Ende-verschlüsselt:** Aus einem zufälligen Geheimnis (nur auf den Geräten) werden per HKDF ein
+  Zugriffs-Token und ein AES-GCM-Schlüssel abgeleitet. Der Server sieht nur verschlüsselte Daten.
+- **Kopplungscode:** 8 Zeichen, 10 Minuten gültig, einmal einlösbar. Er verschlüsselt das Geheimnis für die
+  Übergabe (PBKDF2, 600 000 Runden) – auch der Server kann ihn nicht durchprobieren.
+- **Konfliktfrei:** Jeder Tag trägt einen Änderungszeitstempel, die neuere Änderung gewinnt, Löschungen
+  werden übertragen. Darstellung, Sprache und Erinnerungen bleiben pro Gerät.
+- **Wiederherstellungsschlüssel:** für den Fall, dass alle Geräte verloren gehen.
+
+Der Server ist ein Cloudflare Worker mit D1-Datenbank in [`server/`](server/) (rund 130 Zeilen).
+
+```sh
+cd server && npm install
+npm run migrate:local && npm run dev   # lokal auf http://localhost:8787
+npm test                                # API-Tests gegen den laufenden Server
+```
 
 ## Entwicklung
 
@@ -65,9 +87,11 @@ npm test    # Tests der Rechenlogik (Node ≥ 20)
 │       ├── main.js          Einstiegspunkt
 │       ├── core/            Rechnung, Feiertage, Speicher, Sync – ohne DOM
 │       ├── i18n/            Übersetzungen (de, en) und Intl-Formatierung
+│       ├── sync/            Verschlüsselung, Zusammenführen, Sync-Ablauf
 │       ├── ui/              DOM-Helfer, Icons, Dialog, Navigation, Theme
 │       ├── views/           Heute, Monat, Jahr, Einstellungen, Dialoge
 │       └── features/        Export, Druck, Erinnerungen
+├── server/                  Sync-Server (Cloudflare Worker + D1)
 ├── tests/                   node:test
 ├── tools/                   Dev-Server, Excel-Import
 └── docs/                    Screenshots
