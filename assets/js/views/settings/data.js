@@ -1,0 +1,56 @@
+// Einstellungen: Speicherort, Backup, Export, Zurücksetzen.
+import { resetState } from '../../core/store.js';
+import { canFileSync, sync, connectFile, reconnectFile, disconnectFile } from '../../core/file-sync.js';
+import { now, hhmm } from '../../core/session.js';
+import { $, esc, cardHead } from '../../ui/dom.js';
+import { applyTheme } from '../../ui/theme.js';
+import { rerender } from '../../ui/nav.js';
+import { saveBackup, loadBackup, exportCSV } from '../../features/export.js';
+
+function syncBlock() {
+  if (!canFileSync) {
+    return '<p class="hint flush">Dieser Browser kann nicht automatisch in eine Datei speichern (geht in Chrome oder Edge am Computer). Nutze „Backup sichern“ und wähle dort iCloud Drive.</p>';
+  }
+  if (!sync.handle) {
+    return `<p class="hint flush">Speichert jede Änderung automatisch in eine Datei, z. B. in iCloud Drive.</p>
+      <div class="btn-row section-actions"><button class="btn btn-primary" id="fsNew">Neue Datei</button><button class="btn" id="fsOpen">Vorhandene verbinden</button></div>`;
+  }
+  const status = sync.perm === 'granted'
+    ? (sync.last ? `Zuletzt gespeichert ${hhmm(sync.last)} Uhr` : 'Verbunden')
+    : 'Zugriff muss neu erlaubt werden';
+  return `<div class="switch"><div><div class="strong">${esc(sync.handle.name)}</div>
+      <div class="hint flush">${status}${sync.error ? ' · ' + esc(sync.error) : ''}</div></div>
+    <div class="btn-group">${sync.perm !== 'granted' ? '<button class="btn btn-sm btn-primary" id="fsRe">Erlauben</button>' : ''}
+      <button class="btn btn-sm" id="fsOff">Trennen</button></div></div>`;
+}
+
+export const storage = {
+  html: () => `<section class="card">${cardHead('Speicherort')}
+    ${syncBlock()}
+    <div class="btn-row section-actions"><button class="btn" id="backup">Backup sichern</button><button class="btn" id="restore">Backup laden</button></div>
+    <button class="btn btn-block section-actions" id="csv">Als CSV für Excel exportieren</button>
+    <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+    <p class="hint">Die Daten liegen im Browser auf diesem Gerät. Es gibt keinen Server, nichts wird hochgeladen.</p></section>`,
+  bind: view => {
+    $('#fsNew', view)?.addEventListener('click', () => connectFile(false));
+    $('#fsOpen', view)?.addEventListener('click', () => connectFile(true));
+    $('#fsRe', view)?.addEventListener('click', reconnectFile);
+    $('#fsOff', view)?.addEventListener('click', disconnectFile);
+    $('#backup', view).onclick = saveBackup;
+    $('#restore', view).onclick = () => $('#restoreFile', view).click();
+    $('#restoreFile', view).onchange = async e => { if (await loadBackup(e.target.files[0])) { applyTheme(); rerender(); } };
+    $('#csv', view).onclick = () => exportCSV(now().getFullYear());
+  },
+};
+
+export const reset = {
+  html: () => `<section class="card">${cardHead('Zurücksetzen')}
+    <button class="btn btn-block btn-ghost danger filled" id="reset">Alle Daten löschen</button>
+    <p class="hint">Löscht alles, was in der App erfasst ist. Vorher ein Backup sichern.</p></section>`,
+  bind: view => {
+    $('#reset', view).onclick = () => {
+      if (!confirm('Wirklich ALLE erfassten Daten löschen? Das lässt sich nicht rückgängig machen.')) return;
+      resetState(); applyTheme(); rerender();
+    };
+  },
+};
