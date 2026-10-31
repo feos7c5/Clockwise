@@ -7,21 +7,21 @@ import { now, todayStr } from '../core/session.js';
 import { t, weekdayShort, formatDate } from '../i18n/index.js';
 import { holidayLabel } from '../ui/dom.js';
 
-function download(name, text, type) {
+function download(name, data, type) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.href = URL.createObjectURL(new Blob([data], { type }));
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 // Auf Touch-Geräten über das Teilen-Menü (→ „In Dateien sichern“ → iCloud Drive)
-export async function shareOrDownload(name, text, type) {
-  const file = new File([text], name, { type });
+export async function shareOrDownload(name, data, type) {
+  const file = new File([data], name, { type });
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
-  download(name, text, type);
+  download(name, data, type);
 }
 
 export const saveBackup = () =>

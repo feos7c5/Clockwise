@@ -14,7 +14,7 @@ npm test    # unit tests (Node ≥ 20)
 ├── manifest.webmanifest     PWA manifest
 ├── sw.js                    service worker (offline, notifications)
 ├── assets/
-│   ├── css/                 tokens · base · components · layout · views · print
+│   ├── css/                 tokens · base · components · layout · views
 │   ├── icons/               logo and app icons
 │   └── js/
 │       ├── main.js          entry point
@@ -23,7 +23,7 @@ npm test    # unit tests (Node ≥ 20)
 │       ├── sync/            encryption, merging, sync flow
 │       ├── ui/              DOM helpers, icons, dialog, navigation, theme
 │       ├── views/           today, month, year, settings, dialogs
-│       └── features/        export, print, reminders, install hint
+│       └── features/        export, PDF report, reminders, install hint, updates
 ├── server/                  sync server (Cloudflare Worker + D1)
 ├── tests/                   node:test
 ├── tools/                   dev server, Excel import

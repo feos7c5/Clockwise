@@ -1,10 +1,10 @@
 // Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v13';
+const CACHE = 'clockwise-v14';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/css/tokens.css', 'assets/css/base.css', 'assets/css/components.css',
-  'assets/css/layout.css', 'assets/css/views.css', 'assets/css/print.css',
+  'assets/css/layout.css', 'assets/css/views.css',
   'assets/js/main.js',
   'assets/js/i18n/index.js', 'assets/js/i18n/de.js', 'assets/js/i18n/en.js',
   'assets/js/sync/api.js', 'assets/js/sync/config.js', 'assets/js/sync/crypto.js', 'assets/js/sync/engine.js', 'assets/js/sync/merge.js',
@@ -16,7 +16,7 @@ const FILES = [
   'assets/js/views/day-dialog.js', 'assets/js/views/absence-dialog.js',
   'assets/js/views/settings/index.js', 'assets/js/views/settings/general.js',
   'assets/js/views/settings/worktime.js', 'assets/js/views/settings/data.js',
-  'assets/js/features/export.js', 'assets/js/features/install.js', 'assets/js/features/update.js', 'assets/js/views/install-notice.js', 'assets/js/ui/notice.js', 'assets/js/features/print.js', 'assets/js/features/reminders.js',
+  'assets/js/features/export.js', 'assets/js/features/pdf.js', 'assets/js/features/report.js', 'assets/js/features/install.js', 'assets/js/features/update.js', 'assets/js/views/install-notice.js', 'assets/js/ui/notice.js', 'assets/js/features/reminders.js',
   'assets/icons/logo.svg', 'assets/icons/icon-180.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 

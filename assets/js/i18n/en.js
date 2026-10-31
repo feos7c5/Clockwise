@@ -135,6 +135,7 @@ export default {
   },
 
   print: {
+    file: 'Timesheet-{year}-{month}.pdf', created: 'Created with Clockwise on {date}',
     title: 'Time sheet {month} {year}', pnr: 'Employee no. {pnr}',
     day: 'Day', clockIn: 'In', clockOut: 'Out', pause: 'Break',
     carryPrev: 'Carried over from previous month', target: 'Target hours', actual: 'Actual hours', carryNext: 'Carried over to next month',

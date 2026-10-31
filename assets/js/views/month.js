@@ -10,7 +10,7 @@ import { ICON } from '../ui/icons.js';
 import { nav } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
 import { openAbsenceDialog } from './absence-dialog.js';
-import { printMonth } from '../features/print.js';
+import { exportMonthPdf } from '../features/report.js';
 
 function dayRow(ds, n, today) {
   const st = dayStats(store.state, ds, n), day = st.day, wd = parseISO(ds).getDay();
@@ -54,6 +54,6 @@ export function renderMonth(view) {
   </div>`;
 
   $('#absence', view).onclick = () => openAbsenceDialog(first);
-  $('#printMonth', view).onclick = () => printMonth(y, m);
+  $('#printMonth', view).onclick = () => exportMonthPdf(y, m);
   $$('[data-day]', view).forEach(b => (b.onclick = () => openDayDialog(b.dataset.day)));
 }

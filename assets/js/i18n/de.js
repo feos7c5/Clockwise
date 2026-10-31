@@ -135,6 +135,7 @@ export default {
   },
 
   print: {
+    file: 'Arbeitszeitnachweis-{year}-{month}.pdf', created: 'Erstellt mit Clockwise am {date}',
     title: 'Arbeitszeitnachweis {month} {year}', pnr: 'Personal-Nr. {pnr}',
     day: 'Tag', clockIn: 'Kommt', clockOut: 'Geht', pause: 'Pause',
     carryPrev: 'Übertrag Vormonat', target: 'Soll-Arbeitszeit', actual: 'Ist-Arbeitszeit', carryNext: 'Übertrag nächster Monat',
