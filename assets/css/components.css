@@ -104,6 +104,7 @@ dialog {
   width: min(32rem, calc(100vw - 2 * var(--gutter))); max-height: calc(100vh - var(--sp-10));
   padding: 0; border: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-float);
 }
+dialog { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .dlg { padding: var(--sp-5); }
 .dlg-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-4) 0; }
