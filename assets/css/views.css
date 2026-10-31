@@ -1,5 +1,3 @@
-/* Ansichten: Heute (Stempeln, Woche) und Monat (Tageszeilen). */
-
 .notice {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4); border-radius: var(--r-lg);

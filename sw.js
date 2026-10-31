@@ -1,5 +1,4 @@
-// Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v14';
+const CACHE = 'clockwise-v15';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
@@ -21,7 +20,6 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  // Neue Version wartet, bis der Nutzer in der App auf „Aktualisieren“ tippt
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
 });
 
@@ -36,7 +34,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Nur App-Dateien der eigenen Seite – API-Aufrufe (Sync-Server) laufen am Service Worker vorbei
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request, { cache: 'no-cache' })
@@ -49,7 +46,6 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Tipp auf eine Erinnerung öffnet die App
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(

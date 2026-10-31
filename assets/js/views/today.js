@@ -1,4 +1,3 @@
-// Ansicht "Heute": Stempeln, Tageswerte, Woche, Tagesart.
 import { fmtDur, toMin, fromMin, iso, range, addDays } from '../core/time.js';
 import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
@@ -16,7 +15,6 @@ import { notice, isDismissed, bindNotices } from '../ui/notice.js';
 import { SYNC_AVAILABLE } from '../sync/config.js';
 import { syncEnabled } from '../sync/engine.js';
 
-// Netto-Sekunden für den Live-Timer
 export function liveSeconds(ds) {
   const day = store.state.days[ds];
   if (!day) return 0;
@@ -32,7 +30,6 @@ export function liveSeconds(ds) {
   return Math.max(0, gross - pauseMin(store.state.settings, day, Math.floor(gross / 60)) * 60);
 }
 
-// Uhrzeit, zu der das Netto-Ist eine Grenze erreicht (inkl. automatischer Pause)
 function reachAt(ds, target) {
   const day = store.state.days[ds], base = nowMin(), offset = ds === todayStr() ? 0 : 1440;
   for (let m = 0; m <= 1440; m++) {
@@ -115,7 +112,6 @@ function codesCard(day) {
     <textarea id="todayNote" placeholder="${t('today.notePlaceholder')}">${esc(day.note)}</textarea></label></section>`;
 }
 
-// Neues Gerät ohne Daten: Angebot, Daten von einem anderen Gerät zu holen
 function onboardingNotice() {
   if (!SYNC_AVAILABLE || syncEnabled() || Object.keys(store.state.days).length || isDismissed('onboard')) return '';
   const action = `<button class="btn btn-sm btn-primary" id="onboardJoin">${t('cloud.onboardAction')}</button>`;
@@ -166,7 +162,6 @@ export function renderToday(view) {
   };
 }
 
-// Sekündlicher Timer ohne komplettes Neu-Zeichnen
 export function tickTimer() {
   const el = $('#timer');
   if (!el) return;

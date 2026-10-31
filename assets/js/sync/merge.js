@@ -1,8 +1,3 @@
-// Zusammenführen zweier Datenstände Tag für Tag.
-// Jede Änderung bekommt einen Zeitstempel (meta.days / meta.settings), die neuere gewinnt.
-// Gelöschte Tage behalten ihren Zeitstempel und werden so auf allen Geräten gelöscht.
-
-// Bleiben pro Gerät und werden nicht abgeglichen
 export const DEVICE_SETTINGS = ['theme', 'language', 'remind'];
 
 export const sharedSettings = settings =>
@@ -10,7 +5,6 @@ export const sharedSettings = settings =>
 
 const emptyMeta = () => ({ days: {}, settings: 0 });
 
-// Stabile Serialisierung (Schlüssel sortiert) für Vergleiche
 export function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object') {
@@ -25,7 +19,6 @@ export function snapshot(state) {
   return { days, settings: canonical(sharedSettings(state.settings)) };
 }
 
-// Vergleicht mit dem letzten Stand und stempelt geänderte Tage/Einstellungen
 export function stamp(state, previous, now = Date.now()) {
   const meta = (state.meta ||= emptyMeta());
   const current = snapshot(state);
@@ -36,7 +29,6 @@ export function stamp(state, previous, now = Date.now()) {
   return current;
 }
 
-// Was auf den Server geht: ohne gerätelokale Einstellungen
 export const payload = state => ({
   version: 1,
   days: state.days,
@@ -44,7 +36,6 @@ export const payload = state => ({
   meta: state.meta || emptyMeta(),
 });
 
-// Bei Gleichstand gewinnt der Server-Stand; fehlt er dort, bleibt der lokale Tag erhalten
 export function merge(local, remote) {
   const lm = local.meta || emptyMeta(), rm = remote.meta || emptyMeta();
   const days = {}, metaDays = {};

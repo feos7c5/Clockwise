@@ -1,4 +1,3 @@
-// Sync-Ablauf: abholen → zusammenführen → hochladen, mit Wiederholung bei Versionskonflikten.
 import { store, onSave, applyMerged } from '../core/store.js';
 import { SYNC_AVAILABLE } from './config.js';
 import * as api from './api.js';
@@ -12,7 +11,6 @@ const CONFIG_KEY = 'clockwise-sync';
 const DEBOUNCE_MS = 1500;
 const POLL_MS = 60_000;
 
-// status: off | syncing | ok | offline | error
 export const syncState = { status: 'off', last: null, error: '' };
 
 const statusListeners = new Set(), dataListeners = new Set();
@@ -43,7 +41,6 @@ async function runOnce({ keepalive = false } = {}) {
     let remoteData = null;
     if (remote) {
       remoteData = await unseal(keys.key, remote.blob);
-      // Synchron zusammenführen, damit keine lokale Eingabe dazwischenrutscht
       const merged = merge(store.state, remoteData);
       if (canonical(payload(merged)) !== canonical(payload(store.state))) {
         applyMerged(merged);
@@ -78,7 +75,6 @@ export function syncNow(options = {}) {
 
 const schedule = () => { clearTimeout(timer); timer = setTimeout(() => { timer = null; syncNow(); }, DEBOUNCE_MS); };
 
-// Ausstehende Änderung sofort hochladen (z. B. wenn die App geschlossen wird)
 function flush() {
   if (!timer) return;
   clearTimeout(timer); timer = null;
@@ -98,19 +94,16 @@ export async function initSync() {
   syncNow();
 }
 
-// Erstes Gerät: neues Sync-Konto
 export const enableSync = () => activate(newSecret());
 
-// Kopplungscode für ein weiteres Gerät erzeugen (10 Minuten gültig)
 export async function createPairCode() {
-  await syncNow(); // neues Gerät soll den aktuellen Stand bekommen
+  await syncNow();
   const code = newPairCode();
   const { lookup, key } = await pairKeys(code);
   await api.createPairing(lookup, await seal(key, config.secret));
   return formatPairCode(code);
 }
 
-// Weiteres Gerät: mit Kopplungscode oder Wiederherstellungsschlüssel verbinden
 export async function joinSync(input) {
   const recovered = parseRecoveryKey(input);
   if (recovered) return activate(recovered);

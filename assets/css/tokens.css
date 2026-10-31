@@ -1,26 +1,13 @@
-/* Design-Tokens: Typografie, Abstände, Radien, Größen, Farben (hell/dunkel).
-   Die ganze App skaliert über --scale. */
-
 :root {
   --scale: 1;
 
-  /* Typografie */
-  --fs-xs: .75rem;      /* 12 */
-  --fs-sm: .8125rem;    /* 13 */
-  --fs-base: .9375rem;  /* 15 */
-  --fs-md: 1.0625rem;   /* 17 */
-  --fs-lg: 1.25rem;     /* 20 */
-  --fs-xl: 1.625rem;    /* 26 */
-  --fs-2xl: 2rem;       /* 32 */
-  --fs-display: 3.75rem;/* 60 */
-  --fw-regular: 400;
+  --fs-xs: .75rem;  --fs-sm: .8125rem;  --fs-base: .9375rem;  --fs-md: 1.0625rem;  --fs-lg: 1.25rem;  --fs-xl: 1.625rem;  --fs-2xl: 2rem;  --fs-display: 3.75rem;  --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
   --fw-bold: 700;
   --lh-tight: 1.15;
   --lh-base: 1.45;
 
-  /* Abstände (4er-Raster) */
   --sp-1: .25rem;
   --sp-2: .5rem;
   --sp-3: .75rem;
@@ -30,26 +17,19 @@
   --sp-8: 2rem;
   --sp-10: 2.5rem;
 
-  /* Radien */
   --r-sm: .625rem;
   --r-md: .875rem;
   --r-lg: 1.25rem;
   --r-full: 999px;
 
-  /* Bedienelemente */
-  --ctl-sm: 2.25rem;   /* 36 */
-  --ctl-md: 2.75rem;   /* 44 – Mindest-Touchfläche */
-  --ctl-lg: 3.5rem;    /* 56 */
-  --icon-sm: 1rem;
+  --ctl-sm: 2.25rem;  --ctl-md: 2.75rem;  --ctl-lg: 3.5rem;  --icon-sm: 1rem;
   --icon-md: 1.25rem;
   --icon-lg: 1.5rem;
 
-  /* Layout */
   --content-w: 40rem;
   --gutter: var(--sp-4);
   --tabbar-h: 3.75rem;
 
-  /* Farben – hell */
   --bg: #f4f4f2;
   --surface: #ffffff;
   --ink: #18181b;

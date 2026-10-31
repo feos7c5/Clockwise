@@ -1,4 +1,3 @@
-// Erinnerungen per Notification – solange die App geöffnet ist.
 import { fmtDur } from '../core/time.js';
 import { dayStats } from '../core/calc.js';
 import { store } from '../core/store.js';
@@ -17,7 +16,6 @@ export async function notify(title, body, tag) {
   else new Notification(title, opts);
 }
 
-// Jede Erinnerung höchstens einmal pro Tag
 function flagsForToday() {
   let f;
   try { f = JSON.parse(localStorage.getItem(FLAGS_KEY)) || {}; } catch (e) { f = {}; }

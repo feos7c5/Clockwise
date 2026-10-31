@@ -1,4 +1,3 @@
-// Service Worker registrieren und neue Versionen erkennen – Aktualisierung erst auf Knopfdruck.
 let waiting = null, requested = false, hidden = false;
 const listeners = new Set();
 export const onUpdateChange = fn => listeners.add(fn);
@@ -19,7 +18,6 @@ export async function registerServiceWorker() {
 
   const offer = worker => { waiting = worker; hidden = false; changed(); };
   const watch = worker => worker?.addEventListener('statechange', () => {
-    // "installed" bei vorhandenem Controller = neue Version wartet
     if (worker.state === 'installed' && navigator.serviceWorker.controller) offer(worker);
   });
 
@@ -27,7 +25,6 @@ export async function registerServiceWorker() {
   reg.addEventListener('updatefound', () => watch(reg.installing));
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (requested) location.reload(); });
 
-  // iOS prüft selten von selbst – beim Öffnen und alle 30 Minuten nachsehen
   const check = () => reg.update().catch(() => {});
   document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
   setInterval(check, 30 * 60 * 1000);

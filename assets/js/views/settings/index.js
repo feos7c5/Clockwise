@@ -1,4 +1,3 @@
-// Ansicht "Einstellungen" – setzt sich aus einzelnen Abschnitten zusammen.
 import { appearance, reminders, person } from './general.js';
 import { schedule, pause, accounts } from './worktime.js';
 import { storage, reset } from './data.js';

@@ -1,7 +1,7 @@
 {
   "name": "clockwise-sync",
   "version": "1.0.0",
-  "description": "Ende-zu-Ende-verschlüsselter Sync-Speicher für Clockwise (Cloudflare Worker + D1)",
+  "description": "End-to-end encrypted sync storage for Clockwise (Cloudflare Worker + D1)",
   "private": true,
   "type": "module",
   "scripts": {

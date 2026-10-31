@@ -1,4 +1,3 @@
-// Ansicht "Jahr": Monate, Urlaub, Überstunden, Tagesarten.
 import { iso, fmtDur } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
 import { sumRange, balance, vacationAccount } from '../core/calc.js';

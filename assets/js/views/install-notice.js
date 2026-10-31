@@ -1,4 +1,3 @@
-// Hinweis „Als App installieren“ auf der Heute-Seite.
 import { installMode, promptInstall } from '../features/install.js';
 import { t } from '../i18n/index.js';
 import { $ } from '../ui/dom.js';

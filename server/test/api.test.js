@@ -1,4 +1,3 @@
-// Läuft gegen `npm run dev` (http://localhost:8787) oder SYNC_URL
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes, createHash } from 'node:crypto';
@@ -12,7 +11,7 @@ const call = (method, path, { auth, body } = {}) => fetch(BASE + path, {
   body: body === undefined ? undefined : JSON.stringify(body),
 });
 
-test('Tresor: anlegen, lesen, Versionskonflikt', async () => {
+test('vault: create, read, version conflict', async () => {
   const t = token();
   assert.equal((await call('GET', '/v1/vault', { auth: t })).status, 404);
 
@@ -31,18 +30,18 @@ test('Tresor: anlegen, lesen, Versionskonflikt', async () => {
   assert.equal((await call('GET', '/v1/vault', { auth: t })).status, 404);
 });
 
-test('Tresor: ohne gültiges Token kein Zugriff', async () => {
+test('vault: no access without a valid token', async () => {
   assert.equal((await call('GET', '/v1/vault')).status, 401);
   assert.equal((await call('GET', '/v1/vault', { auth: 'kurz' })).status, 401);
 });
 
-test('Tresore sind voneinander getrennt', async () => {
+test('vaults are isolated from each other', async () => {
   const a = token(), b = token();
   await call('PUT', '/v1/vault', { auth: a, body: { version: 0, blob: 'nur-a' } });
   assert.equal((await call('GET', '/v1/vault', { auth: b })).status, 404);
 });
 
-test('Kopplung: genau einmal abholbar', async () => {
+test('pairing: can be claimed exactly once', async () => {
   const l = lookup();
   assert.equal((await call('POST', '/v1/pair', { body: { lookup: l, payload: 'geheim' } })).status, 201);
   const first = await call('POST', '/v1/pair/claim', { body: { lookup: l } });
@@ -51,12 +50,12 @@ test('Kopplung: genau einmal abholbar', async () => {
   assert.equal((await call('POST', '/v1/pair/claim', { body: { lookup: l } })).status, 404);
 });
 
-test('Kopplung: unbekannter Code und ungültige Eingaben', async () => {
+test('pairing: unknown code and invalid input', async () => {
   assert.equal((await call('POST', '/v1/pair/claim', { body: { lookup: lookup() } })).status, 404);
   assert.equal((await call('POST', '/v1/pair', { body: { lookup: 'x', payload: 'p' } })).status, 400);
 });
 
-test('CORS nur für erlaubte Herkunft', async () => {
+test('CORS only for allowed origins', async () => {
   const res = await fetch(BASE + '/v1/vault', { method: 'OPTIONS', headers: { Origin: 'http://localhost:8765' } });
   assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'http://localhost:8765');
   const evil = await fetch(BASE + '/v1/vault', { method: 'OPTIONS', headers: { Origin: 'https://evil.example' } });

@@ -1,4 +1,3 @@
-// Inline-SVG-Icons (Strichstärke und Größe kommen aus dem CSS)
 const svg = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
 
 export const ICON = {

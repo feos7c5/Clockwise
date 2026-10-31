@@ -1,4 +1,3 @@
-// Einstellungen: Speicherort, Backup, Export, Zurücksetzen.
 import { resetState } from '../../core/store.js';
 import { canFileSync, sync, connectFile, reconnectFile, disconnectFile } from '../../core/file-sync.js';
 import { now, hhmm } from '../../core/session.js';

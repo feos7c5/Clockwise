@@ -1,9 +1,7 @@
-// Gesetzliche Feiertage je Bundesland. id = Übersetzungsschlüssel, f = Soll-Faktor (0 = frei, 0.5 = halber Tag).
 import { iso } from './time.js';
 
 export const STATES = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'];
 
-// Gauß'sche Osterformel (gregorianisch)
 export function easter(y) {
   const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
   const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;

@@ -1,4 +1,3 @@
-// Backup (JSON) und CSV-Export für Excel.
 import { iso, parseISO, range, fmtDur } from '../core/time.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, pauseMin, grossMin } from '../core/calc.js';
@@ -15,7 +14,6 @@ function download(name, data, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-// Auf Touch-Geräten über das Teilen-Menü (→ „In Dateien sichern“ → iCloud Drive)
 export async function shareOrDownload(name, data, type) {
   const file = new File([data], name, { type });
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
@@ -43,7 +41,6 @@ export async function loadBackup(file) {
 const csvCell = v => (/[;"\n]/.test(v) ? `"${String(v).replace(/"/g, '""')}"` : v);
 const plain = m => fmtDur(m).replace('−', '-');
 
-// Gleiche Spalten wie die ursprüngliche Excel-Vorlage (Überschriften übersetzt)
 export function exportCSV(year) {
   const n = now(), s = store.state.settings;
   const lines = [t('csv.columns')];

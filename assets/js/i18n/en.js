@@ -1,4 +1,3 @@
-// English
 export default {
   weekdays: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
   weekdaysMonFirst: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],

@@ -1,4 +1,3 @@
-// Hell/Dunkel: "system" folgt prefers-color-scheme, sonst fest.
 import { store } from '../core/store.js';
 import { $$ } from './dom.js';
 
@@ -10,7 +9,6 @@ export function applyTheme() {
   if (t === 'system') delete root.dataset.theme;
   else root.dataset.theme = t;
 
-  // Statusleisten-Farbe (zwei Meta-Tags mit media-Query: hell, dunkel)
   const [light, dark] = $$('meta[name="theme-color"]');
   light.content = t === 'dark' ? DARK : LIGHT;
   dark.content = t === 'light' ? LIGHT : DARK;

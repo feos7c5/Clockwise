@@ -1,4 +1,3 @@
-// Einstellungen: Sync zwischen Geräten.
 import { SYNC_AVAILABLE } from '../../sync/config.js';
 import { syncEnabled, syncState, enableSync } from '../../sync/engine.js';
 import { hhmm } from '../../core/session.js';

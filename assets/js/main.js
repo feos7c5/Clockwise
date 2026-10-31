@@ -1,4 +1,3 @@
-// Einstiegspunkt: Navigation, Kopfzeile, Timer, Service Worker.
 import { fmtDur } from './core/time.js';
 import { balance } from './core/calc.js';
 import { store } from './core/store.js';
@@ -27,7 +26,6 @@ const VIEWS = {
   settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
 
-// Rechts in der Kopfzeile: Saldo (Heute) oder Blättern (Monat/Jahr)
 function renderHeadActions() {
   const el = $('#headRight');
   if (nav.tab === 'today') {
@@ -69,7 +67,6 @@ function render() {
   renderBanner();
 }
 
-// Seitenübergreifend oben: neue Version verfügbar
 function renderBanner() {
   const el = $('#banner');
   el.innerHTML = updateAvailable()
@@ -81,19 +78,16 @@ function renderBanner() {
 
 setRenderer(render);
 
-// Trennlinie unter der festen Kopfzeile, sobald Inhalt darunter durchscrollt
 const markScrolled = () => document.body.classList.toggle('scrolled', window.scrollY > 4);
 window.addEventListener('scroll', markScrolled, { passive: true });
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
 onSyncChange(() => { if (nav.tab === 'settings') render(); });
 const typing = () => document.activeElement?.matches('textarea, input, select');
 onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) render(); });
-// Neue Daten von einem anderen Gerät: neu zeichnen, außer der Nutzer tippt gerade
 onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
 onInstallChange(() => { if (nav.tab === 'today') render(); });
 onUpdateChange(renderBanner);
 
-// Timer jede Sekunde, volles Neu-Zeichnen jede Minute (außer beim Tippen)
 setInterval(() => {
   if (nav.tab !== 'today' || document.hidden) return;
   tickTimer();

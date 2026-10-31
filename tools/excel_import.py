@@ -1,8 +1,8 @@
-"""Wandelt eine Arbeitszeit-Excel (Vorlage mit Monatsblättern Januar–Dezember)
-in eine Clockwise-Backup-Datei um, die in der App über „Backup laden“ eingespielt wird.
+"""Convert a working-time Excel workbook (monthly sheets January–December) into a
+Clockwise backup file that can be loaded in the app via "Load backup".
 
-Aufruf:  python3 tools/excel_import.py Arbeitszeit.xlsx Ausgabe.json
-Benötigt: pip install openpyxl
+Usage:  python3 tools/excel_import.py Arbeitszeit.xlsx output.json
+Requires: pip install openpyxl
 """
 import datetime as dt
 import json
@@ -12,7 +12,6 @@ import openpyxl
 
 MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli',
           'August', 'September', 'Oktober', 'November', 'Dezember']
-# Spalten im Monatsblatt: D Kommt1, E Geht1, F Kommt2, G Geht2, H Pause, J Code, O Bemerkung
 COL = {'k1': 4, 'g1': 5, 'k2': 6, 'g2': 7, 'pause': 8, 'code': 10, 'note': 15}
 FIRST_ROW, LAST_ROW = 4, 34
 
@@ -34,7 +33,6 @@ def minutes(value):
 
 
 def weekly_minutes(ws_settings, row):
-    # Voreinstellungen D..J = Mo..So
     return [minutes(ws_settings.cell(row, c).value) or 0 for c in range(4, 11)]
 
 
@@ -89,7 +87,7 @@ def main(src, dst):
     state = {'version': 1, 'settings': settings, 'days': read_days(wb, year)}
     with open(dst, 'w', encoding='utf-8') as f:
         json.dump(state, f, ensure_ascii=False, indent=1)
-    print(f'{len(state["days"])} Tage nach {dst} geschrieben.')
+    print(f'{len(state["days"])} days written to {dst}.')
 
 
 if __name__ == '__main__':

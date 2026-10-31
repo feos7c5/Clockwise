@@ -1,17 +1,13 @@
-// Arbeitszeit-Rechnung: Ist, Soll, Differenz, Saldo.
-// Bildet die Regeln der ursprünglichen Excel-Vorlage nach.
 import { iso, parseISO, toMin, range } from './time.js';
 import { holidayOn } from './holidays.js';
 import { CODES, vacationValue } from './codes.js';
 
-// Vertragliche Tages-Sollzeit laut "gilt ab"-Zeiträumen (Wochentag 0 = Montag)
 export function contractMin(settings, ds) {
   let current = null;
   for (const p of [...settings.periods].sort((a, b) => a.from.localeCompare(b.from))) if (p.from <= ds) current = p;
   return current ? current.min[(parseISO(ds).getDay() + 6) % 7] || 0 : 0;
 }
 
-// Brutto-Anwesenheit; nowMin ergänzt eine laufende Stempelung (über Mitternacht = +24 h)
 export function grossMin(day, nowMin = null) {
   let sum = 0;
   for (const b of day.blocks || []) {
@@ -24,7 +20,6 @@ export function grossMin(day, nowMin = null) {
   return sum;
 }
 
-// Summe der Lücken zwischen abgeschlossenen Zeitblöcken (= gestempelte Pausen)
 export function gapMin(day) {
   const done = (day.blocks || []).filter(b => b.in && b.out);
   let gaps = 0;
@@ -36,7 +31,6 @@ export function gapMin(day) {
   return gaps;
 }
 
-// § 4 ArbZG: mehr als 6 h → 30 min, mehr als 9 h → 45 min
 export const legalPause = gross => (gross > 540 ? 45 : gross > 360 ? 30 : 0);
 
 export function pauseMin(settings, day, gross) {
@@ -69,14 +63,12 @@ export function sollMin(settings, ds, day, ist) {
   return hol.f * c.f * az;
 }
 
-// Erster erfasster Tag – davor wird nichts gezählt (die App war noch nicht im Einsatz)
 export function firstDay(state) {
   let first = null;
   for (const ds in state.days) if (first === null || ds < first) first = ds;
   return first;
 }
 
-// Tageswerte. Heute zählt erst mit Stempelung oder Tagesart, die Zukunft und die Zeit vor dem ersten Eintrag nie.
 export function dayStats(state, ds, now) {
   const s = state.settings, day = state.days[ds] || { blocks: [] };
   const today = iso(now), yesterday = iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
@@ -102,7 +94,6 @@ export function sumRange(state, fromStr, toStr, now) {
   return { ist, soll, diff };
 }
 
-// Saldo bis einschließlich toStr
 export function balance(state, toStr, now) {
   const carry = state.settings.carry || 0;
   const first = firstDay(state);
@@ -116,7 +107,6 @@ export function vacationUsed(state, year) {
   return n;
 }
 
-// Voller Jahresanspruch: gilt ab dem eingetragenen Jahr, bis ein späteres Jahr etwas anderes festlegt
 export function vacationAnnual(settings, year) {
   const years = Object.keys(settings.vacation).map(Number).filter(y => y <= year).sort((a, b) => a - b);
   return years.length ? settings.vacation[years[years.length - 1]] : 0;
@@ -124,7 +114,6 @@ export function vacationAnnual(settings, year) {
 
 const DAY_MS = 86_400_000;
 
-// Anteil des Eintrittsjahres ab dem Eintrittsdatum (tagesgenau), sonst 1
 export function prorateFactor(settings, year) {
   const start = settings.vacationProrate && settings.vacationStart;
   if (!start) return 1;
@@ -136,7 +125,6 @@ export function prorateFactor(settings, year) {
   return (end - from) / (end - Date.UTC(year, 0, 1));
 }
 
-// Anspruch des Jahres, im Eintrittsjahr anteilig – Bruchteile auf halbe Tage gerundet
 export function vacationBase(settings, year) {
   const factor = prorateFactor(settings, year);
   return factor === 1 ? vacationAnnual(settings, year) : Math.round(vacationAnnual(settings, year) * factor * 2) / 2;
@@ -147,7 +135,6 @@ function firstTrackedYear(state) {
   return years.length ? Math.min(...years) : null;
 }
 
-// Urlaubskonto eines Jahres. Resturlaub kommt automatisch aus dem Vorjahr, außer er ist eingetragen.
 export function vacationAccount(state, year) {
   const base = vacationBase(state.settings, year);
   const manual = state.settings.vacationCarry[year];

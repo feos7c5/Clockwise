@@ -1,4 +1,3 @@
-# Persönliche Daten nie committen
 *.xlsx
 *Backup*.json
 *-Daten.json
@@ -7,6 +6,5 @@ Excel-Import.json
 .DS_Store
 node_modules/
 
-# Cloudflare lokal
 .wrangler/
 .dev.vars

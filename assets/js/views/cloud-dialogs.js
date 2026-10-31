@@ -1,4 +1,3 @@
-// Dialoge für den Sync: Code anzeigen, Code eingeben, Wiederherstellungsschlüssel, Ausschalten.
 import { pad } from '../core/time.js';
 import { createPairCode, joinSync, recoveryKey, disableSync } from '../sync/engine.js';
 import { t } from '../i18n/index.js';
@@ -14,10 +13,9 @@ async function copyText(text, button) {
     await navigator.clipboard.writeText(text);
     button.textContent = t('cloud.copied');
     setTimeout(() => { button.textContent = t('cloud.copy'); }, 2000);
-  } catch { /* Zwischenablage nicht erlaubt – Code steht ja sichtbar da */ }
+  } catch { }
 }
 
-// Gerät A: Kopplungscode mit Countdown
 export function openPairDialog() {
   let timer;
   const show = async () => {
@@ -60,7 +58,6 @@ export function openPairDialog() {
 
 const joinError = e => (e.message === 'invalid_code' ? t('cloud.errInvalid') : e.message === 'unknown_code' ? t('cloud.errUnknown') : t('cloud.errNetwork'));
 
-// Gerät B: Code oder Wiederherstellungsschlüssel eingeben
 export function openJoinDialog() {
   const canPaste = Boolean(navigator.clipboard?.readText);
   showDialog(`${dialogHead(t('cloud.joinTitle'))}
@@ -89,7 +86,7 @@ export function openJoinDialog() {
     ok.onclick = submit;
     input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } };
     $('#joinPaste', dlg)?.addEventListener('click', async () => {
-      try { input.value = (await navigator.clipboard.readText()).trim(); input.focus(); } catch { /* abgelehnt */ }
+      try { input.value = (await navigator.clipboard.readText()).trim(); input.focus(); } catch { }
     });
     setTimeout(() => input.focus(), 50);
   });

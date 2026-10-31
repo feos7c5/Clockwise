@@ -1,6 +1,6 @@
-"""Lokaler Entwicklungs-Server ohne Browser-Cache.
+"""Local development server without browser caching.
 
-Aufruf:  python3 tools/serve.py [port]    (Standard: 8765)
+Usage:  python3 tools/serve.py [port]    (default: 8765)
 """
 import functools
 import http.server
@@ -22,5 +22,5 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
     handler = functools.partial(NoCacheHandler, directory=ROOT)
-    print(f'Clockwise läuft auf http://localhost:{port}')
+    print(f'Clockwise running on http://localhost:{port}')
     http.server.ThreadingHTTPServer(('127.0.0.1', port), handler).serve_forever()

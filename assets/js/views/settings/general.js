@@ -1,4 +1,3 @@
-// Einstellungen: Darstellung, Sprache, Erinnerungen, Person.
 import { STATES } from '../../core/holidays.js';
 import { store, save } from '../../core/store.js';
 import { t } from '../../i18n/index.js';

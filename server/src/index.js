@@ -1,11 +1,3 @@
-// Clockwise Sync – speichert nur verschlüsselte Datenblöcke, ohne Konten und ohne Klartext.
-//
-// GET    /v1/vault          → { version, blob }            (Authorization: Bearer <token>)
-// PUT    /v1/vault          { version, blob } → { version } | 409 { version, blob }
-// DELETE /v1/vault          → 204
-// POST   /v1/pair           { lookup, payload } → 201      (Kopplung anlegen, 10 min gültig)
-// POST   /v1/pair/claim     { lookup } → { payload }       (einmalig abholen)
-
 const MAX_BLOB = 2_000_000;
 const MAX_PAYLOAD = 2_000;
 const PAIR_TTL_MS = 10 * 60 * 1000;
@@ -57,7 +49,6 @@ async function getVault(request, env) {
   return { version: row.version, blob: row.blob };
 }
 
-// Optimistische Sperre: Schreiben nur, wenn die erwartete Version noch aktuell ist
 async function putVault(request, env) {
   const id = await vaultId(request);
   const { version, blob } = await readJson(request, MAX_BLOB + 1000);
@@ -92,7 +83,6 @@ async function createPairing(request, env) {
   ]);
 }
 
-// Einmalig: Eintrag wird beim Abholen gelöscht
 async function claimPairing(request, env) {
   const { lookup } = await readJson(request, 200);
   if (!LOOKUP_RE.test(lookup || '')) throw new HttpError(400, 'bad_request');

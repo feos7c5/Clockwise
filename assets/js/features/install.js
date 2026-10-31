@@ -1,4 +1,3 @@
-// Installation als App: Safari zeigt keinen eigenen Hinweis, Chrome/Edge liefern beforeinstallprompt.
 import { isDismissed, dismiss } from '../ui/notice.js';
 
 let deferredPrompt = null;
@@ -14,7 +13,6 @@ const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' 
 const isMacSafari = !isIOS && /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg|Firefox/.test(ua);
 const isInstalled = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
-// 'prompt' (Chrome/Edge), 'ios', 'mac' oder null (installiert, ausgeblendet, nicht möglich)
 export function installMode() {
   if (isInstalled() || isDismissed('install')) return null;
   if (deferredPrompt) return 'prompt';

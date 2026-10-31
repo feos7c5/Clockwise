@@ -1,7 +1,7 @@
 {
   "name": "Clockwise",
   "short_name": "Clockwise",
-  "description": "Arbeitszeit erfassen – Kommen, Gehen, Überstunden-Saldo",
+  "description": "A simple time clock – clock in, clock out, overtime balance",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

@@ -1,6 +1,3 @@
-// Ende-zu-Ende-Verschlüsselung mit der Web Crypto API.
-// Aus einem zufälligen Geheimnis werden Zugriffs-Token (für den Server) und Datenschlüssel (nur lokal) abgeleitet.
-
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 const subtle = () => globalThis.crypto.subtle;
@@ -30,14 +27,13 @@ export async function unseal(key, blob) {
   return JSON.parse(dec.decode(plain));
 }
 
-// ---------- Kopplungscode: 8 Zeichen ohne verwechselbare Zeichen (0/O, 1/I/L) ----------
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
 export function newPairCode() {
   let code = '';
   while (code.length < 8) {
     for (const b of globalThis.crypto.getRandomValues(new Uint8Array(16))) {
-      if (b < 248 && code.length < 8) code += ALPHABET[b % ALPHABET.length]; // ohne Modulo-Verzerrung
+      if (b < 248 && code.length < 8) code += ALPHABET[b % ALPHABET.length];
     }
   }
   return code;
@@ -50,7 +46,6 @@ export function normalizePairCode(input) {
   return code.length === 8 && [...code].every(c => ALPHABET.includes(c)) ? code : null;
 }
 
-// Langsame Ableitung: selbst der Server kann den Code nicht durchprobieren
 export async function pairKeys(code) {
   const hash = await subtle().digest('SHA-256', enc.encode(`clockwise-pair-lookup:${code}`));
   const lookup = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -62,7 +57,6 @@ export async function pairKeys(code) {
   return { lookup, key };
 }
 
-// ---------- Wiederherstellungsschlüssel = Geheimnis mit Präfix ----------
 const RECOVERY_PREFIX = 'CW1-';
 export const toRecoveryKey = secret => RECOVERY_PREFIX + secret;
 

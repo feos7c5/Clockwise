@@ -10,7 +10,7 @@ const settings = { land: 'NW', pauseMin: 45, theme: 'dark', language: 'de', remi
 const state = (days = {}, extra = {}) => ({ settings: { ...settings, ...extra }, days: structuredClone(days) });
 const day = (i, o) => ({ blocks: [{ in: i, out: o }] });
 
-test('Änderungen werden pro Tag gestempelt', () => {
+test('changes are timestamped per day', () => {
   const s = state({ '2026-10-01': day('08:00', '16:00') });
   let snap = snapshot(s);
   s.days['2026-10-02'] = day('09:00', '17:00');
@@ -18,10 +18,10 @@ test('Änderungen werden pro Tag gestempelt', () => {
   assert.deepEqual(s.meta.days, { '2026-10-02': 100 });
   delete s.days['2026-10-01'];
   stamp(s, snap, 200);
-  assert.equal(s.meta.days['2026-10-01'], 200); // Löschung gestempelt
+  assert.equal(s.meta.days['2026-10-01'], 200);
 });
 
-test('Geräte-Einstellungen lösen keinen Sync-Stempel aus', () => {
+test('device settings do not trigger a sync timestamp', () => {
   const s = state();
   const snap = snapshot(s);
   s.settings.theme = 'light';
@@ -32,7 +32,7 @@ test('Geräte-Einstellungen lösen keinen Sync-Stempel aus', () => {
   assert.equal(s.meta.settings, 200);
 });
 
-test('Merge: neuere Änderung gewinnt je Tag, beide Seiten bleiben erhalten', () => {
+test('merge: newer change wins per day, both sides kept', () => {
   const a = state({ '2026-10-01': day('08:00', '16:00'), '2026-10-02': day('08:00', '12:00') });
   a.meta = { days: { '2026-10-01': 300, '2026-10-02': 100 }, settings: 0 };
   const b = state({ '2026-10-02': day('08:00', '17:00'), '2026-10-03': day('07:00', '15:00') });
@@ -42,7 +42,7 @@ test('Merge: neuere Änderung gewinnt je Tag, beide Seiten bleiben erhalten', ()
   assert.equal(m.days['2026-10-02'].blocks[0].out, '17:00');
 });
 
-test('Merge: Löschung auf einem Gerät löscht überall', () => {
+test('merge: deletion on one device deletes everywhere', () => {
   const a = state({});
   a.meta = { days: { '2026-10-01': 500 }, settings: 0 };
   const b = state({ '2026-10-01': day('08:00', '16:00') });
@@ -51,16 +51,16 @@ test('Merge: Löschung auf einem Gerät löscht überall', () => {
   assert.equal('2026-10-01' in merge(b, a).days, false);
 });
 
-test('Merge: Altdaten ohne Stempel werden vereinigt, Geräte-Einstellungen bleiben lokal', () => {
+test('merge: legacy data is combined, device settings stay local', () => {
   const local = state({ '2026-10-01': day('08:00', '16:00') }, { theme: 'light', pauseMin: 30 });
   const remote = state({ '2026-04-20': day('08:30', '16:15') }, { theme: 'dark', pauseMin: 45 });
   const m = merge(local, remote);
   assert.equal(Object.keys(m.days).length, 2);
-  assert.equal(m.settings.theme, 'light');   // lokal
-  assert.equal(m.settings.pauseMin, 45);     // geteilte Einstellung vom Server bei Gleichstand
+  assert.equal(m.settings.theme, 'light');
+  assert.equal(m.settings.pauseMin, 45);
 });
 
-test('Merge ist stabil: zweimal zusammenführen ändert nichts', () => {
+test('merge is idempotent', () => {
   const a = state({ '2026-10-01': day('08:00', '16:00') });
   a.meta = { days: { '2026-10-01': 10 }, settings: 0 };
   const b = state({ '2026-10-02': day('08:00', '16:00') });
@@ -68,7 +68,7 @@ test('Merge ist stabil: zweimal zusammenführen ändert nichts', () => {
   assert.equal(canonical(payload(once)), canonical(payload(twice)));
 });
 
-test('Verschlüsselung: gleiches Geheimnis → gleiches Token, Daten wieder lesbar', async () => {
+test('encryption: same secret gives same token, data round-trips', async () => {
   const secret = newSecret();
   const k1 = await deriveKeys(secret), k2 = await deriveKeys(secret);
   assert.equal(k1.token, k2.token);
@@ -79,7 +79,7 @@ test('Verschlüsselung: gleiches Geheimnis → gleiches Token, Daten wieder lesb
   await assert.rejects(unseal((await deriveKeys(newSecret())).key, blob));
 });
 
-test('Kopplungscode: Format, Eingabe-Toleranz, Ableitung', async () => {
+test('pairing code: format, input tolerance, key derivation', async () => {
   const code = newPairCode();
   assert.match(code, /^[2-9A-HJKMNP-Z]{8}$/);
   assert.equal(normalizePairCode(formatPairCode(code).toLowerCase()), code);
@@ -89,7 +89,7 @@ test('Kopplungscode: Format, Eingabe-Toleranz, Ableitung', async () => {
   assert.deepEqual(await unseal(b.key, await seal(a.key, 'geheim')), 'geheim');
 });
 
-test('Wiederherstellungsschlüssel', () => {
+test('recovery key', () => {
   const secret = newSecret();
   assert.equal(parseRecoveryKey(` ${toRecoveryKey(secret)} `), secret);
   assert.equal(parseRecoveryKey('CW1-zu-kurz'), null);

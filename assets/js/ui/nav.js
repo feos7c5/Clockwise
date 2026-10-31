@@ -1,4 +1,3 @@
-// Navigationszustand und zentrales Neu-Zeichnen.
 import { now } from '../core/session.js';
 
 export const TABS = ['today', 'month', 'year', 'settings'];

@@ -1,4 +1,3 @@
-// Einstellungen: Soll-Arbeitszeit, Pause, Urlaubs- und Stundenkonto.
 import { fmtDur, parseDur } from '../../core/time.js';
 import { store, save } from '../../core/store.js';
 import { vacationAccount, vacationAnnual } from '../../core/calc.js';
@@ -42,7 +41,7 @@ export const schedule = {
       commit();
     }));
     $$('[data-pf]', view).forEach(inp => (inp.onchange = () => {
-      if (inp.value) { periods[inp.dataset.pf].from = inp.value; commit(); } // Sortierung beim nächsten Öffnen
+      if (inp.value) { periods[inp.dataset.pf].from = inp.value; commit(); }
     }));
     $$('[data-pdel]', view).forEach(b => (b.onclick = () => {
       if (periods.length < 2) return alert(t('settings.needOnePeriod'));
@@ -106,7 +105,6 @@ export const accounts = {
   },
 };
 
-// Vorschlag fürs Eintrittsdatum: erster Soll-Zeitraum mit Arbeitszeit, sonst erster erfasster Tag
 function defaultStart() {
   const withHours = sortedPeriods().find(p => p.min.some(m => m > 0));
   return withHours?.from || Object.keys(store.state.days).sort()[0] || todayStr();

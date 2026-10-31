@@ -1,4 +1,3 @@
-// Hinweis-Karten. Jeder Hinweis lässt sich mit ✕ ausblenden (dauerhaft oder z. B. nur für heute).
 import { ICON } from './icons.js';
 import { $$ } from './dom.js';
 import { t } from '../i18n/index.js';
@@ -7,13 +6,12 @@ const KEY = 'clockwise-dismissed';
 
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
 
-// value: true = für immer, sonst z. B. das Datum → gilt nur, solange der Wert gleich bleibt
 export const isDismissed = (id, value = true) => read()[id] === value;
 
 export function dismiss(id, value = true) {
   const all = read();
   all[id] = value;
-  try { localStorage.setItem(KEY, JSON.stringify(all)); } catch { /* privat */ }
+  try { localStorage.setItem(KEY, JSON.stringify(all)); } catch { }
 }
 
 export function notice({ id, value = true, title, text = '', action = '', icon = '', tone = 'info' }) {
@@ -26,7 +24,6 @@ export function notice({ id, value = true, title, text = '', action = '', icon =
   </div>`;
 }
 
-// ✕-Knöpfe verbinden; onDismiss zeichnet neu
 export function bindNotices(root, onDismiss) {
   $$('[data-dismiss]', root).forEach(b => (b.onclick = () => {
     const value = b.dataset.value === 'true' ? true : b.dataset.value;

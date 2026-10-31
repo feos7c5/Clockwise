@@ -1,4 +1,3 @@
-// Adresse des Sync-Servers. Lokal: `npm run dev` im Ordner server/.
 const LOCAL = 'http://localhost:8787';
 const PRODUCTION = 'https://clockwise-sync.clockwise-sync.workers.dev';
 

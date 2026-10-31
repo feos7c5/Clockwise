@@ -1,4 +1,3 @@
-// Dialog: einen Tag bearbeiten oder nachtragen.
 import { parseISO, fmtDur } from '../core/time.js';
 import { CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
@@ -45,14 +44,11 @@ export function openDayDialog(ds) {
   };
   const autoPauseHint = () => t('dayDialog.auto', { n: pauseMin(settings, { ...draft, pause: null }, grossMin(draft)) });
 
-  // Nur Ergebnis und Pausen-Hinweis aktualisieren – Eingabefelder bleiben stehen,
-  // sonst springt auf iOS das Uhrzeit-Rad, während es sich noch dreht
   const refresh = dlg => {
     $('#dlgResult', dlg).innerHTML = resultLine();
     $('#pause', dlg).placeholder = autoPauseHint();
   };
 
-  // Komplett neu zeichnen nur bei Strukturänderungen (Zeitblock hinzu/weg)
   const draw = () => {
     const options = Object.keys(CODES).map(k => `<option value="${k}" ${draft.code === k ? 'selected' : ''}>${codeLabel(k)}</option>`).join('');
 

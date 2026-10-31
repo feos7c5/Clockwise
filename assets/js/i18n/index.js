@@ -1,4 +1,3 @@
-// Übersetzungen: t('bereich.schluessel', { platzhalter }) und Intl-Formatierung.
 import de from './de.js';
 import en from './en.js';
 
@@ -9,7 +8,6 @@ let current = FALLBACK;
 
 const lookup = (dict, key) => key.split('.').reduce((o, k) => (o == null ? o : o[k]), dict);
 
-// 'system' → erste unterstützte Browsersprache, sonst Fallback
 export function resolveLanguage(pref) {
   if (pref && pref !== 'system' && LANGUAGES[pref]) return pref;
   for (const tag of navigator.languages || [navigator.language || FALLBACK]) {
@@ -32,7 +30,6 @@ export function t(key, params) {
   return value.replace(/\{(\w+)\}/g, (m, k) => (params[k] ?? m));
 }
 
-// Singular/Plural über Intl.PluralRules: Schlüssel.one / Schlüssel.other
 export function tn(key, n, params = {}) {
   const form = new Intl.PluralRules(current).select(n);
   const forms = t(key);

@@ -1,5 +1,3 @@
-// Startzustand für neue Installationen. Eigene Daten kommen per "Backup laden".
-
 export const DEFAULT_STATE = {
   version: 1,
   settings: {
@@ -9,7 +7,6 @@ export const DEFAULT_STATE = {
     halfHolidays: true,
     pauseMode: 'fix',
     pauseMin: 45,
-    // Soll-Minuten je Wochentag (Mo–So), gültig ab Datum
     periods: [{ from: '2026-01-01', min: [420, 420, 420, 420, 420, 0, 0] }],
     vacation: {},
     vacationProrate: false,

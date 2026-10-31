@@ -1,4 +1,3 @@
-// Ansicht "Monat": Zusammenfassung und alle Tage.
 import { iso, parseISO, range, fmtDur } from '../core/time.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, sumRange, balance } from '../core/calc.js';

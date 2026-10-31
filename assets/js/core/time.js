@@ -1,5 +1,3 @@
-// Datums- und Zeit-Helfer. Zeiten werden intern in Minuten gerechnet.
-
 export const pad = n => String(n).padStart(2, '0');
 
 export const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -17,7 +15,6 @@ export const toMin = s => {
 
 export const fromMin = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
 
-// 450 → "7:30", -90 → "−1:30", mit sign=true auch "+0:15"
 export function fmtDur(m, sign = false) {
   const neg = m < 0;
   m = Math.abs(Math.round(m));
@@ -25,7 +22,6 @@ export function fmtDur(m, sign = false) {
   return neg ? '−' + s : sign && m ? '+' + s : s;
 }
 
-// "7:30", "7,5", "-2:15" → Minuten
 export function parseDur(input) {
   let s = String(input || '').trim().replace(',', '.').replace('−', '-');
   if (!s) return null;

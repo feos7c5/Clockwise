@@ -1,4 +1,3 @@
-// Monatsnachweis als PDF – wird geteilt (iPhone: Drucken, Dateien, Mail) oder heruntergeladen.
 import { iso, parseISO, range, fmtDur, pad } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
@@ -10,11 +9,11 @@ import { codeLabel, holidayLabel } from '../ui/dom.js';
 import { PdfDoc, A4, fit } from './pdf.js';
 import { shareOrDownload } from './export.js';
 
-const M = 48;                       // Seitenrand
+const M = 48;
 const LINE = 12.5, SIZE = 9;
 const COL = { day: M, in: 122, out: 162, pause: 236, ist: 284, soll: 330, diff: 378, note: 392 };
 const NOTE_W = A4.w - M - COL.note;
-const plain = m => fmtDur(m, true).replace('−', '-'); // mit Vorzeichen, ASCII-Minus
+const plain = m => fmtDur(m, true).replace('−', '-');
 
 function tableHead(doc, y) {
   const h = (x, key, align) => doc.text(x, y, t(key), { size: 8, bold: true, gray: 0.45, align });
@@ -68,7 +67,6 @@ export function buildMonthPdf(y, m) {
     yPos = dayRow(doc, yPos, ds, n, totals);
   }
 
-  // Zusammenfassung
   if (yPos > A4.h - 190) { doc.newPage(); yPos = 70; }
   yPos += 14;
   const sumRow = (label, value, bold = false) => {
@@ -83,7 +81,6 @@ export function buildMonthPdf(y, m) {
   sumRow(t('print.carryNext'), plain(carry + sum.diff), true);
   sumRow(t('print.absences'), t('print.absenceDays', { vac: formatNumber(totals.vac), sick: totals.sick, ho: totals.ho }));
 
-  // Unterschriften
   const signY = Math.min(yPos + 55, A4.h - 60);
   doc.line(M, signY, 260, signY, { gray: 0, width: 0.6 });
   doc.line(A4.w - M - 212, signY, A4.w - M, signY, { gray: 0, width: 0.6 });
@@ -94,6 +91,6 @@ export function buildMonthPdf(y, m) {
 }
 
 export function exportMonthPdf(y, m) {
-  const bytes = buildMonthPdf(y, m); // synchron vor dem Teilen (iOS verlangt die Nutzeraktion)
+  const bytes = buildMonthPdf(y, m);
   return shareOrDownload(t('print.file', { year: y, month: pad(m + 1) }), bytes, 'application/pdf');
 }

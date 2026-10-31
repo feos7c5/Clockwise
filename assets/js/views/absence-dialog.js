@@ -1,4 +1,3 @@
-// Dialog: Urlaub, Krankheit usw. für einen Zeitraum eintragen.
 import { range } from '../core/time.js';
 import { ABSENCE_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
@@ -10,7 +9,6 @@ import { $, codeLabel } from '../ui/dom.js';
 import { showDialog, dialogHead, closeDialog } from '../ui/dialog.js';
 import { rerender } from '../ui/nav.js';
 
-// Arbeitstage im Zeitraum – Wochenenden und volle Feiertage fallen weg
 function workdays(from, to) {
   if (!from || !to || to < from) return [];
   const s = store.state.settings;

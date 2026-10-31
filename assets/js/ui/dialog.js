@@ -1,11 +1,9 @@
-// Ein gemeinsamer <dialog> für alle Bearbeitungs-Dialoge.
 import { $, $$ } from './dom.js';
 import { ICON } from './icons.js';
 import { t } from '../i18n/index.js';
 
 const el = () => $('#dialog');
 
-// iOS ignoriert overflow:hidden am body – deshalb fixieren und Scrollposition merken
 let lockedAt = 0;
 function lockScroll() {
   lockedAt = window.scrollY;
@@ -32,7 +30,6 @@ export function showDialog(html, bind) {
     dlg.addEventListener('close', unlockScroll, { once: true });
     dlg.showModal();
   }
-  // Sonst fokussiert der Browser das ✕ und zeigt einen Fokusring
   (dlg.querySelector('[autofocus]') || dlg.querySelector('form')).focus({ preventScroll: true });
 }
 

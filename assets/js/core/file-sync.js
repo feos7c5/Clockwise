@@ -1,5 +1,3 @@
-// Automatisches Speichern in eine Datei (z. B. iCloud Drive).
-// Nur Chromium-Browser am Computer (File System Access API).
 import { store, onSave, save, replaceState, isValidState } from './store.js';
 import { t, formatDateTime } from '../i18n/index.js';
 
@@ -10,7 +8,6 @@ const listeners = new Set();
 export const onSyncChange = fn => listeners.add(fn);
 const changed = () => listeners.forEach(fn => fn());
 
-// Minimaler IndexedDB-Speicher für das Datei-Handle
 const db = (() => {
   let p;
   const open = () => p ||= new Promise((resolve, reject) => {
