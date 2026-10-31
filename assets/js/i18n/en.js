@@ -80,6 +80,13 @@ export default {
     confirmReset: 'Really delete ALL recorded data? This cannot be undone.',
   },
 
+  install: {
+    title: 'Install as app', action: 'Install', dismiss: 'Dismiss',
+    ios: 'In Safari, tap ••• → “Share” → “Add to Home Screen”. Clockwise then starts like an app, even offline.',
+    mac: 'In Safari: “File” menu → “Add to Dock”.',
+    prompt: 'Starts like a standalone app, even offline.',
+  },
+
   cloud: {
     title: 'Sync',
     intro: 'Your times on all your devices automatically – end-to-end encrypted, no account.',

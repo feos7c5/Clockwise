@@ -11,6 +11,7 @@ import { ICON } from '../ui/icons.js';
 import { rerender } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
 import { openJoinDialog } from './cloud-dialogs.js';
+import { installNotice, bindInstallNotice } from './install-notice.js';
 import { SYNC_AVAILABLE } from '../sync/config.js';
 import { syncEnabled } from '../sync/engine.js';
 
@@ -129,6 +130,7 @@ export function renderToday(view) {
   const progress = st.soll ? Math.min(100, (st.ist / st.soll) * 100) : 0;
 
   view.innerHTML = `<div class="stack">
+    ${installNotice()}
     ${onboardingNotice()}
     ${missingStamp() ? `<div class="notice"><div class="ic">${ICON.bell}</div><div><b>${t('today.missingTitle')}</b>${t('today.missingText')}</div></div>` : ''}
     <section class="card clock">
@@ -148,6 +150,7 @@ export function renderToday(view) {
   $$('[data-act]', view).forEach(b => (b.onclick = () => { navigator.vibrate?.(20); stamp(b.dataset.act); rerender(); }));
   $('#editToday', view).onclick = () => openDayDialog(ds);
   $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
+  bindInstallNotice(view);
   $$('[data-code]', view).forEach(b => (b.onclick = () => {
     const d = getDay(ds);
     if (d.code === b.dataset.code) delete d.code; else d.code = b.dataset.code;

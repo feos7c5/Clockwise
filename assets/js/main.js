@@ -16,6 +16,7 @@ import { renderYear } from './views/year.js';
 import { renderSettings } from './views/settings/index.js';
 import { startReminders, checkReminders } from './features/reminders.js';
 import { initSync, onSyncStatus, onRemoteData } from './sync/engine.js';
+import { onInstallChange } from './features/install.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
@@ -69,6 +70,7 @@ const typing = () => document.activeElement?.matches('textarea, input, select');
 onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) render(); });
 // Neue Daten von einem anderen Gerät: neu zeichnen, außer der Nutzer tippt gerade
 onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
+onInstallChange(() => { if (nav.tab === 'today') render(); });
 
 // Timer jede Sekunde, volles Neu-Zeichnen jede Minute (außer beim Tippen)
 setInterval(() => {

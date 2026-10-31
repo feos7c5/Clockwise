@@ -80,6 +80,13 @@ export default {
     confirmReset: 'Wirklich ALLE erfassten Daten löschen? Das lässt sich nicht rückgängig machen.',
   },
 
+  install: {
+    title: 'Als App installieren', action: 'Installieren', dismiss: 'Ausblenden',
+    ios: 'In Safari auf ••• tippen → „Teilen“ → „Zum Home-Bildschirm“. Danach startet Clockwise wie eine App, auch offline.',
+    mac: 'In Safari: Menü „Ablage“ → „Zum Dock hinzufügen“.',
+    prompt: 'Startet wie eine eigene App, auch offline.',
+  },
+
   cloud: {
     title: 'Sync',
     intro: 'Deine Zeiten automatisch auf allen Geräten – Ende-zu-Ende-verschlüsselt, ohne Konto.',
