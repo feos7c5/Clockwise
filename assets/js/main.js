@@ -17,6 +17,8 @@ import { renderSettings } from './views/settings/index.js';
 import { startReminders, checkReminders } from './features/reminders.js';
 import { initSync, onSyncStatus, onRemoteData } from './sync/engine.js';
 import { onInstallChange } from './features/install.js';
+import { registerServiceWorker, onUpdateChange, updateAvailable, applyUpdate, hideUpdate } from './features/update.js';
+import { notice } from './ui/notice.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
@@ -63,6 +65,17 @@ function render() {
   renderTabs();
   view.render($('#view'));
   renderHeadActions();
+  renderBanner();
+}
+
+// Seitenübergreifend oben: neue Version verfügbar
+function renderBanner() {
+  const el = $('#banner');
+  el.innerHTML = updateAvailable()
+    ? notice({ id: 'update', title: t('update.title'), text: t('update.text'), action: `<button class="btn btn-sm btn-primary" id="applyUpdate">${t('update.action')}</button>` })
+    : '';
+  $('#applyUpdate', el)?.addEventListener('click', applyUpdate);
+  $('[data-dismiss]', el)?.addEventListener('click', e => { e.stopImmediatePropagation(); hideUpdate(); });
 }
 
 setRenderer(render);
@@ -73,6 +86,7 @@ onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) r
 // Neue Daten von einem anderen Gerät: neu zeichnen, außer der Nutzer tippt gerade
 onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
 onInstallChange(() => { if (nav.tab === 'today') render(); });
+onUpdateChange(renderBanner);
 
 // Timer jede Sekunde, volles Neu-Zeichnen jede Minute (außer beim Tippen)
 setInterval(() => {
@@ -94,4 +108,4 @@ initFileSync();
 initSync();
 startReminders();
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+registerServiceWorker();

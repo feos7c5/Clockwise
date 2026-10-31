@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://clockwise-sync.clockwise-sync.workers.dev http://localhost:8787; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Clockwise</title>
   <meta name="description" content="Arbeitszeit erfassen – Kommen, Gehen, Überstunden-Saldo">
@@ -28,6 +29,7 @@
     <div id="headRight"></div>
   </header>
 
+  <div id="banner"></div>
   <main id="view"></main>
 
   <nav class="tabs">

@@ -1,5 +1,5 @@
 // Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v8';
+const CACHE = 'clockwise-v9';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
@@ -16,13 +16,16 @@ const FILES = [
   'assets/js/views/day-dialog.js', 'assets/js/views/absence-dialog.js',
   'assets/js/views/settings/index.js', 'assets/js/views/settings/general.js',
   'assets/js/views/settings/worktime.js', 'assets/js/views/settings/data.js',
-  'assets/js/features/export.js', 'assets/js/features/install.js', 'assets/js/views/install-notice.js', 'assets/js/features/print.js', 'assets/js/features/reminders.js',
+  'assets/js/features/export.js', 'assets/js/features/install.js', 'assets/js/features/update.js', 'assets/js/views/install-notice.js', 'assets/js/ui/notice.js', 'assets/js/features/print.js', 'assets/js/features/reminders.js',
   'assets/icons/logo.svg', 'assets/icons/icon-180.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // Neue Version wartet, bis der Nutzer in der App auf „Aktualisieren“ tippt
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
 });
+
+self.addEventListener('message', e => { if (e.data === 'skip-waiting') self.skipWaiting(); });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
