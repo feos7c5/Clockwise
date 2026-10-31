@@ -1,5 +1,6 @@
 // Zustand im localStorage. Alle Änderungen laufen über save().
 import { DEFAULT_STATE } from './defaults.js';
+import { t } from '../i18n/index.js';
 
 const KEY = 'stempeluhr-v1';
 const listeners = new Set();
@@ -23,7 +24,7 @@ export function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(store.state));
   } catch (e) {
-    alert('Speichern fehlgeschlagen: ' + e.message);
+    alert(t('backup.saveFailed', { error: e.message }));
   }
   listeners.forEach(fn => fn(store.state));
 }

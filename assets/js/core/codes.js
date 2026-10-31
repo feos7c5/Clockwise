@@ -1,16 +1,17 @@
 // Tagesarten. f = Faktor auf die Soll-Zeit, 'NONE'/'XTRA' = Soll entspricht Ist.
+// Bezeichnungen stehen in den Sprachdateien unter codes.<Kürzel>.
 
 export const CODES = {
-  U:  { label: 'Urlaub', f: 0 },
-  UH: { label: 'Urlaub ½ Tag', f: 0.5 },
-  K:  { label: 'Krank', f: 0 },
-  KR: { label: 'Krank Restzeit', f: 'NONE' },
-  G:  { label: 'Gleittag', f: 1 },
-  H:  { label: 'Homeoffice', f: 1 },
-  D:  { label: 'Dienstreise', f: 1 },
-  B:  { label: 'Bereitschaft', f: 'XTRA' },
-  KU: { label: 'Kurzarbeit', f: 0 },
-  KA: { label: 'Kurzarbeit Restzeit', f: 'NONE' },
+  U: { f: 0 },          // Urlaub
+  UH: { f: 0.5 },       // Urlaub ½ Tag
+  K: { f: 0 },          // Krank
+  KR: { f: 'NONE' },    // Krank Restzeit
+  G: { f: 1 },          // Gleittag
+  H: { f: 1 },          // Homeoffice
+  D: { f: 1 },          // Dienstreise
+  B: { f: 'XTRA' },     // Bereitschaft
+  KU: { f: 0 },         // Kurzarbeit
+  KA: { f: 'NONE' },    // Kurzarbeit Restzeit
 };
 
 // Schnellauswahl auf der Heute-Seite

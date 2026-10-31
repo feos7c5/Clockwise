@@ -5,18 +5,20 @@ import { holidayOn } from '../core/holidays.js';
 import { dayStats, pauseMin, grossMin } from '../core/calc.js';
 import { store, save, cleanDay } from '../core/store.js';
 import { now } from '../core/session.js';
-import { $, $$, esc, tone, longDate } from '../ui/dom.js';
+import { t, formatLongDate } from '../i18n/index.js';
+import { $, $$, esc, tone, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { showDialog, dialogHead, closeDialog } from '../ui/dialog.js';
 import { rerender } from '../ui/nav.js';
 
 function blockRows(blocks) {
   if (!blocks.length) return '';
-  return '<div class="blocks-head"><span>Kommt</span><span>Geht</span></div>' + blocks.map((b, i) => `
+  const head = `<div class="blocks-head"><span>${t('dayDialog.clockIn')}</span><span>${t('dayDialog.clockOut')}</span></div>`;
+  return head + blocks.map((b, i) => `
     <div class="block-edit">
-      <input type="time" data-i="${i}" data-k="in" value="${b.in || ''}" aria-label="Kommt">
-      <input type="time" data-i="${i}" data-k="out" value="${b.out || ''}" aria-label="Geht">
-      <button type="button" class="btn btn-icon btn-ghost" data-del="${i}" aria-label="Zeitblock entfernen">${ICON.close}</button>
+      <input type="time" data-i="${i}" data-k="in" value="${b.in || ''}" aria-label="${t('dayDialog.clockIn')}">
+      <input type="time" data-i="${i}" data-k="out" value="${b.out || ''}" aria-label="${t('dayDialog.clockOut')}">
+      <button type="button" class="btn btn-icon btn-ghost" data-del="${i}" aria-label="${t('dayDialog.removeBlock')}">${ICON.close}</button>
     </div>`).join('');
 }
 
@@ -39,26 +41,26 @@ export function openDayDialog(ds) {
   const draw = () => {
     const st = dayStats({ ...store.state, days: { ...store.state.days, [ds]: draft } }, ds, now());
     const autoPause = pauseMin(settings, { ...draft, pause: null }, grossMin(draft));
-    const codeOptions = Object.entries(CODES).map(([k, c]) => `<option value="${k}" ${draft.code === k ? 'selected' : ''}>${c.label}</option>`).join('');
+    const options = Object.keys(CODES).map(k => `<option value="${k}" ${draft.code === k ? 'selected' : ''}>${codeLabel(k)}</option>`).join('');
 
     showDialog(`
-      ${dialogHead(`${longDate(date)}${hol ? ` <span class="tag">${esc(hol.name)}</span>` : ''}`)}
+      ${dialogHead(`${formatLongDate(date)}${hol ? ` <span class="tag">${esc(holidayLabel(hol))}</span>` : ''}`)}
       ${blockRows(draft.blocks)}
-      <button type="button" class="btn btn-sm btn-ghost accent add-block" id="addBlock">${ICON.plus}Zeitblock</button>
+      <button type="button" class="btn btn-sm btn-ghost accent add-block" id="addBlock">${ICON.plus}${t('dayDialog.addBlock')}</button>
       <div class="grid-2 dlg-section">
-        <label class="field"><span>Pause (min)</span>
-          <input type="number" min="0" inputmode="numeric" id="pause" value="${draft.pause ?? ''}" placeholder="auto: ${autoPause}"></label>
-        <label class="field"><span>Tagesart</span>
-          <select id="code"><option value="">Normal</option>${codeOptions}</select></label>
+        <label class="field"><span>${t('dayDialog.pauseMin')}</span>
+          <input type="number" min="0" inputmode="numeric" id="pause" value="${draft.pause ?? ''}" placeholder="${t('dayDialog.auto', { n: autoPause })}"></label>
+        <label class="field"><span>${t('common.dayType')}</span>
+          <select id="code"><option value="">${t('common.normal')}</option>${options}</select></label>
       </div>
-      <label class="field dlg-section"><span>Bemerkung</span><textarea id="note">${esc(draft.note)}</textarea></label>
-      <div class="dlg-result">Ist ${fmtDur(st.ist)} · Soll ${fmtDur(st.soll)} ·
+      <label class="field dlg-section"><span>${t('common.note')}</span><textarea id="note">${esc(draft.note)}</textarea></label>
+      <div class="dlg-result">${t('common.istSoll', { ist: fmtDur(st.ist), soll: fmtDur(st.soll) })} ·
         <span class="${tone(st.ist - st.soll)}">${fmtDur(st.ist - st.soll, true)}</span></div>
       <div class="dlg-foot">
-        <button type="button" class="btn btn-ghost danger" id="clear">Tag leeren</button>
+        <button type="button" class="btn btn-ghost danger" id="clear">${t('dayDialog.clear')}</button>
         <span class="spacer"></span>
-        <button type="button" class="btn" data-close>Abbrechen</button>
-        <button type="button" class="btn btn-primary" id="ok">Speichern</button>
+        <button type="button" class="btn" data-close>${t('common.cancel')}</button>
+        <button type="button" class="btn btn-primary" id="ok">${t('common.save')}</button>
       </div>`, dlg => {
       $$('input[type=time]', dlg).forEach(inp => (inp.onchange = () => { draft.blocks[inp.dataset.i][inp.dataset.k] = inp.value || null; draw(); }));
       $$('[data-del]', dlg).forEach(b => (b.onclick = () => { draft.blocks.splice(+b.dataset.del, 1); draw(); }));
@@ -71,7 +73,7 @@ export function openDayDialog(ds) {
       $('#code', dlg).onchange = e => { draft.code = e.target.value; draw(); };
       $('#note', dlg).oninput = e => { draft.note = e.target.value; };
       $('#clear', dlg).onclick = () => {
-        if (!confirm('Alle Einträge dieses Tages löschen?')) return;
+        if (!confirm(t('dayDialog.confirmClear'))) return;
         delete store.state.days[ds];
         save(); closeDialog(); rerender();
       };

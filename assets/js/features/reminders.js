@@ -3,6 +3,7 @@ import { fmtDur } from '../core/time.js';
 import { dayStats } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now, todayStr, running, missingStamp } from '../core/session.js';
+import { t } from '../i18n/index.js';
 
 const FLAGS_KEY = 'stempeluhr-notified';
 
@@ -29,13 +30,13 @@ export function checkReminders() {
   const flags = flagsForToday();
   const once = (key, title, body) => { if (!flags[key]) { flags[key] = true; notify(title, body, key); } };
 
-  if (missingStamp()) once('start', 'Noch nicht eingestempelt', 'Heute ist ein Arbeitstag – Kommen nicht vergessen.');
+  if (missingStamp()) once('start', t('notify.missingTitle'), t('notify.missingBody'));
 
   const r = running();
   if (r) {
     const st = dayStats(store.state, r.ds, now());
-    if (rs.soll && st.soll > 0 && st.ist >= st.soll) once('soll', 'Soll erreicht', `Du hast heute ${fmtDur(st.ist)} h gearbeitet.`);
-    if (rs.forgot && st.ist >= rs.forgot * 60) once('forgot', 'Noch eingestempelt?', `Seit ${r.block.in} eingestempelt – ausstempeln vergessen?`);
+    if (rs.soll && st.soll > 0 && st.ist >= st.soll) once('soll', t('notify.targetTitle'), t('notify.targetBody', { dur: fmtDur(st.ist) }));
+    if (rs.forgot && st.ist >= rs.forgot * 60) once('forgot', t('notify.forgotTitle'), t('notify.forgotBody', { time: r.block.in }));
   }
   localStorage.setItem(FLAGS_KEY, JSON.stringify(flags));
 }

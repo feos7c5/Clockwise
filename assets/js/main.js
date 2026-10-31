@@ -4,7 +4,8 @@ import { balance } from './core/calc.js';
 import { store } from './core/store.js';
 import { now, todayStr } from './core/session.js';
 import { initFileSync, onSyncChange } from './core/file-sync.js';
-import { $, $$, tone, longDate, MONTHS } from './ui/dom.js';
+import { t, setLanguage, formatLongDate, monthName } from './i18n/index.js';
+import { $, $$, tone } from './ui/dom.js';
 import { ICON } from './ui/icons.js';
 import { applyTheme } from './ui/theme.js';
 import { dialogOpen } from './ui/dialog.js';
@@ -16,23 +17,23 @@ import { renderSettings } from './views/settings/index.js';
 import { startReminders, checkReminders } from './features/reminders.js';
 
 const VIEWS = {
-  heute: { render: renderToday, title: () => ['Heute', longDate(now())] },
-  monat: { render: renderMonth, title: () => [MONTHS[nav.month.m], String(nav.month.y)] },
-  jahr: { render: renderYear, title: () => [String(nav.year), 'Jahresübersicht'] },
-  einst: { render: renderSettings, title: () => ['Einstellungen', ''] },
+  today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
+  month: { render: renderMonth, title: () => [monthName(nav.month.m), String(nav.month.y)] },
+  year: { render: renderYear, title: () => [String(nav.year), t('head.yearOverview')] },
+  settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
 
 // Rechts in der Kopfzeile: Saldo (Heute) oder Blättern (Monat/Jahr)
 function renderHeadActions() {
   const el = $('#headRight');
-  if (nav.tab === 'heute') {
+  if (nav.tab === 'today') {
     const b = balance(store.state, todayStr(), now());
-    el.innerHTML = `<div class="chip"><span class="muted">Saldo</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
-  } else if (nav.tab === 'monat' || nav.tab === 'jahr') {
+    el.innerHTML = `<div class="chip"><span class="muted">${t('head.balance')}</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
+  } else if (nav.tab === 'month' || nav.tab === 'year') {
     el.innerHTML = `<div class="nav-group">
-      <button class="btn btn-icon btn-sm" id="navPrev" aria-label="Zurück">${ICON.left}</button>
-      <button class="btn btn-sm" id="navNow" ${isCurrentPeriod() ? 'disabled' : ''}>Heute</button>
-      <button class="btn btn-icon btn-sm" id="navNext" aria-label="Weiter">${ICON.right}</button></div>`;
+      <button class="btn btn-icon btn-sm" id="navPrev" aria-label="${t('nav.back')}">${ICON.left}</button>
+      <button class="btn btn-sm" id="navNow" ${isCurrentPeriod() ? 'disabled' : ''}>${t('nav.current')}</button>
+      <button class="btn btn-icon btn-sm" id="navNext" aria-label="${t('nav.forward')}">${ICON.right}</button></div>`;
     $('#navPrev').onclick = () => stepPeriod(-1);
     $('#navNext').onclick = () => stepPeriod(1);
     $('#navNow').onclick = resetPeriod;
@@ -41,23 +42,32 @@ function renderHeadActions() {
   }
 }
 
+function renderTabs() {
+  $('.tabs').setAttribute('aria-label', t('nav.main'));
+  $$('.tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === nav.tab);
+    $('span', b).textContent = t(`nav.${b.dataset.tab}`);
+  });
+}
+
 function render() {
+  setLanguage(store.state.settings.language);
   const view = VIEWS[nav.tab];
   const [title, subtitle] = view.title();
   $('#title').textContent = title;
   $('#subtitle').textContent = subtitle;
-  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === nav.tab));
+  renderTabs();
   view.render($('#view'));
   renderHeadActions();
 }
 
 setRenderer(render);
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
-onSyncChange(() => { if (nav.tab === 'einst') render(); });
+onSyncChange(() => { if (nav.tab === 'settings') render(); });
 
 // Timer jede Sekunde, volles Neu-Zeichnen jede Minute (außer beim Tippen)
 setInterval(() => {
-  if (nav.tab !== 'heute' || document.hidden) return;
+  if (nav.tab !== 'today' || document.hidden) return;
   tickTimer();
   const typing = document.activeElement?.matches('textarea, input');
   if (now().getSeconds() === 0 && !typing && !dialogOpen()) render();

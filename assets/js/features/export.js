@@ -4,7 +4,8 @@ import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, pauseMin, grossMin } from '../core/calc.js';
 import { store, replaceState, isValidState } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
-import { WD } from '../ui/dom.js';
+import { t, weekdayShort, formatDate } from '../i18n/index.js';
+import { holidayLabel } from '../ui/dom.js';
 
 function download(name, text, type) {
   const a = document.createElement('a');
@@ -29,12 +30,12 @@ export const saveBackup = () =>
 export async function loadBackup(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (!isValidState(data)) throw new Error('Keine Clockwise-Datei');
-    if (!confirm('Aktuelle Daten durch das Backup ersetzen?')) return false;
+    if (!isValidState(data)) throw new Error(t('backup.invalid'));
+    if (!confirm(t('backup.confirmReplace'))) return false;
     replaceState(data);
     return true;
   } catch (err) {
-    alert('Import fehlgeschlagen: ' + err.message);
+    alert(t('backup.importFailed', { error: err.message }));
     return false;
   }
 }
@@ -42,10 +43,10 @@ export async function loadBackup(file) {
 const csvCell = v => (/[;"\n]/.test(v) ? `"${String(v).replace(/"/g, '""')}"` : v);
 const plain = m => fmtDur(m).replace('−', '-');
 
-// Gleiche Spalten wie die ursprüngliche Excel-Vorlage
+// Gleiche Spalten wie die ursprüngliche Excel-Vorlage (Überschriften übersetzt)
 export function exportCSV(year) {
   const n = now(), s = store.state.settings;
-  const lines = [['Datum', 'Tag', 'Feiertag', 'Kommt1', 'Geht1', 'Kommt2', 'Geht2', 'Weitere', 'Pause', 'Code', 'IST', 'SOLL', 'Diff', 'Saldo', 'Bemerkung']];
+  const lines = [t('csv.columns')];
   let bal = balance(store.state, iso(new Date(year, 0, 0)), n);
 
   for (const ds of range(`${year}-01-01`, `${year}-12-31`)) {
@@ -53,7 +54,7 @@ export function exportCSV(year) {
     bal += st.diff;
     if (!(b.length || st.day.code || st.day.note || hol) && !st.soll) continue;
     lines.push([
-      d.toLocaleDateString('de-DE'), WD[d.getDay()], hol?.name || '',
+      formatDate(d), weekdayShort(d.getDay()), hol ? holidayLabel(hol) : '',
       b[0]?.in || '', b[0]?.out || '', b[1]?.in || '', b[1]?.out || '',
       b.slice(2).map(x => `${x.in}-${x.out || ''}`).join(' '),
       b.length ? fmtDur(pauseMin(s, st.day, grossMin(st.day))) : '',
@@ -61,6 +62,6 @@ export function exportCSV(year) {
       st.counts ? plain(st.diff) : '', plain(bal), st.day.note || '',
     ]);
   }
-  const csv = '﻿' + lines.map(l => l.map(csvCell).join(';')).join('\r\n');
-  shareOrDownload(`Arbeitszeit-${year}.csv`, csv, 'text/csv');
+  const csv = '\uFEFF' + lines.map(l => l.map(csvCell).join(';')).join('\r\n');
+  shareOrDownload(t('csv.file', { year }), csv, 'text/csv');
 }

@@ -1,11 +1,12 @@
 // Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v1';
+const CACHE = 'clockwise-v2';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/css/tokens.css', 'assets/css/base.css', 'assets/css/components.css',
   'assets/css/layout.css', 'assets/css/views.css', 'assets/css/print.css',
   'assets/js/main.js',
+  'assets/js/i18n/index.js', 'assets/js/i18n/de.js', 'assets/js/i18n/en.js',
   'assets/js/core/calc.js', 'assets/js/core/codes.js', 'assets/js/core/defaults.js', 'assets/js/core/file-sync.js',
   'assets/js/core/holidays.js', 'assets/js/core/session.js', 'assets/js/core/store.js', 'assets/js/core/time.js',
   'assets/js/ui/dialog.js', 'assets/js/ui/dom.js', 'assets/js/ui/icons.js', 'assets/js/ui/nav.js', 'assets/js/ui/theme.js',

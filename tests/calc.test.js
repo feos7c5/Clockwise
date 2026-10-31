@@ -22,8 +22,8 @@ test('Zeitformat', () => {
 test('Ostern und Feiertage NRW', () => {
   assert.equal(easter(2026).toDateString(), new Date(2026, 3, 5).toDateString());
   const h = holidays(2026, 'NW', true);
-  assert.equal(h['2026-06-04'].name, 'Fronleichnam');
-  assert.equal(h['2026-11-01'].name, 'Allerheiligen');
+  assert.equal(h['2026-06-04'].id, 'corpusChristi');
+  assert.equal(h['2026-11-01'].id, 'allSaints');
   assert.equal(h['2026-10-31'], undefined); // Reformationstag nicht in NRW
   assert.equal(h['2026-12-24'].f, 0.5);
 });

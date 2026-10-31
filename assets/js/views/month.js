@@ -1,11 +1,11 @@
 // Ansicht "Monat": Zusammenfassung und alle Tage.
 import { iso, parseISO, range, fmtDur } from '../core/time.js';
-import { CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, sumRange, balance } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
-import { $, $$, esc, tone, WD } from '../ui/dom.js';
+import { t, weekdayShort } from '../i18n/index.js';
+import { $, $$, esc, tone, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { nav } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
@@ -16,16 +16,16 @@ function dayRow(ds, n, today) {
   const st = dayStats(store.state, ds, n), day = st.day, wd = parseISO(ds).getDay();
   const hol = holidayOn(store.state.settings, ds);
   const times = day.blocks.map(b => `${b.in}–${b.out || '…'}`).join(', ');
-  const tags = (hol ? `<span class="tag">${esc(hol.name)}</span>` : '')
-    + (day.code ? `<span class="tag accent">${esc(CODES[day.code]?.label || day.code)}</span>` : '');
+  const tags = (hol ? `<span class="tag">${esc(holidayLabel(hol))}</span>` : '')
+    + (day.code ? `<span class="tag accent">${esc(codeLabel(day.code))}</span>` : '');
   const sub = [tags, esc(day.note)].filter(Boolean).join(' ');
   const missing = st.soll && st.counts && !day.code && !day.blocks.length;
   const compact = !times && !sub && !missing && !st.ist && ds !== today;
   const classes = [wd === 0 || wd === 6 ? 'we' : '', ds === today ? 'today' : '', compact ? 'compact' : ''].join(' ');
 
   return `<button class="dayrow ${classes}" data-day="${ds}">
-    <div class="date"><b>${parseISO(ds).getDate()}</b><small>${WD[wd]}</small></div>
-    <div class="main">${times || (missing ? '<span class="minus">Keine Zeiten</span>' : '')}${sub ? `<div class="sub">${sub}</div>` : ''}</div>
+    <div class="date"><b>${parseISO(ds).getDate()}</b><small>${weekdayShort(wd)}</small></div>
+    <div class="main">${times || (missing ? `<span class="minus">${t('month.noTimes')}</span>` : '')}${sub ? `<div class="sub">${sub}</div>` : ''}</div>
     <div class="side">${st.ist ? fmtDur(st.ist) : ''}<small class="${tone(st.diff)}">${st.counts && (st.ist || st.soll) ? fmtDur(st.diff, true) : ''}</small></div>
   </button>`;
 }
@@ -42,13 +42,13 @@ export function renderMonth(view) {
 
   view.innerHTML = `<div class="stack">
     <section class="card summary">
-      ${summaryItem('Übertrag', fmtDur(carry, true), tone(carry))}
-      ${summaryItem('Ist / Soll', `${fmtDur(sum.ist)}<span class="muted"> / ${fmtDur(sum.soll)}</span>`)}
-      ${summaryItem('Saldo Ende', fmtDur(end, true), tone(end))}
+      ${summaryItem(t('month.carry'), fmtDur(carry, true), tone(carry))}
+      ${summaryItem(t('month.istSoll'), `${fmtDur(sum.ist)}<span class="muted"> / ${fmtDur(sum.soll)}</span>`)}
+      ${summaryItem(t('month.endBalance'), fmtDur(end, true), tone(end))}
     </section>
     <div class="btn-row">
-      <button class="btn" id="absence">${ICON.plus}Abwesenheit</button>
-      <button class="btn" id="printMonth">${ICON.print}Drucken / PDF</button>
+      <button class="btn" id="absence">${ICON.plus}${t('month.absence')}</button>
+      <button class="btn" id="printMonth">${ICON.print}${t('month.print')}</button>
     </div>
     <div class="days">${range(first, last).map(ds => dayRow(ds, n, todayStr())).join('')}</div>
   </div>`;

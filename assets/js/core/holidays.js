@@ -1,11 +1,7 @@
-// Gesetzliche Feiertage je Bundesland. f = Soll-Faktor (0 = frei, 0.5 = halber Tag).
+// Gesetzliche Feiertage je Bundesland. id = Übersetzungsschlüssel, f = Soll-Faktor (0 = frei, 0.5 = halber Tag).
 import { iso } from './time.js';
 
-export const LANDS = {
-  BW: 'Baden-Württemberg', BY: 'Bayern', BE: 'Berlin', BB: 'Brandenburg', HB: 'Bremen', HH: 'Hamburg',
-  HE: 'Hessen', MV: 'Mecklenburg-Vorpommern', NI: 'Niedersachsen', NW: 'Nordrhein-Westfalen',
-  RP: 'Rheinland-Pfalz', SL: 'Saarland', SN: 'Sachsen', ST: 'Sachsen-Anhalt', SH: 'Schleswig-Holstein', TH: 'Thüringen',
-};
+export const STATES = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'];
 
 // Gauß'sche Osterformel (gregorianisch)
 export function easter(y) {
@@ -28,32 +24,32 @@ export function holidays(year, land, halfDays) {
   const repentance = (() => { const d = D(11, 23); while (d.getDay() !== 3) d.setDate(d.getDate() - 1); return d; })();
 
   const list = [
-    [D(1, 1), 'Neujahr'],
-    [D(1, 6), 'Heilige Drei Könige', ['BW', 'BY', 'ST']],
-    [D(3, 8), 'Int. Frauentag', ['BE', 'MV']],
-    [fromEaster(-2), 'Karfreitag'],
-    [E, 'Ostersonntag'],
-    [fromEaster(1), 'Ostermontag'],
-    [D(5, 1), 'Maifeiertag'],
-    [fromEaster(39), 'Christi Himmelfahrt'],
-    [fromEaster(49), 'Pfingstsonntag'],
-    [fromEaster(50), 'Pfingstmontag'],
-    [fromEaster(60), 'Fronleichnam', ['BW', 'BY', 'HE', 'NW', 'RP', 'SL']],
-    [D(8, 15), 'Mariä Himmelfahrt', ['SL']],
-    [D(9, 20), 'Weltkindertag', ['TH']],
-    [D(10, 3), 'Tag der Deutschen Einheit'],
-    [D(10, 31), 'Reformationstag', ['BB', 'HB', 'HH', 'MV', 'NI', 'SN', 'ST', 'SH', 'TH']],
-    [D(11, 1), 'Allerheiligen', ['BW', 'BY', 'NW', 'RP', 'SL']],
-    [repentance, 'Buß- und Bettag', ['SN']],
-    [D(12, 25), '1. Weihnachtsfeiertag'],
-    [D(12, 26), '2. Weihnachtsfeiertag'],
+    [D(1, 1), 'newYear'],
+    [D(1, 6), 'epiphany', ['BW', 'BY', 'ST']],
+    [D(3, 8), 'womensDay', ['BE', 'MV']],
+    [fromEaster(-2), 'goodFriday'],
+    [E, 'easterSunday'],
+    [fromEaster(1), 'easterMonday'],
+    [D(5, 1), 'labourDay'],
+    [fromEaster(39), 'ascension'],
+    [fromEaster(49), 'whitSunday'],
+    [fromEaster(50), 'whitMonday'],
+    [fromEaster(60), 'corpusChristi', ['BW', 'BY', 'HE', 'NW', 'RP', 'SL']],
+    [D(8, 15), 'assumption', ['SL']],
+    [D(9, 20), 'childrensDay', ['TH']],
+    [D(10, 3), 'unity'],
+    [D(10, 31), 'reformation', ['BB', 'HB', 'HH', 'MV', 'NI', 'SN', 'ST', 'SH', 'TH']],
+    [D(11, 1), 'allSaints', ['BW', 'BY', 'NW', 'RP', 'SL']],
+    [repentance, 'repentance', ['SN']],
+    [D(12, 25), 'christmas1'],
+    [D(12, 26), 'christmas2'],
   ];
 
   const out = {};
-  for (const [d, name, only] of list) if (!only || only.includes(land)) out[iso(d)] = { name, f: 0 };
+  for (const [d, id, only] of list) if (!only || only.includes(land)) out[iso(d)] = { id, f: 0 };
   if (halfDays) {
-    out[iso(D(12, 24))] = { name: 'Heiligabend', f: 0.5 };
-    out[iso(D(12, 31))] = { name: 'Silvester', f: 0.5 };
+    out[iso(D(12, 24))] = { id: 'christmasEve', f: 0.5 };
+    out[iso(D(12, 31))] = { id: 'newYearsEve', f: 0.5 };
   }
   cache.set(key, out);
   return out;

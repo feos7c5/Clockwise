@@ -1,11 +1,12 @@
 // Ansicht "Heute": Stempeln, Tageswerte, Woche, Tagesart.
 import { fmtDur, toMin, fromMin, iso, range, addDays } from '../core/time.js';
-import { CODES, QUICK_CODES } from '../core/codes.js';
+import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, istMin, grossMin, pauseMin, pauseWarning } from '../core/calc.js';
 import { store, getDay, cleanDay, save } from '../core/store.js';
 import { now, todayStr, nowMin, running, onBreak, missingStamp, stamp } from '../core/session.js';
-import { $, $$, esc, tone, WD, fmtSec, stat, cardHead } from '../ui/dom.js';
+import { t, weekdayShort } from '../i18n/index.js';
+import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { rerender } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
@@ -36,35 +37,41 @@ function reachAt(ds, target) {
 }
 
 function statusLine(r, brk, day, ds) {
-  let dot = '', text = 'Nicht eingestempelt';
-  if (r) { dot = 'on'; text = `Eingestempelt seit ${r.block.in}${r.ds !== ds ? ' (gestern)' : ''}`; }
-  else if (brk) { dot = 'brk'; text = `Pause seit ${brk.out} · ${fmtDur(Math.max(0, nowMin() - toMin(brk.out)))} h`; }
-  else if (day.blocks.length) text = `Feierabend um ${day.blocks[day.blocks.length - 1].out}`;
+  let dot = '', text = t('today.notClockedIn');
+  if (r) {
+    dot = 'on';
+    text = t('today.clockedInSince', { time: r.block.in }) + (r.ds !== ds ? ' ' + t('today.yesterday') : '');
+  } else if (brk) {
+    dot = 'brk';
+    text = t('today.onBreakSince', { time: brk.out, dur: fmtDur(Math.max(0, nowMin() - toMin(brk.out))) });
+  } else if (day.blocks.length) {
+    text = t('today.finishedAt', { time: day.blocks[day.blocks.length - 1].out });
+  }
   const hol = holidayOn(store.state.settings, ds);
-  if (hol) text += ` · ${esc(hol.name)}`;
-  if (day.code) text += ` · ${esc(CODES[day.code]?.label || day.code)}`;
+  if (hol) text += ` · ${esc(holidayLabel(hol))}`;
+  if (day.code) text += ` · ${esc(codeLabel(day.code))}`;
   return `<div class="status"><span class="dot ${dot}"></span>${text}</div>`;
 }
 
 function stampButtons(r, brk) {
-  if (r) return `<button class="btn btn-lg" data-act="pause">${ICON.pause}Pause</button>
-    <button class="btn btn-lg btn-ink" data-act="out">${ICON.stop}Gehen</button>`;
-  if (brk) return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}Weiter</button>
-    <button class="btn btn-lg" data-act="end">Feierabend</button>`;
-  return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}Kommen</button>`;
+  if (r) return `<button class="btn btn-lg" data-act="pause">${ICON.pause}${t('today.pause')}</button>
+    <button class="btn btn-lg btn-ink" data-act="out">${ICON.stop}${t('today.clockOut')}</button>`;
+  if (brk) return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}${t('today.resume')}</button>
+    <button class="btn btn-lg" data-act="end">${t('today.finish')}</button>`;
+  return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}${t('today.clockIn')}</button>`;
 }
 
 function statTiles(r, st, activeDs, bal) {
   if (r && st.soll > 0) {
     const left = st.soll - st.ist;
-    return stat('Soll erreicht', left > 0 ? reachAt(activeDs, st.soll) || '–' : '✓',
-      left > 0 ? `noch ${fmtDur(left)} h` : `${fmtDur(-left, true)} h drüber`)
-      + stat('Spätestens gehen', reachAt(activeDs, 600) || '–', '10 h Höchstarbeitszeit');
+    return stat(t('today.targetReached'), left > 0 ? reachAt(activeDs, st.soll) || '–' : '✓',
+      left > 0 ? t('today.remaining', { dur: fmtDur(left) }) : t('today.over', { dur: fmtDur(-left, true) }))
+      + stat(t('today.latestEnd'), reachAt(activeDs, 600) || '–', t('today.maxHours'));
   }
   const today = st.counts
-    ? stat('Heute', fmtDur(st.ist - st.soll, true), `Ist ${fmtDur(st.ist)} · Soll ${fmtDur(st.soll)}`, tone(st.ist - st.soll))
-    : stat('Heute', fmtDur(st.soll), 'Soll');
-  return today + stat('Überstunden', fmtDur(bal, true), 'Saldo gesamt', tone(bal));
+    ? stat(t('today.day'), fmtDur(st.ist - st.soll, true), t('common.istSoll', { ist: fmtDur(st.ist), soll: fmtDur(st.soll) }), tone(st.ist - st.soll))
+    : stat(t('today.day'), fmtDur(st.soll), t('today.target'));
+  return today + stat(t('today.overtime'), fmtDur(bal, true), t('today.totalBalance'), tone(bal));
 }
 
 function weekCard(n) {
@@ -79,28 +86,28 @@ function weekCard(n) {
     return `<div class="wb ${d === ds ? 'today' : ''}">
       <div class="h">${s.ist ? fmtDur(s.ist) : ''}</div>
       <div class="col"><i class="${over ? 'over' : ''}" style="height:${(s.ist / scale) * 100}%"></i></div>
-      <div class="lbl">${WD[addDays(monday, i).getDay()]}</div></div>`;
+      <div class="lbl">${weekdayShort(addDays(monday, i).getDay())}</div></div>`;
   }).join('');
-  return `<section class="card">${cardHead('Diese Woche')}<div class="weekbars">${bars}</div>
-    <div class="weektot"><span><b>${fmtDur(sum('ist'))}</b> von ${fmtDur(sum('soll'))} h</span>
+  return `<section class="card">${cardHead(t('today.week'))}<div class="weekbars">${bars}</div>
+    <div class="weektot"><span><b>${fmtDur(sum('ist'))}</b> ${t('today.weekOf', { dur: fmtDur(sum('soll')) })}</span>
     <span class="${tone(sum('diff'))}">${fmtDur(sum('diff'), true)}</span></div></section>`;
 }
 
-function blocksCard(day, gross) {
+function entriesCard(day, gross) {
   const list = day.blocks.length
-    ? `<ul class="list">${day.blocks.map(b => `<li><span>${b.in} – ${b.out || 'läuft'}</span>
+    ? `<ul class="list">${day.blocks.map(b => `<li><span>${b.in} – ${b.out || t('today.running')}</span>
         <span class="muted">${b.out ? fmtDur(grossMin({ blocks: [b] })) + ' h' : ''}</span></li>`).join('')}
-        <li><span class="muted">Pausenabzug</span><span class="muted">${pauseMin(store.state.settings, day, gross)} min</span></li></ul>`
-    : '<div class="empty-text">Noch keine Stempelung. Vergessen? Über „Bearbeiten“ nachtragen.</div>';
-  const edit = `<button class="btn btn-sm btn-ghost accent" id="editToday">${ICON.edit}Bearbeiten</button>`;
-  return `<section class="card">${cardHead('Stempelungen', edit)}${list}</section>`;
+        <li><span class="muted">${t('today.pauseDeduction')}</span><span class="muted">${pauseMin(store.state.settings, day, gross)} min</span></li></ul>`
+    : `<div class="empty-text">${t('today.noEntries')}</div>`;
+  const edit = `<button class="btn btn-sm btn-ghost accent" id="editToday">${ICON.edit}${t('common.edit')}</button>`;
+  return `<section class="card">${cardHead(t('today.entries'), edit)}${list}</section>`;
 }
 
 function codesCard(day) {
-  const toggles = QUICK_CODES.map(k => `<button data-code="${k}" class="toggle ${day.code === k ? 'on' : ''}">${CODES[k].label}</button>`).join('');
-  return `<section class="card">${cardHead('Tagesart')}<div class="toggles">${toggles}</div>
-    <label class="field" style="margin-top:var(--sp-4)"><span>Bemerkung</span>
-    <textarea id="todayNote" placeholder="Projekt, Termin, Dienstreise …">${esc(day.note)}</textarea></label></section>`;
+  const toggles = QUICK_CODES.map(k => `<button data-code="${k}" class="toggle ${day.code === k ? 'on' : ''}">${codeLabel(k)}</button>`).join('');
+  return `<section class="card">${cardHead(t('common.dayType'))}<div class="toggles">${toggles}</div>
+    <label class="field" style="margin-top:var(--sp-4)"><span>${t('common.note')}</span>
+    <textarea id="todayNote" placeholder="${t('today.notePlaceholder')}">${esc(day.note)}</textarea></label></section>`;
 }
 
 export function renderToday(view) {
@@ -112,18 +119,18 @@ export function renderToday(view) {
   const progress = st.soll ? Math.min(100, (st.ist / st.soll) * 100) : 0;
 
   view.innerHTML = `<div class="stack">
-    ${missingStamp() ? `<div class="notice"><div class="ic">${ICON.bell}</div><div><b>Noch nicht eingestempelt</b>Heute ist ein Arbeitstag.</div></div>` : ''}
+    ${missingStamp() ? `<div class="notice"><div class="ic">${ICON.bell}</div><div><b>${t('today.missingTitle')}</b>${t('today.missingText')}</div></div>` : ''}
     <section class="card clock">
       ${statusLine(r, brk, day, ds)}
       <div class="timer" id="timer">${fmtSec(liveSeconds(activeDs))}</div>
-      <div class="timer-sub">von ${fmtDur(st.soll)} h Soll</div>
+      <div class="timer-sub">${t('today.ofTarget', { dur: fmtDur(st.soll) })}</div>
       <div class="progress"><i style="width:${progress}%"></i></div>
       <div class="btn-row">${stampButtons(r, brk)}</div>
-      ${warn ? '<div class="warn">Pause unter dem gesetzlichen Minimum (ab 6 h 30 min, ab 9 h 45 min).</div>' : ''}
+      ${warn ? `<div class="warn">${t('today.pauseWarning')}</div>` : ''}
     </section>
     <section class="stats">${statTiles(r, st, activeDs, balance(store.state, ds, n))}</section>
     ${weekCard(n)}
-    ${blocksCard(day, grossMin(day, r && r.ds === ds ? nowMin() : null))}
+    ${entriesCard(day, grossMin(day, r && r.ds === ds ? nowMin() : null))}
     ${codesCard(day)}
   </div>`;
 
@@ -144,8 +151,8 @@ export function renderToday(view) {
 
 // Sekündlicher Timer ohne komplettes Neu-Zeichnen
 export function tickTimer() {
-  const t = $('#timer');
-  if (!t) return;
+  const el = $('#timer');
+  if (!el) return;
   const r = running();
-  t.textContent = fmtSec(liveSeconds(r ? r.ds : todayStr()));
+  el.textContent = fmtSec(liveSeconds(r ? r.ds : todayStr()));
 }

@@ -1,6 +1,7 @@
 // Automatisches Speichern in eine Datei (z. B. iCloud Drive).
 // Nur Chromium-Browser am Computer (File System Access API).
 import { store, onSave, save, replaceState, isValidState } from './store.js';
+import { t, formatDateTime } from '../i18n/index.js';
 
 export const canFileSync = 'showSaveFilePicker' in window;
 export const sync = { handle: null, perm: 'none', last: null, error: '' };
@@ -67,18 +68,18 @@ export async function initFileSync() {
   changed();
 }
 
-const PICKER = { types: [{ description: 'Clockwise-Daten', accept: { 'application/json': ['.json'] } }] };
+const picker = () => ({ types: [{ description: t('sync.fileType'), accept: { 'application/json': ['.json'] } }] });
 
 export async function connectFile(existing) {
   try {
     const h = existing
-      ? (await showOpenFilePicker(PICKER))[0]
-      : await showSaveFilePicker({ ...PICKER, suggestedName: 'Clockwise-Daten.json' });
+      ? (await showOpenFilePicker(picker()))[0]
+      : await showSaveFilePicker({ ...picker(), suggestedName: 'Clockwise-Daten.json' });
     if ((await h.requestPermission({ mode: 'readwrite' })) !== 'granted') return;
     if (existing) {
       const data = JSON.parse(await (await h.getFile()).text());
-      const when = data.savedAt ? new Date(data.savedAt).toLocaleString('de-DE') : 'unbekannt';
-      if (isValidState(data) && confirm(`Daten aus „${h.name}“ laden? (Stand ${when})\n\nAbbrechen = aktuelle Daten in die Datei schreiben.`)) {
+      const when = data.savedAt ? formatDateTime(new Date(data.savedAt)) : t('sync.unknown');
+      if (isValidState(data) && confirm(t('sync.loadFrom', { file: h.name, when }))) {
         replaceState(data);
       }
     }
@@ -87,7 +88,7 @@ export async function connectFile(existing) {
     await db.set('file', h);
     save();
   } catch (e) {
-    if (e.name !== 'AbortError') alert('Datei konnte nicht verbunden werden: ' + e.message);
+    if (e.name !== 'AbortError') alert(t('sync.connectFailed', { error: e.message }));
   }
   changed();
 }

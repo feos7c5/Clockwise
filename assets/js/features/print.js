@@ -1,21 +1,22 @@
 // Monatsnachweis zum Drucken bzw. als PDF (Layout in assets/css/print.css).
-import { iso, parseISO, range, pad, fmtDur } from '../core/time.js';
-import { CODES, vacationValue } from '../core/codes.js';
+import { iso, parseISO, range, fmtDur } from '../core/time.js';
+import { vacationValue } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, sumRange, balance, pauseMin, grossMin } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now } from '../core/session.js';
-import { $, esc, WD, MONTHS } from '../ui/dom.js';
+import { t, weekdayShort, formatDayMonth, monthName, formatNumber } from '../i18n/index.js';
+import { $, esc, codeLabel, holidayLabel } from '../ui/dom.js';
 
-function row(ds, m, n, totals) {
+function row(ds, n, totals) {
   const s = store.state.settings, st = dayStats(store.state, ds, n), b = st.day.blocks, d = parseISO(ds), wd = d.getDay();
-  const code = st.day.code;
+  const code = st.day.code, hol = holidayOn(s, ds);
   totals.vac += vacationValue(code);
   totals.sick += code === 'K' ? 1 : 0;
   totals.ho += code === 'H' ? 1 : 0;
-  const note = [holidayOn(s, ds)?.name, code && CODES[code]?.label, st.day.note].filter(Boolean).join(' · ');
+  const note = [hol && holidayLabel(hol), code && codeLabel(code), st.day.note].filter(Boolean).join(' · ');
   return `<tr class="${wd === 0 || wd === 6 ? 'we' : ''}">
-    <td>${WD[wd]} ${pad(d.getDate())}.${pad(m + 1)}.</td>
+    <td>${weekdayShort(wd)} ${formatDayMonth(d)}</td>
     <td>${b.map(x => x.in).join('<br>')}</td>
     <td>${b.map(x => x.out || '').join('<br>')}</td>
     <td>${b.length ? pauseMin(s, st.day, grossMin(st.day)) : ''}</td>
@@ -31,22 +32,23 @@ export function printMonth(y, m) {
   const carry = balance(store.state, iso(new Date(y, m, 0)), n);
   const sum = sumRange(store.state, first, last, n);
   const totals = { vac: 0, sick: 0, ho: 0 };
-  const rows = range(first, last).map(ds => row(ds, m, n, totals)).join('');
+  const rows = range(first, last).map(ds => row(ds, n, totals)).join('');
+  const th = key => `<th>${t(key)}</th>`;
 
   $('#print').innerHTML = `
-    <h1>Arbeitszeitnachweis ${MONTHS[m]} ${y}</h1>
-    <div class="meta">${esc(s.name)}${s.pnr ? ' · Personal-Nr. ' + esc(s.pnr) : ''}</div>
+    <h1>${t('print.title', { month: monthName(m), year: y })}</h1>
+    <div class="meta">${esc(s.name)}${s.pnr ? ' · ' + esc(t('print.pnr', { pnr: s.pnr })) : ''}</div>
     <table>
-      <thead><tr><th>Tag</th><th>Kommt</th><th>Geht</th><th>Pause</th><th>Ist</th><th>Soll</th><th>Diff</th><th class="note">Bemerkung</th></tr></thead>
+      <thead><tr>${th('print.day')}${th('print.clockIn')}${th('print.clockOut')}${th('print.pause')}${th('common.ist')}${th('common.soll')}${th('common.diff')}<th class="note">${t('common.note')}</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <table class="sum"><tbody>
-      <tr><td>Übertrag Vormonat</td><td>${fmtDur(carry, true)}</td></tr>
-      <tr><td>Soll-Arbeitszeit</td><td>${fmtDur(sum.soll)}</td></tr>
-      <tr><td>Ist-Arbeitszeit</td><td>${fmtDur(sum.ist)}</td></tr>
-      <tr><td><b>Übertrag nächster Monat</b></td><td><b>${fmtDur(carry + sum.diff, true)}</b></td></tr>
-      <tr><td>Urlaub / Krank / Homeoffice</td><td>${totals.vac} / ${totals.sick} / ${totals.ho} Tage</td></tr>
+      <tr><td>${t('print.carryPrev')}</td><td>${fmtDur(carry, true)}</td></tr>
+      <tr><td>${t('print.target')}</td><td>${fmtDur(sum.soll)}</td></tr>
+      <tr><td>${t('print.actual')}</td><td>${fmtDur(sum.ist)}</td></tr>
+      <tr><td><b>${t('print.carryNext')}</b></td><td><b>${fmtDur(carry + sum.diff, true)}</b></td></tr>
+      <tr><td>${t('print.absences')}</td><td>${t('print.absenceDays', { vac: formatNumber(totals.vac), sick: totals.sick, ho: totals.ho })}</td></tr>
     </tbody></table>
-    <div class="sign"><div>Datum, Arbeitnehmer</div><div>Datum, Arbeitgeber</div></div>`;
+    <div class="sign"><div>${t('print.signEmployee')}</div><div>${t('print.signEmployer')}</div></div>`;
   window.print();
 }

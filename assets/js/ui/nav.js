@@ -1,11 +1,11 @@
 // Navigationszustand und zentrales Neu-Zeichnen.
 import { now } from '../core/session.js';
 
-const TABS = ['heute', 'monat', 'jahr', 'einst'];
+export const TABS = ['today', 'month', 'year', 'settings'];
 const hashTab = location.hash.slice(1);
 
 export const nav = {
-  tab: TABS.includes(hashTab) ? hashTab : 'heute',
+  tab: TABS.includes(hashTab) ? hashTab : 'today',
   month: { y: now().getFullYear(), m: now().getMonth() },
   year: now().getFullYear(),
 };
@@ -22,7 +22,7 @@ export function goTo(tab) {
 }
 
 export function stepPeriod(dir) {
-  if (nav.tab === 'monat') {
+  if (nav.tab === 'month') {
     const d = new Date(nav.month.y, nav.month.m + dir, 1);
     nav.month = { y: d.getFullYear(), m: d.getMonth() };
   } else {
@@ -40,7 +40,7 @@ export function resetPeriod() {
 
 export function isCurrentPeriod() {
   const n = now();
-  return nav.tab === 'monat'
+  return nav.tab === 'month'
     ? nav.month.y === n.getFullYear() && nav.month.m === n.getMonth()
     : nav.year === n.getFullYear();
 }
