@@ -47,3 +47,4 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter) var
   }
   body { padding-bottom: calc(var(--tabbar-h) + var(--sp-10)); }
 }
+.card-head.sub { margin-top: var(--sp-5); }
