@@ -4,23 +4,26 @@ class SyncHttpError extends Error {
   constructor(status, body) { super(`HTTP ${status}`); this.status = status; this.body = body; }
 }
 
-async function request(method, path, { token, body, keepalive = false } = {}) {
+async function request(method, path, { token, body, keepalive = false, headers = {} } = {}) {
   const json = body === undefined ? undefined : JSON.stringify(body);
   const res = await fetch(SYNC_URL + path, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers },
+    cache: 'no-store',
     body: json,
     signal: AbortSignal.timeout(15000),
     keepalive: keepalive && json !== undefined && json.length < 60_000,
   });
-  const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok && res.status !== 409) throw new SyncHttpError(res.status, data);
+  const data = res.status === 204 || res.status === 304 ? null : await res.json().catch(() => null);
+  if (!res.ok && res.status !== 409 && res.status !== 304) throw new SyncHttpError(res.status, data);
   return { status: res.status, data };
 }
 
-export async function getVault(token) {
+export async function getVault(token, knownVersion = 0) {
   try {
-    return (await request('GET', '/v1/vault', { token })).data;
+    const headers = knownVersion ? { 'If-None-Match': `"${knownVersion}"` } : {};
+    const { status, data } = await request('GET', '/v1/vault', { token, headers });
+    return status === 304 ? { unchanged: true } : data;
   } catch (e) {
     if (e.status === 404) return null;
     throw e;

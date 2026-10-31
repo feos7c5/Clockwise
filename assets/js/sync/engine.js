@@ -8,64 +8,107 @@ import {
 } from './crypto.js';
 
 const CONFIG_KEY = 'clockwise-sync';
-const DEBOUNCE_MS = 1500;
-const POLL_MS = 60_000;
+const PUSH_DELAY_MS = 3_000;
+const POLL_MS = 2 * 60_000;
+const MIN_PULL_GAP_MS = 20_000;
+const RETRY_MS = [5_000, 15_000, 60_000, 5 * 60_000];
 
-export const syncState = { status: 'off', last: null, error: '' };
+export const syncState = { status: 'off', last: null, error: '', pending: false };
 
 const statusListeners = new Set(), dataListeners = new Set();
 export const onSyncStatus = fn => statusListeners.add(fn);
 export const onRemoteData = fn => dataListeners.add(fn);
 const setStatus = (status, error = '') => {
-  Object.assign(syncState, { status, error }, status === 'ok' ? { last: new Date() } : {});
+  Object.assign(syncState, { status, error, pending: Boolean(config?.dirty) }, status === 'ok' ? { last: new Date() } : {});
   statusListeners.forEach(fn => fn(syncState));
 };
 
-let config = null, keys = null, running = null, again = false, timer;
+let config = null, keys = null, running = null, again = null;
+let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0;
 
 const readConfig = () => { try { return JSON.parse(localStorage.getItem(CONFIG_KEY)); } catch { return null; } };
 const writeConfig = () => (config ? localStorage.setItem(CONFIG_KEY, JSON.stringify(config)) : localStorage.removeItem(CONFIG_KEY));
 
 export const syncEnabled = () => Boolean(config);
 
-async function activate(secret) {
-  config = { secret };
-  writeConfig();
-  keys = await deriveKeys(secret);
-  return syncNow();
+function markDirty() {
+  localRevision++;
+  if (!config.dirty) { config.dirty = true; writeConfig(); }
 }
 
-async function runOnce({ keepalive = false } = {}) {
-  let remote = await api.getVault(keys.token);
+async function applyRemote(remote) {
+  const data = await unseal(keys.key, remote.blob);
+  const merged = merge(store.state, data);
+  if (canonical(payload(merged)) !== canonical(payload(store.state))) {
+    applyMerged(merged);
+    dataListeners.forEach(fn => fn());
+  }
+  config.version = remote.version;
+  if (canonical(payload(store.state)) !== canonical(data)) config.dirty = true;
+  writeConfig();
+}
+
+async function pull(force) {
+  if (!force && Date.now() - lastPull < MIN_PULL_GAP_MS) return;
+  const remote = await api.getVault(keys.token, config.version);
+  lastPull = Date.now();
+  if (!remote) {
+    config.version = 0;
+    config.dirty = true;
+    writeConfig();
+  } else if (!remote.unchanged) {
+    await applyRemote(remote);
+  }
+}
+
+async function push(keepalive) {
   for (let attempt = 0; attempt < 4; attempt++) {
-    let remoteData = null;
-    if (remote) {
-      remoteData = await unseal(keys.key, remote.blob);
-      const merged = merge(store.state, remoteData);
-      if (canonical(payload(merged)) !== canonical(payload(store.state))) {
-        applyMerged(merged);
-        dataListeners.forEach(fn => fn());
-      }
+    const revision = localRevision;
+    const blob = await seal(keys.key, payload(store.state));
+    const result = await api.putVault(keys.token, config.version, blob, { keepalive });
+    if (!result.conflict) {
+      config.version = result.version;
+      if (revision === localRevision) config.dirty = false;
+      writeConfig();
+      return;
     }
-    const local = payload(store.state);
-    if (remoteData && canonical(local) === canonical(remoteData)) return;
-    const result = await api.putVault(keys.token, remote ? remote.version : 0, await seal(keys.key, local), { keepalive });
-    if (!result.conflict) return;
-    remote = result.blob ? { version: result.version, blob: result.blob } : null;
+    if (result.blob) await applyRemote({ version: result.version, blob: result.blob });
+    else { config.version = 0; writeConfig(); }
   }
   throw new Error('conflict');
 }
 
+async function cycle({ forcePull = false, keepalive = false }) {
+  if (config.dirty) await push(keepalive);
+  else await pull(forcePull);
+  if (config.dirty) await push(keepalive);
+}
+
+function scheduleRetry() {
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => syncNow({ forcePull: true }), RETRY_MS[Math.min(retries++, RETRY_MS.length - 1)]);
+}
+
 export function syncNow(options = {}) {
   if (!keys) return Promise.resolve();
-  if (running) { again = true; return running; }
+  if (navigator.onLine === false) { setStatus('offline'); return Promise.resolve(); }
+  if (running) { again = { ...again, ...options }; return running; }
   setStatus('syncing');
   running = (async () => {
+    let opts = options;
     try {
-      do { again = false; await runOnce(options); } while (again);
+      while (opts) {
+        again = null;
+        await cycle(opts);
+        opts = again;
+      }
+      retries = 0;
+      clearTimeout(retryTimer);
       setStatus('ok');
     } catch (e) {
-      setStatus(navigator.onLine === false || e.name === 'TypeError' || e.name === 'TimeoutError' ? 'offline' : 'error', e.message);
+      const offline = navigator.onLine === false || e.name === 'TypeError' || e.name === 'TimeoutError';
+      setStatus(offline ? 'offline' : 'error', e.message);
+      scheduleRetry();
     } finally {
       running = null;
     }
@@ -73,28 +116,42 @@ export function syncNow(options = {}) {
   return running;
 }
 
-const schedule = () => { clearTimeout(timer); timer = setTimeout(() => { timer = null; syncNow(); }, DEBOUNCE_MS); };
+function schedulePush() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => { pushTimer = null; syncNow(); }, PUSH_DELAY_MS);
+}
 
 function flush() {
-  if (!timer) return;
-  clearTimeout(timer); timer = null;
+  if (!pushTimer) return;
+  clearTimeout(pushTimer);
+  pushTimer = null;
   syncNow({ keepalive: true });
 }
 
 export async function initSync() {
   if (!SYNC_AVAILABLE) return;
-  onSave(() => { if (keys) schedule(); });
-  window.addEventListener('online', () => syncNow());
+  onSave(() => { if (keys) { markDirty(); schedulePush(); } });
+  window.addEventListener('online', () => syncNow({ forcePull: true }));
+  window.addEventListener('offline', () => { if (keys) setStatus('offline'); });
   document.addEventListener('visibilitychange', () => (document.hidden ? flush() : syncNow()));
   window.addEventListener('pagehide', flush);
   setInterval(() => { if (!document.hidden) syncNow(); }, POLL_MS);
   config = readConfig();
   if (!config) return;
+  config.version ??= 0;
+  config.dirty ??= false;
   keys = await deriveKeys(config.secret);
-  syncNow();
+  syncNow({ forcePull: true });
 }
 
-export const enableSync = () => activate(newSecret());
+async function activate(secret, { fresh }) {
+  config = { secret, version: 0, dirty: fresh };
+  writeConfig();
+  keys = await deriveKeys(secret);
+  return syncNow({ forcePull: true });
+}
+
+export const enableSync = () => activate(newSecret(), { fresh: true });
 
 export async function createPairCode() {
   await syncNow();
@@ -106,19 +163,21 @@ export async function createPairCode() {
 
 export async function joinSync(input) {
   const recovered = parseRecoveryKey(input);
-  if (recovered) return activate(recovered);
+  if (recovered) return activate(recovered, { fresh: false });
   const code = normalizePairCode(input);
   if (!code) throw new Error('invalid_code');
   const { lookup, key } = await pairKeys(code);
   const sealed = await api.claimPairing(lookup);
   if (!sealed) throw new Error('unknown_code');
-  return activate(await unseal(key, sealed));
+  return activate(await unseal(key, sealed), { fresh: false });
 }
 
 export const recoveryKey = () => (config ? toRecoveryKey(config.secret) : null);
 
 export async function disableSync({ wipe = false } = {}) {
   if (wipe && keys) await api.deleteVault(keys.token);
+  clearTimeout(pushTimer);
+  clearTimeout(retryTimer);
   config = null; keys = null;
   writeConfig();
   setStatus('off');
