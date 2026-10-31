@@ -34,7 +34,18 @@ export const payload = state => ({
   days: state.days,
   settings: sharedSettings(state.settings),
   meta: state.meta || emptyMeta(),
+  devices: state.devices || {},
 });
+
+export function mergeDevices(local = {}, remote = {}) {
+  const out = {};
+  for (const id of new Set([...Object.keys(local), ...Object.keys(remote)])) {
+    const a = local[id], b = remote[id];
+    const winner = !a ? b : !b ? a : (a.updated || 0) > (b.updated || 0) ? a : b;
+    out[id] = { ...winner, ...((a?.removed || b?.removed) ? { removed: true } : {}) };
+  }
+  return out;
+}
 
 export function merge(local, remote) {
   const lm = local.meta || emptyMeta(), rm = remote.meta || emptyMeta();
@@ -57,5 +68,6 @@ export function merge(local, remote) {
     days,
     settings: structuredClone({ ...local.settings, ...shared, ...deviceOnly }),
     meta: { days: metaDays, settings: Math.max(lm.settings || 0, rm.settings || 0) },
+    devices: mergeDevices(local.devices, remote.devices),
   };
 }

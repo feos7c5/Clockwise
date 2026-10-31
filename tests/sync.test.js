@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { snapshot, stamp, merge, payload, canonical } from '../assets/js/sync/merge.js';
+import { snapshot, stamp, merge, payload, canonical, mergeDevices } from '../assets/js/sync/merge.js';
 import {
   newSecret, deriveKeys, seal, unseal, newPairCode, normalizePairCode, formatPairCode,
   pairKeys, toRecoveryKey, parseRecoveryKey,
@@ -93,4 +93,15 @@ test('recovery key', () => {
   const secret = newSecret();
   assert.equal(parseRecoveryKey(` ${toRecoveryKey(secret)} `), secret);
   assert.equal(parseRecoveryKey('CW1-zu-kurz'), null);
+});
+
+test('devices: union, newer entry wins, removal is final', () => {
+  const local = { a: { name: 'iPhone', seen: '2026-10-31', updated: 200 }, b: { name: 'Mac', updated: 100 } };
+  const remote = { b: { name: 'Mac · Chrome', updated: 150 }, c: { name: 'iPad', updated: 50 } };
+  const m = mergeDevices(local, remote);
+  assert.deepEqual(Object.keys(m).sort(), ['a', 'b', 'c']);
+  assert.equal(m.b.name, 'Mac · Chrome');
+  const removed = mergeDevices({ b: { name: 'Mac', updated: 900 } }, { b: { name: 'Mac', updated: 100, removed: true } });
+  assert.equal(removed.b.removed, true);
+  assert.equal(merge({ settings, days: {}, devices: local }, { settings, days: {}, devices: { a: { removed: true, updated: 1 } } }).devices.a.removed, true);
 });

@@ -1,4 +1,5 @@
-import { store, onSave, applyMerged } from '../core/store.js';
+import { store, onSave, applyMerged, save } from '../core/store.js';
+import { iso } from '../core/time.js';
 import { SYNC_AVAILABLE } from './config.js';
 import * as api from './api.js';
 import { merge, payload, canonical } from './merge.js';
@@ -12,6 +13,8 @@ const PUSH_DELAY_MS = 3_000;
 const POLL_MS = 2 * 60_000;
 const MIN_PULL_GAP_MS = 20_000;
 const RETRY_MS = [5_000, 15_000, 60_000, 5 * 60_000];
+const REMOVED_KEY = 'clockwise-removed';
+const LOCAL_DATA_KEYS = ['stempeluhr-v1', CONFIG_KEY, 'stempeluhr-notified'];
 
 export const syncState = { status: 'off', last: null, error: '', pending: false };
 
@@ -25,6 +28,8 @@ const setStatus = (status, error = '') => {
 
 let config = null, keys = null, running = null, again = null;
 let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0;
+
+const newDeviceId = () => [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
 
 const readConfig = () => { try { return JSON.parse(localStorage.getItem(CONFIG_KEY)); } catch { return null; } };
 const writeConfig = () => (config ? localStorage.setItem(CONFIG_KEY, JSON.stringify(config)) : localStorage.removeItem(CONFIG_KEY));
@@ -104,6 +109,8 @@ export function syncNow(options = {}) {
       }
       retries = 0;
       clearTimeout(retryTimer);
+      if (wasRemoved()) return wipeRemovedDevice();
+      registerDevice();
       setStatus('ok');
     } catch (e) {
       const offline = navigator.onLine === false || e.name === 'TypeError' || e.name === 'TimeoutError';
@@ -128,6 +135,57 @@ function flush() {
   syncNow({ keepalive: true });
 }
 
+function defaultDeviceName() {
+  const ua = navigator.userAgent;
+  const device = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iPad'
+    : /Android/.test(ua) ? 'Android' : /Macintosh/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'Browser';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : 'Safari';
+  return device === 'iPhone' || device === 'iPad' ? device : `${device} · ${browser}`;
+}
+
+function registerDevice() {
+  const devices = (store.state.devices ||= {});
+  const me = devices[config.device], today = iso(new Date());
+  if (me && me.seen === today) return;
+  devices[config.device] = { name: me?.name || defaultDeviceName(), seen: today, updated: Date.now() };
+  save();
+}
+
+const wasRemoved = () => Boolean(store.state.devices?.[config.device]?.removed);
+
+function wipeRemovedDevice() {
+  clearTimeout(pushTimer);
+  clearTimeout(retryTimer);
+  config = null; keys = null;
+  LOCAL_DATA_KEYS.forEach(k => localStorage.removeItem(k));
+  localStorage.setItem(REMOVED_KEY, iso(new Date()));
+  location.reload();
+}
+
+export const removedNotice = () => localStorage.getItem(REMOVED_KEY);
+
+export function listDevices() {
+  if (!config) return [];
+  return Object.entries(store.state.devices || {})
+    .filter(([, d]) => !d.removed)
+    .map(([id, d]) => ({ id, ...d, self: id === config.device }))
+    .sort((a, b) => (b.self - a.self) || (b.seen || '').localeCompare(a.seen || ''));
+}
+
+export function renameDevice(id, name) {
+  const d = store.state.devices?.[id];
+  if (!d || !name.trim()) return;
+  Object.assign(d, { name: name.trim().slice(0, 40), updated: Date.now() });
+  save();
+}
+
+export function removeDevice(id) {
+  const d = store.state.devices?.[id];
+  if (!d || id === config.device) return;
+  Object.assign(d, { removed: true, updated: Date.now() });
+  save();
+}
+
 export async function initSync() {
   if (!SYNC_AVAILABLE) return;
   onSave(() => { if (keys) { markDirty(); schedulePush(); } });
@@ -140,12 +198,13 @@ export async function initSync() {
   if (!config) return;
   config.version ??= 0;
   config.dirty ??= false;
+  if (!config.device) { config.device = newDeviceId(); writeConfig(); }
   keys = await deriveKeys(config.secret);
   syncNow({ forcePull: true });
 }
 
 async function activate(secret, { fresh }) {
-  config = { secret, version: 0, dirty: fresh };
+  config = { secret, version: 0, dirty: fresh, device: newDeviceId() };
   writeConfig();
   keys = await deriveKeys(secret);
   return syncNow({ forcePull: true });
