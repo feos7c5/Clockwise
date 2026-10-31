@@ -69,7 +69,14 @@ export function sollMin(settings, ds, day, ist) {
   return hol.f * c.f * az;
 }
 
-// Tageswerte. Heute zählt erst mit Stempelung oder Tagesart, die Zukunft nie.
+// Erster erfasster Tag – davor wird nichts gezählt (die App war noch nicht im Einsatz)
+export function firstDay(state) {
+  let first = null;
+  for (const ds in state.days) if (first === null || ds < first) first = ds;
+  return first;
+}
+
+// Tageswerte. Heute zählt erst mit Stempelung oder Tagesart, die Zukunft und die Zeit vor dem ersten Eintrag nie.
 export function dayStats(state, ds, now) {
   const s = state.settings, day = state.days[ds] || { blocks: [] };
   const today = iso(now), yesterday = iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
@@ -78,7 +85,9 @@ export function dayStats(state, ds, now) {
   const live = !running ? null : ds === today ? nowMin : ds === yesterday ? nowMin + 1440 : null;
   const ist = istMin(s, day, live);
   const soll = sollMin(s, ds, day, ist);
-  const counts = ds < today || (ds === today && Boolean((day.blocks || []).length || day.code));
+  const first = firstDay(state);
+  const started = first !== null && ds >= first;
+  const counts = started && (ds < today || (ds === today && Boolean((day.blocks || []).length || day.code)));
   return { ist, soll, diff: counts ? ist - soll : 0, counts, running, day };
 }
 
@@ -93,10 +102,10 @@ export function sumRange(state, fromStr, toStr, now) {
   return { ist, soll, diff };
 }
 
-// Saldo bis einschließlich toStr – zählt ab dem ersten erfassten Tag
+// Saldo bis einschließlich toStr
 export function balance(state, toStr, now) {
   const carry = state.settings.carry || 0;
-  const first = Object.keys(state.days).sort()[0];
+  const first = firstDay(state);
   if (!first || first > toStr) return carry;
   return carry + sumRange(state, first, toStr, now).diff;
 }

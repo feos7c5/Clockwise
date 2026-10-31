@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fmtDur, parseDur } from '../assets/js/core/time.js';
 import { easter, holidays } from '../assets/js/core/holidays.js';
-import { pauseMin, istMin, sollMin, dayStats, balance, vacationUsed, pauseWarning } from '../assets/js/core/calc.js';
+import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, pauseWarning } from '../assets/js/core/calc.js';
 
 const settings = {
   land: 'NW', halfHolidays: true, pauseMode: 'fix', pauseMin: 45, carry: 0,
@@ -74,4 +74,12 @@ test('Heute zählt erst mit Stempelung', () => {
   const st = dayStats(state, '2026-10-30', fri);
   assert.equal(st.counts, true);
   assert.equal(st.running, true);
+});
+
+test('Vor dem ersten Eintrag zählt nichts – auch nicht in Monats-/Jahressummen', () => {
+  const state = { settings, days: { '2026-10-29': day(['08:00', '16:00']) } };
+  const jan = sumRange(state, '2026-01-01', '2026-01-31', NOW);
+  assert.deepEqual(jan, { ist: 0, soll: 0, diff: 0 });
+  assert.equal(dayStats(state, '2026-10-28', NOW).counts, false);
+  assert.equal(sumRange(state, '2026-01-01', '2026-10-31', NOW).diff, balance(state, '2026-10-31', NOW));
 });
