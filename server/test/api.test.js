@@ -73,3 +73,28 @@ test('CORS only for allowed origins', async () => {
   const evil = await fetch(BASE + '/v1/vault', { method: 'OPTIONS', headers: { Origin: 'https://evil.example' } });
   assert.notEqual(evil.headers.get('Access-Control-Allow-Origin'), 'https://evil.example');
 });
+
+test('live: every connected device hears about a new version', async () => {
+  const t = token();
+  const wsUrl = BASE.replace(/^http/, 'ws') + '/v1/live';
+  const connect = () => new Promise((resolve, reject) => {
+    const ws = new WebSocket(wsUrl, ['clockwise', t]);
+    const messages = [];
+    ws.onmessage = e => messages.push(JSON.parse(e.data));
+    ws.onopen = () => resolve({ ws, messages });
+    ws.onerror = reject;
+  });
+  const a = await connect(), b = await connect();
+  await call('PUT', '/v1/vault', { auth: t, body: { version: 0, blob: 'X' } });
+  await new Promise(r => setTimeout(r, 500));
+  assert.deepEqual(a.messages, [{ v: 1 }]);
+  assert.deepEqual(b.messages, [{ v: 1 }]);
+  a.ws.close(); b.ws.close();
+  await call('DELETE', '/v1/vault', { auth: t });
+});
+
+test('live: rejects connections without a valid token', async () => {
+  const ws = new WebSocket(BASE.replace(/^http/, 'ws') + '/v1/live', ['clockwise']);
+  const opened = await new Promise(r => { ws.onopen = () => r(true); ws.onerror = () => r(false); });
+  assert.equal(opened, false);
+});

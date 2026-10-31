@@ -1,3 +1,5 @@
+export { VaultChannel } from './channel.js';
+
 const MAX_BLOB = 2_000_000;
 const MAX_PAYLOAD = 2_000;
 const PAIR_TTL_MS = 10 * 60 * 1000;
@@ -65,10 +67,22 @@ async function putVault(request, env) {
       .bind(id, blob, now).run()
     : await env.DB.prepare('UPDATE vaults SET version = version + 1, blob = ?, updated_at = ? WHERE id = ? AND version = ?')
       .bind(blob, now, id, version).run();
-  if (result.meta.changes === 1) return { status: 200, body: { version: version + 1 } };
+  if (result.meta.changes === 1) return { status: 200, body: { version: version + 1 }, id };
 
   const current = await env.DB.prepare('SELECT version, blob FROM vaults WHERE id = ?').bind(id).first();
   return { status: 409, body: current ? { version: current.version, blob: current.blob } : { version: 0, blob: null } };
+}
+
+const channel = (env, id) => env.CHANNEL.get(env.CHANNEL.idFromName(id));
+
+async function openLive(request, env) {
+  const origin = request.headers.get('Origin');
+  if (origin && !env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).includes(origin)) throw new HttpError(403, 'forbidden');
+  if (request.headers.get('Upgrade') !== 'websocket') throw new HttpError(426, 'upgrade_required');
+  const protocols = (request.headers.get('Sec-WebSocket-Protocol') || '').split(',').map(s => s.trim());
+  const token = protocols.find(p => TOKEN_RE.test(p));
+  if (protocols[0] !== 'clockwise' || !token) throw new HttpError(401, 'unauthorized');
+  return channel(env, await sha256Hex(token)).fetch(request);
 }
 
 async function deleteVault(request, env) {
@@ -97,7 +111,7 @@ async function claimPairing(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const headers = cors(request, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     const { pathname } = new URL(request.url);
@@ -105,7 +119,12 @@ export default {
     try {
       switch (route) {
         case 'GET /v1/vault': { const r = await getVault(request, env); return json(r.body, r.status, { ...headers, ETag: `"${r.etag}"`, 'Cache-Control': 'no-store' }); }
-        case 'PUT /v1/vault': { const r = await putVault(request, env); return json(r.body, r.status, headers); }
+        case 'PUT /v1/vault': {
+          const r = await putVault(request, env);
+          if (r.id) ctx.waitUntil(channel(env, r.id).fetch('https://channel/notify', { method: 'POST', body: JSON.stringify({ version: r.body.version }) }));
+          return json(r.body, r.status, headers);
+        }
+        case 'GET /v1/live': return await openLive(request, env);
         case 'DELETE /v1/vault': await deleteVault(request, env); return json(null, 204, headers);
         case 'POST /v1/pair': await createPairing(request, env); return json(null, 201, headers);
         case 'POST /v1/pair/claim': return json(await claimPairing(request, env), 200, headers);
