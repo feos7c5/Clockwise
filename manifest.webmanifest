@@ -1,7 +1,7 @@
 {
   "name": "Clockwise",
   "short_name": "Clockwise",
-  "description": "A simple time clock – clock in, clock out, overtime balance",
+  "description": "Time tracking for your working hours",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

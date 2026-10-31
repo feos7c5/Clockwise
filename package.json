@@ -1,7 +1,7 @@
 {
   "name": "clockwise",
   "version": "1.0.0",
-  "description": "A simple time clock – clock in, clock out, overtime balance (PWA)",
+  "description": "Time tracking for your working hours",
   "private": true,
   "type": "module",
   "scripts": {

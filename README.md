@@ -4,10 +4,7 @@
 
 <h1 align="center">Clockwise</h1>
 
-<p align="center">
-  A simple time clock for your working hours.<br>
-  Clock in, clock out, and always know your overtime balance.
-</p>
+<p align="center">Time tracking for your working hours.</p>
 
 <p align="center">
   <a href="https://feos7c5.github.io/Clockwise/"><b>Open Clockwise →</b></a>
