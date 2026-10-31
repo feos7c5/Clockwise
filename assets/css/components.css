@@ -122,3 +122,18 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .setting-row + .setting-row, .switch + .setting-row { margin-top: var(--sp-2); }
 .setting-row > span { flex: 1; min-width: 0; }
 .setting-row > input, .setting-row > select { flex: none; width: 7.5rem; }
+
+/* Sync: Kopplungscode, Wiederherstellungsschlüssel, Eingabe mit Aktion */
+.pair-code {
+  margin: var(--sp-5) 0 var(--sp-1); text-align: center; font-size: var(--fs-2xl); font-weight: var(--fw-bold);
+  letter-spacing: .12em; font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.pair-code.expired { color: var(--faint); text-decoration: line-through; }
+.pair-meta { text-align: center; font-size: var(--fs-sm); color: var(--muted); min-height: 1.4em; }
+.recovery-key {
+  margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--fill);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: var(--fs-sm); word-break: break-all; user-select: all;
+}
+.input-action { display: flex; gap: var(--sp-2); align-items: center; }
+.input-action input { flex: 1; font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; }
+.input-action .btn { flex: none; height: var(--ctl-md); }

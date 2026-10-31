@@ -65,3 +65,5 @@
 .dayrow .side small { display: block; font-size: var(--fs-xs); }
 .tag { display: inline-block; margin-right: var(--sp-1); padding: 1px var(--sp-2); border-radius: var(--r-full); background: var(--fill); color: var(--muted); font-size: var(--fs-xs); font-weight: var(--fw-medium); }
 .tag.accent { background: var(--accent-soft); color: var(--accent); }
+.notice.info { background: var(--accent-soft); justify-content: space-between; }
+.dot.err { background: var(--minus); }

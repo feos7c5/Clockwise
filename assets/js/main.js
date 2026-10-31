@@ -15,6 +15,7 @@ import { renderMonth } from './views/month.js';
 import { renderYear } from './views/year.js';
 import { renderSettings } from './views/settings/index.js';
 import { startReminders, checkReminders } from './features/reminders.js';
+import { initSync, onSyncStatus, onRemoteData } from './sync/engine.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
@@ -64,6 +65,10 @@ function render() {
 setRenderer(render);
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
 onSyncChange(() => { if (nav.tab === 'settings') render(); });
+const typing = () => document.activeElement?.matches('textarea, input, select');
+onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) render(); });
+// Neue Daten von einem anderen Gerät: neu zeichnen, außer der Nutzer tippt gerade
+onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
 
 // Timer jede Sekunde, volles Neu-Zeichnen jede Minute (außer beim Tippen)
 setInterval(() => {
@@ -82,6 +87,7 @@ document.addEventListener('visibilitychange', () => {
 applyTheme();
 render();
 initFileSync();
+initSync();
 startReminders();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');

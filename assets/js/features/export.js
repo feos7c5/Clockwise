@@ -16,7 +16,7 @@ function download(name, text, type) {
 }
 
 // Auf Touch-Geräten über das Teilen-Menü (→ „In Dateien sichern“ → iCloud Drive)
-async function shareOrDownload(name, text, type) {
+export async function shareOrDownload(name, text, type) {
   const file = new File([text], name, { type });
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }

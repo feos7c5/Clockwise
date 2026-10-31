@@ -10,6 +10,9 @@ import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } fro
 import { ICON } from '../ui/icons.js';
 import { rerender } from '../ui/nav.js';
 import { openDayDialog } from './day-dialog.js';
+import { openJoinDialog } from './cloud-dialogs.js';
+import { SYNC_AVAILABLE } from '../sync/config.js';
+import { syncEnabled } from '../sync/engine.js';
 
 // Netto-Sekunden für den Live-Timer
 export function liveSeconds(ds) {
@@ -110,6 +113,13 @@ function codesCard(day) {
     <textarea id="todayNote" placeholder="${t('today.notePlaceholder')}">${esc(day.note)}</textarea></label></section>`;
 }
 
+// Neues Gerät ohne Daten: Angebot, Daten von einem anderen Gerät zu holen
+function onboardingNotice() {
+  if (!SYNC_AVAILABLE || syncEnabled() || Object.keys(store.state.days).length) return '';
+  return `<div class="notice info"><div><b>${t('cloud.onboardTitle')}</b>${t('cloud.onboardText')}</div>
+    <button class="btn btn-sm btn-primary" id="onboardJoin">${t('cloud.onboardAction')}</button></div>`;
+}
+
 export function renderToday(view) {
   const n = now(), ds = todayStr(), r = running(), brk = onBreak();
   const activeDs = r ? r.ds : ds;
@@ -119,6 +129,7 @@ export function renderToday(view) {
   const progress = st.soll ? Math.min(100, (st.ist / st.soll) * 100) : 0;
 
   view.innerHTML = `<div class="stack">
+    ${onboardingNotice()}
     ${missingStamp() ? `<div class="notice"><div class="ic">${ICON.bell}</div><div><b>${t('today.missingTitle')}</b>${t('today.missingText')}</div></div>` : ''}
     <section class="card clock">
       ${statusLine(r, brk, day, ds)}
@@ -136,6 +147,7 @@ export function renderToday(view) {
 
   $$('[data-act]', view).forEach(b => (b.onclick = () => { navigator.vibrate?.(20); stamp(b.dataset.act); rerender(); }));
   $('#editToday', view).onclick = () => openDayDialog(ds);
+  $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
   $$('[data-code]', view).forEach(b => (b.onclick = () => {
     const d = getDay(ds);
     if (d.code === b.dataset.code) delete d.code; else d.code = b.dataset.code;
