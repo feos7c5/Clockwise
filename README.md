@@ -1,0 +1,97 @@
+<p align="center">
+  <img src="assets/icons/logo.svg" width="96" height="96" alt="Clockwise Logo">
+</p>
+
+<h1 align="center">Clockwise</h1>
+
+<p align="center">
+  Arbeitszeit erfassen für Vertrauensarbeitszeit – Kommen, Gehen, Überstunden-Saldo.<br>
+  Als Web-App installierbar, offline nutzbar, alle Daten bleiben auf dem Gerät.
+</p>
+
+<p align="center">
+  <a href="https://feos7c5.github.io/clockwise/"><b>App öffnen →</b></a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots.png" alt="Ansichten Heute, Monat und Jahr" width="820">
+</p>
+
+## Funktionen
+
+- **Stempeln** mit Kommen, Pause und Gehen, Live-Timer, Prognose „Soll erreicht um“ und 10-h-Grenze
+- **Überstunden-Saldo** über alle Monate, mit Übertrag wie in der klassischen Excel-Zeiterfassung
+- **Tagesarten**: Homeoffice, Dienstreise, Urlaub (ganz/halb), Krank, Gleittag, Kurzarbeit
+- **Feiertage** für alle 16 Bundesländer, Heiligabend und Silvester optional als halbe Tage
+- **Pausenregel** fest oder nach § 4 ArbZG, gestempelte Pausen werden angerechnet
+- **Soll-Zeiten** je Wochentag mit „gilt ab“-Zeiträumen (z. B. bei Stundenänderung)
+- **Abwesenheiten** für Zeiträume eintragen, Wochenenden und Feiertage werden übersprungen
+- **Monatsnachweis** als PDF mit Unterschriftszeilen, **CSV-Export** für Excel
+- **Erinnerungen**, wenn an einem Arbeitstag noch nicht eingestempelt ist
+- **Hell/Dunkel** nach Systemeinstellung
+
+## Installation auf dem iPhone
+
+1. [feos7c5.github.io/clockwise](https://feos7c5.github.io/clockwise/) in **Safari** öffnen
+2. **Teilen → Zum Home-Bildschirm**
+3. Optional: vorhandene Daten über *Einstellungen → Backup laden* einspielen
+
+Am Mac funktioniert dasselbe in Safari (*Ablage → Zum Dock hinzufügen*) oder Chrome (*Installieren*).
+
+## Datenschutz
+
+Es gibt keinen Server und kein Tracking. Alle Daten liegen im Browser-Speicher des Geräts.
+Zur Sicherung dienen *Backup sichern* (JSON-Datei, z. B. nach iCloud Drive) und in Chrome/Edge
+die automatische Speicherung in eine Datei.
+
+## Entwicklung
+
+Reines HTML, CSS und JavaScript (ES-Module) – kein Build-Schritt, keine Abhängigkeiten.
+
+```sh
+npm start   # lokaler Server auf http://localhost:8765
+npm test    # Tests der Rechenlogik (Node ≥ 20)
+```
+
+```
+├── index.html               App-Gerüst
+├── manifest.webmanifest     PWA-Manifest
+├── sw.js                    Service Worker (offline, Erinnerungen)
+├── assets/
+│   ├── css/                 tokens · base · components · layout · views · print
+│   ├── icons/               Logo und App-Icons
+│   └── js/
+│       ├── main.js          Einstiegspunkt
+│       ├── core/            Rechnung, Feiertage, Speicher, Sync – ohne DOM
+│       ├── ui/              DOM-Helfer, Icons, Dialog, Navigation, Theme
+│       ├── views/           Heute, Monat, Jahr, Einstellungen, Dialoge
+│       └── features/        Export, Druck, Erinnerungen
+├── tests/                   node:test
+├── tools/                   Dev-Server, Excel-Import
+└── docs/                    Screenshots
+```
+
+### Design-System
+
+Alle Größen sind Tokens in `rem` (`assets/css/tokens.css`): Typo-Skala, 4er-Abstandsraster,
+Radien, Control-Höhen und Farben für hell/dunkel. Über `--scale` lässt sich die gesamte
+Oberfläche proportional vergrößern oder verkleinern.
+
+### Excel-Import
+
+Bestehende Zeiterfassungen aus der Excel-Vorlage (Monatsblätter Januar–Dezember) lassen sich
+in eine Backup-Datei umwandeln und in der App laden:
+
+```sh
+pip install openpyxl
+python3 tools/excel_import.py Arbeitszeit.xlsx Import.json
+```
+
+### Commits
+
+[Conventional Commits](https://www.conventionalcommits.org/de/) – `feat:`, `fix:`, `docs:`,
+`refactor:`, `chore:` usw. Der Hook in `.githooks/` prüft das Format:
+
+```sh
+git config core.hooksPath .githooks
+```
