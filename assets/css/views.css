@@ -65,8 +65,6 @@
 .dayrow .sub { margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-xs); color: var(--muted); }
 .dayrow .side { text-align: right; font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
 .dayrow .side small { display: block; font-size: var(--fs-xs); }
-.tag { display: inline-block; margin-right: var(--sp-1); padding: 1px var(--sp-2); border-radius: var(--r-full); background: var(--fill); color: var(--muted); font-size: var(--fs-xs); font-weight: var(--fw-medium); }
-.tag.accent { background: var(--accent-soft); color: var(--accent); }
 .notice.info { background: var(--accent-soft); }
 .notice-text { flex: 1; min-width: 0; }
 .notice .ic + .notice-text { margin-left: 0; }

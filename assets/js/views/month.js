@@ -15,9 +15,7 @@ function dayRow(ds, n, today) {
   const st = dayStats(store.state, ds, n), day = st.day, wd = parseISO(ds).getDay();
   const hol = holidayOn(store.state.settings, ds);
   const times = day.blocks.map(b => `${b.in}–${b.out || '…'}`).join(', ');
-  const tags = (hol ? `<span class="tag">${esc(holidayLabel(hol))}</span>` : '')
-    + (day.code ? `<span class="tag accent">${esc(codeLabel(day.code))}</span>` : '');
-  const sub = [tags, esc(day.note)].filter(Boolean).join(' ');
+  const sub = [hol && holidayLabel(hol), day.code && codeLabel(day.code), day.note].filter(Boolean).map(esc).join(' · ');
   const missing = st.soll && st.counts && !day.code && !day.blocks.length;
   const compact = !times && !sub && !missing && !st.ist && ds !== today;
   const classes = [wd === 0 || wd === 6 ? 'we' : '', ds === today ? 'today' : '', compact ? 'compact' : ''].join(' ');

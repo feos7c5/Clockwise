@@ -53,7 +53,7 @@ export function openDayDialog(ds) {
     const options = Object.keys(CODES).map(k => `<option value="${k}" ${draft.code === k ? 'selected' : ''}>${codeLabel(k)}</option>`).join('');
 
     showDialog(`
-      ${dialogHead(`${formatLongDate(date)}${hol ? ` <span class="tag">${esc(holidayLabel(hol))}</span>` : ''}`)}
+      ${dialogHead(`${formatLongDate(date)}${hol ? ` <span class="muted">· ${esc(holidayLabel(hol))}</span>` : ''}`)}
       ${blockRows(draft.blocks)}
       <button type="button" class="btn btn-sm btn-ghost accent add-block" id="addBlock">${ICON.plus}${t('dayDialog.addBlock')}</button>
       <div class="grid-2 dlg-section">
