@@ -13,7 +13,7 @@ import { openJoinDialog } from './cloud-dialogs.js';
 import { installNotice, bindInstallNotice } from './install-notice.js';
 import { notice, isDismissed, bindNotices } from '../ui/notice.js';
 import { SYNC_AVAILABLE } from '../sync/config.js';
-import { syncEnabled } from '../sync/engine.js';
+import { syncEnabled, removedNotice } from '../sync/engine.js';
 
 export function liveSeconds(ds) {
   const day = store.state.days[ds];
@@ -127,6 +127,7 @@ export function renderToday(view) {
   const progress = st.soll ? Math.min(100, (st.ist / st.soll) * 100) : 0;
 
   view.innerHTML = `<div class="stack">
+    ${removedNotice() && !isDismissed('removed', removedNotice()) ? notice({ id: 'removed', value: removedNotice(), tone: 'warning', title: t('cloud.removedTitle'), text: t('cloud.removedText') }) : ''}
     ${installNotice()}
     ${onboardingNotice()}
     ${missingStamp() && !isDismissed('missing', ds) ? notice({ id: 'missing', value: ds, tone: 'warning', icon: ICON.bell, title: t('today.missingTitle'), text: t('today.missingText') }) : ''}

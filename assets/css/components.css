@@ -135,3 +135,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .input-action { display: flex; gap: var(--sp-2); align-items: center; }
 .input-action input { flex: 1; font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; }
 .input-action .btn { flex: none; height: var(--ctl-md); }
+
+.devices { list-style: none; margin: 0; padding: 0; }
+.devices li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) 0; }
+.devices li + li { border-top: 1px solid var(--line); }
+.device-info { min-width: 0; }
+.device-name { font-weight: var(--fw-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -93,6 +93,10 @@ export default {
   },
 
   cloud: {
+    devices: 'Devices', thisDevice: 'This device', lastSeen: 'Last active: {when}',
+    rename: 'Rename', renameTitle: 'Rename device', deviceName: 'Name', remove: 'Remove',
+    confirmRemove: 'Remove “{name}”?\n\nThe device signs out on its next sync and deletes its local data.',
+    removedTitle: 'This device was removed', removedText: 'It was removed from sync on another device. Local data has been deleted.',
     title: 'Sync',
     intro: 'Your times on all your devices automatically – end-to-end encrypted, no account.',
     enable: 'Turn on sync', join: 'Connect to a device',

@@ -1,7 +1,7 @@
 import { pad } from '../core/time.js';
-import { createPairCode, joinSync, recoveryKey, disableSync } from '../sync/engine.js';
+import { createPairCode, joinSync, recoveryKey, disableSync, listDevices, renameDevice } from '../sync/engine.js';
 import { t } from '../i18n/index.js';
-import { $ } from '../ui/dom.js';
+import { $, esc } from '../ui/dom.js';
 import { showDialog, dialogHead, closeDialog } from '../ui/dialog.js';
 import { rerender } from '../ui/nav.js';
 import { shareOrDownload } from '../features/export.js';
@@ -117,5 +117,19 @@ export function openDisableDialog() {
       try { await disableSync({ wipe: true }); } catch { alert(t('cloud.errNetwork')); return; }
       closeDialog(); rerender();
     };
+  });
+}
+
+export function openRenameDialog(id) {
+  const device = listDevices().find(d => d.id === id);
+  if (!device) return;
+  showDialog(`${dialogHead(t('cloud.renameTitle'))}
+    <label class="field"><span>${t('cloud.deviceName')}</span><input type="text" id="devName" maxlength="40" value="${esc(device.name)}" autofocus></label>
+    <div class="dlg-foot"><span class="spacer"></span>
+      <button type="button" class="btn" data-close>${t('common.cancel')}</button>
+      <button type="button" class="btn btn-primary" id="devSave">${t('common.save')}</button></div>`, dlg => {
+    const save = () => { renameDevice(id, $('#devName', dlg).value); closeDialog(); rerender(); };
+    $('#devSave', dlg).onclick = save;
+    $('#devName', dlg).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } };
   });
 }

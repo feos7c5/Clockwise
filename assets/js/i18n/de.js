@@ -93,6 +93,10 @@ export default {
   },
 
   cloud: {
+    devices: 'Geräte', thisDevice: 'Dieses Gerät', lastSeen: 'Zuletzt aktiv: {when}',
+    rename: 'Umbenennen', renameTitle: 'Gerät umbenennen', deviceName: 'Name', remove: 'Entfernen',
+    confirmRemove: '„{name}“ entfernen?\n\nDas Gerät meldet sich beim nächsten Abgleich ab und löscht dabei seine lokalen Daten.',
+    removedTitle: 'Dieses Gerät wurde entfernt', removedText: 'Es wurde auf einem anderen Gerät aus dem Sync entfernt. Die lokalen Daten wurden gelöscht.',
     title: 'Sync',
     intro: 'Deine Zeiten automatisch auf allen Geräten – Ende-zu-Ende-verschlüsselt, ohne Konto.',
     enable: 'Sync einschalten', join: 'Mit Gerät verbinden',
