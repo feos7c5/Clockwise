@@ -29,6 +29,7 @@
 - **Monatsnachweis** als PDF mit Unterschriftszeilen, **CSV-Export** für Excel
 - **Erinnerungen**, wenn an einem Arbeitstag noch nicht eingestempelt ist
 - **Hell/Dunkel** nach Systemeinstellung
+- **Sprachen**: Deutsch und Englisch, folgt der Systemsprache oder fest einstellbar
 
 ## Installation auf dem iPhone
 
@@ -63,6 +64,7 @@ npm test    # Tests der Rechenlogik (Node ≥ 20)
 │   └── js/
 │       ├── main.js          Einstiegspunkt
 │       ├── core/            Rechnung, Feiertage, Speicher, Sync – ohne DOM
+│       ├── i18n/            Übersetzungen (de, en) und Intl-Formatierung
 │       ├── ui/              DOM-Helfer, Icons, Dialog, Navigation, Theme
 │       ├── views/           Heute, Monat, Jahr, Einstellungen, Dialoge
 │       └── features/        Export, Druck, Erinnerungen
@@ -76,6 +78,12 @@ npm test    # Tests der Rechenlogik (Node ≥ 20)
 Alle Größen sind Tokens in `rem` (`assets/css/tokens.css`): Typo-Skala, 4er-Abstandsraster,
 Radien, Control-Höhen und Farben für hell/dunkel. Über `--scale` lässt sich die gesamte
 Oberfläche proportional vergrößern oder verkleinern.
+
+### Übersetzungen
+
+Alle Texte liegen in `assets/js/i18n/<sprache>.js`. Neue Sprache: Datei mit denselben Schlüsseln
+anlegen und in `assets/js/i18n/index.js` unter `LANGUAGES` eintragen. Datums- und Zahlenformate
+kommen automatisch aus `Intl`.
 
 ### Excel-Import
 
