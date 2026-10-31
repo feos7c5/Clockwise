@@ -127,3 +127,7 @@ python3 tools/excel_import.py Arbeitszeit.xlsx Import.json
 ```sh
 git config core.hooksPath .githooks
 ```
+
+## Lizenz
+
+[MIT](LICENSE) © 2026 feos7c5
