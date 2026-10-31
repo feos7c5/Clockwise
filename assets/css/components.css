@@ -113,7 +113,10 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .block-edit + .block-edit { margin-top: var(--sp-2); }
 .dlg-section { margin-top: var(--sp-4); }
 .dlg-foot { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-5); }
+.dlg-foot { flex-wrap: wrap; }
 .dlg-foot .spacer { flex: 1; }
+.dlg-foot.stacked { flex-direction: column; align-items: stretch; }
+.dlg:focus { outline: none; }
 .dlg-result { margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--fill); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
 
 .btn-ghost.danger.filled { background: var(--fill); }

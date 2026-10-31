@@ -13,10 +13,12 @@ export const dialogHead = title => `
 
 export function showDialog(html, bind) {
   const dlg = el();
-  dlg.innerHTML = `<form class="dlg" method="dialog">${html}</form>`;
+  dlg.innerHTML = `<form class="dlg" method="dialog" tabindex="-1">${html}</form>`;
   $$('[data-close]', dlg).forEach(b => (b.onclick = () => dlg.close()));
   bind(dlg);
   if (!dlg.open) dlg.showModal();
+  // Sonst fokussiert der Browser das ✕ und zeigt einen Fokusring
+  (dlg.querySelector('[autofocus]') || dlg.querySelector('form')).focus({ preventScroll: true });
 }
 
 export const closeDialog = () => el().close();

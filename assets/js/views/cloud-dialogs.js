@@ -111,10 +111,9 @@ export function openRecoveryDialog() {
 export function openDisableDialog() {
   showDialog(`${dialogHead(t('cloud.disableTitle'))}
     <p class="hint flush">${t('cloud.disableHint')}</p>
-    <div class="dlg-foot">
-      <button type="button" class="btn btn-ghost danger" id="disAll">${t('cloud.disableAll')}</button>
-      <span class="spacer"></span>
-      <button type="button" class="btn btn-primary" id="disDevice">${t('cloud.disableDevice')}</button></div>`, dlg => {
+    <div class="dlg-foot stacked">
+      <button type="button" class="btn btn-primary" id="disDevice">${t('cloud.disableDevice')}</button>
+      <button type="button" class="btn btn-ghost danger" id="disAll">${t('cloud.disableAll')}</button></div>`, dlg => {
     $('#disDevice', dlg).onclick = async () => { await disableSync(); closeDialog(); rerender(); };
     $('#disAll', dlg).onclick = async () => {
       if (!confirm(t('cloud.confirmWipe'))) return;
