@@ -38,9 +38,22 @@ export function openDayDialog(ds) {
   const hol = holidayOn(store.state.settings, ds);
   const settings = store.state.settings;
 
-  const draw = () => {
+  const resultLine = () => {
     const st = dayStats({ ...store.state, days: { ...store.state.days, [ds]: draft } }, ds, now());
-    const autoPause = pauseMin(settings, { ...draft, pause: null }, grossMin(draft));
+    return `${t('common.istSoll', { ist: fmtDur(st.ist), soll: fmtDur(st.soll) })} ·
+      <span class="${tone(st.ist - st.soll)}">${fmtDur(st.ist - st.soll, true)}</span>`;
+  };
+  const autoPauseHint = () => t('dayDialog.auto', { n: pauseMin(settings, { ...draft, pause: null }, grossMin(draft)) });
+
+  // Nur Ergebnis und Pausen-Hinweis aktualisieren – Eingabefelder bleiben stehen,
+  // sonst springt auf iOS das Uhrzeit-Rad, während es sich noch dreht
+  const refresh = dlg => {
+    $('#dlgResult', dlg).innerHTML = resultLine();
+    $('#pause', dlg).placeholder = autoPauseHint();
+  };
+
+  // Komplett neu zeichnen nur bei Strukturänderungen (Zeitblock hinzu/weg)
+  const draw = () => {
     const options = Object.keys(CODES).map(k => `<option value="${k}" ${draft.code === k ? 'selected' : ''}>${codeLabel(k)}</option>`).join('');
 
     showDialog(`
@@ -49,28 +62,29 @@ export function openDayDialog(ds) {
       <button type="button" class="btn btn-sm btn-ghost accent add-block" id="addBlock">${ICON.plus}${t('dayDialog.addBlock')}</button>
       <div class="grid-2 dlg-section">
         <label class="field"><span>${t('dayDialog.pauseMin')}</span>
-          <input type="number" min="0" inputmode="numeric" id="pause" value="${draft.pause ?? ''}" placeholder="${t('dayDialog.auto', { n: autoPause })}"></label>
+          <input type="number" min="0" inputmode="numeric" id="pause" value="${draft.pause ?? ''}" placeholder="${autoPauseHint()}"></label>
         <label class="field"><span>${t('common.dayType')}</span>
           <select id="code"><option value="">${t('common.normal')}</option>${options}</select></label>
       </div>
       <label class="field dlg-section"><span>${t('common.note')}</span><textarea id="note">${esc(draft.note)}</textarea></label>
-      <div class="dlg-result">${t('common.istSoll', { ist: fmtDur(st.ist), soll: fmtDur(st.soll) })} ·
-        <span class="${tone(st.ist - st.soll)}">${fmtDur(st.ist - st.soll, true)}</span></div>
+      <div class="dlg-result" id="dlgResult">${resultLine()}</div>
       <div class="dlg-foot">
         <button type="button" class="btn btn-ghost danger" id="clear">${t('dayDialog.clear')}</button>
         <span class="spacer"></span>
         <button type="button" class="btn" data-close>${t('common.cancel')}</button>
         <button type="button" class="btn btn-primary" id="ok">${t('common.save')}</button>
       </div>`, dlg => {
-      $$('input[type=time]', dlg).forEach(inp => (inp.onchange = () => { draft.blocks[inp.dataset.i][inp.dataset.k] = inp.value || null; draw(); }));
+      $$('input[type=time]', dlg).forEach(inp => {
+        inp.oninput = inp.onchange = () => { draft.blocks[inp.dataset.i][inp.dataset.k] = inp.value || null; refresh(dlg); };
+      });
       $$('[data-del]', dlg).forEach(b => (b.onclick = () => { draft.blocks.splice(+b.dataset.del, 1); draw(); }));
       $('#addBlock', dlg).onclick = () => {
         const last = draft.blocks[draft.blocks.length - 1];
         draft.blocks.push({ in: last?.out || '08:00', out: null });
         draw();
       };
-      $('#pause', dlg).onchange = e => { draft.pause = e.target.value === '' ? null : Math.max(0, +e.target.value); draw(); };
-      $('#code', dlg).onchange = e => { draft.code = e.target.value; draw(); };
+      $('#pause', dlg).oninput = e => { draft.pause = e.target.value === '' ? null : Math.max(0, +e.target.value); refresh(dlg); };
+      $('#code', dlg).onchange = e => { draft.code = e.target.value; refresh(dlg); };
       $('#note', dlg).oninput = e => { draft.note = e.target.value; };
       $('#clear', dlg).onclick = () => {
         if (!confirm(t('dayDialog.confirmClear'))) return;

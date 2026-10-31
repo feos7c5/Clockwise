@@ -41,8 +41,7 @@ export const schedule = {
       commit();
     }));
     $$('[data-pf]', view).forEach(inp => (inp.onchange = () => {
-      if (inp.value) { periods[inp.dataset.pf].from = inp.value; commit(); }
-      rerender();
+      if (inp.value) { periods[inp.dataset.pf].from = inp.value; commit(); } // Sortierung beim nächsten Öffnen
     }));
     $$('[data-pdel]', view).forEach(b => (b.onclick = () => {
       if (periods.length < 2) return alert(t('settings.needOnePeriod'));
