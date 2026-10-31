@@ -91,7 +91,7 @@ let scrollFrame = 0;
 function markScrolled() {
   if (document.body.style.position === 'fixed') return;
   const sticky = nav.tab === 'month' || nav.tab === 'year';
-  const collapsed = !sticky && $('.top').getBoundingClientRect().bottom < $('.compact-inner').offsetHeight + 8;
+  const collapsed = !sticky && $('.top').getBoundingClientRect().bottom < $('.compact-bar').offsetHeight;
   document.body.classList.toggle('compact', collapsed);
   document.body.classList.toggle('stuck', sticky && window.scrollY > 4);
   $('.compact-bar').inert = !collapsed;

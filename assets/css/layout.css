@@ -2,11 +2,12 @@
   position: relative; z-index: 5;
   display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-3);
   max-width: var(--content-w); margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + var(--sp-5)) var(--gutter) var(--sp-3);
+  padding: calc(var(--top-shield) + var(--sp-3)) var(--gutter) var(--sp-3);
   background: var(--bg);
 }
+.status-shield { position: fixed; z-index: 25; top: 0; left: 0; right: 0; height: var(--top-shield); background: var(--bg); pointer-events: none; }
 .compact-bar {
-  position: fixed; z-index: 20; top: 0; left: 0; right: 0; padding-top: env(safe-area-inset-top);
+  position: fixed; z-index: 20; top: 0; left: 0; right: 0; padding-top: var(--top-shield);
   background: var(--bg); box-shadow: 0 1px 0 var(--line);
   opacity: 0; pointer-events: none; transition: opacity .15s;
 }

@@ -29,6 +29,8 @@
   --content-w: 40rem;
   --gutter: var(--sp-4);
   --tabbar-h: 3.75rem;
+  --edge-ramp: 0px;
+  --top-shield: calc(max(env(safe-area-inset-top), 12px) + var(--edge-ramp));
 
   --bg: #f4f4f2;
   --surface: #ffffff;
@@ -108,4 +110,8 @@
   --glass-edge: rgba(255, 255, 255, .08);
   --tab-active: rgba(255, 255, 255, .08);
   color-scheme: dark;
+}
+
+@media (display-mode: standalone) {
+  :root { --edge-ramp: 1.25rem; }
 }

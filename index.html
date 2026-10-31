@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#111112" media="(prefers-color-scheme: dark)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Clockwise">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
@@ -24,6 +24,7 @@
   <script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
+  <div class="status-shield" aria-hidden="true"></div>
   <div class="compact-bar" inert>
     <div class="compact-inner"><span id="compactTitle"></span><div id="compactRight"></div></div>
   </div>
