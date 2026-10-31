@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fmtDur, parseDur } from '../assets/js/core/time.js';
 import { easter, holidays } from '../assets/js/core/holidays.js';
-import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, pauseWarning } from '../assets/js/core/calc.js';
+import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, vacationBase, pauseWarning } from '../assets/js/core/calc.js';
 
 const settings = {
   land: 'NW', halfHolidays: true, pauseMode: 'fix', pauseMin: 45, carry: 0,
@@ -96,4 +96,13 @@ test('Urlaub: Anspruch gilt weiter, Resturlaub wird automatisch übertragen', ()
   assert.deepEqual([vacationAccount(state, 2027).carry, vacationAccount(state, 2028).carry], [5, 25]);
   state.settings.vacation[2028] = 30;                           // neuer Anspruch ab 2028
   assert.equal(vacationAccount(state, 2029).base, 30);
+});
+
+test('Urlaub im Eintrittsjahr anteilig (tagesgenau, halbe Tage)', () => {
+  const s = { ...settings, vacation: { 2026: 30 }, vacationCarry: {}, vacationProrate: true, vacationStart: '2026-04-20' };
+  assert.equal(vacationBase(s, 2026), 21);   // 30 × 256/365 = 21,04
+  assert.equal(vacationBase(s, 2027), 30);   // danach voller Anspruch
+  assert.equal(vacationBase(s, 2025), 0);    // vor Eintritt nichts
+  assert.equal(vacationBase({ ...s, vacationStart: '2026-07-01' }, 2026), 15); // 30 × 184/365 = 15,12
+  assert.equal(vacationBase({ ...s, vacationProrate: false }, 2026), 30);
 });

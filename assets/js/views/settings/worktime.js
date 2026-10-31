@@ -1,8 +1,9 @@
 // Einstellungen: Soll-Arbeitszeit, Pause, Urlaubs- und Stundenkonto.
 import { fmtDur, parseDur } from '../../core/time.js';
 import { store, save } from '../../core/store.js';
-import { vacationAccount } from '../../core/calc.js';
-import { formatNumber } from '../../i18n/index.js';
+import { vacationAccount, vacationAnnual } from '../../core/calc.js';
+import { formatNumber, formatDate } from '../../i18n/index.js';
+import { parseISO } from '../../core/time.js';
 import { todayStr, now } from '../../core/session.js';
 import { t } from '../../i18n/index.js';
 import { $, $$, cardHead } from '../../ui/dom.js';
@@ -75,11 +76,19 @@ export const accounts = {
   html: () => {
     const y = now().getFullYear();
     const vac = vacationAccount(store.state, y);
+    const start = s().vacationStart || defaultStart();
+    const startYear = +start.slice(0, 4);
+    const prorated = vacationAccount(store.state, startYear);
+    const prorateInfo = s().vacationProrate
+      ? `<p class="hint">${t('settings.prorateResult', { year: startYear, n: formatNumber(prorated.base), date: formatDate(parseISO(start)) })}</p>` : '';
     return `<section class="card">${cardHead(t('settings.accounts'))}
       <div class="grid-2">
-        <label class="field"><span>${t('settings.vacationDays')}</span><input type="number" step="0.5" min="0" id="sVac" value="${vac.base || ''}"></label>
+        <label class="field"><span>${t('settings.vacationDays')}</span><input type="number" step="0.5" min="0" id="sVac" value="${vacationAnnual(s(), y) || ''}"></label>
         <label class="field"><span>${t('settings.vacationCarry', { year: y - 1 })}</span><input type="number" step="0.5" id="sVacCarry" value="${vac.manual ? vac.carry : ''}" placeholder="${t('settings.carryAuto', { n: formatNumber(vac.autoCarry) })}"></label>
       </div>
+      <label class="switch" style="margin-top:var(--sp-2)"><span>${t('settings.prorate')}</span><input type="checkbox" id="sProrate" ${s().vacationProrate ? 'checked' : ''}></label>
+      ${s().vacationProrate ? `<label class="setting-row"><span>${t('settings.prorateStart')}</span><input type="date" id="sStart" value="${start}"></label>` : ''}
+      ${prorateInfo}
       <label class="field"><span>${t('settings.hourCarry')}</span><input type="text" id="sCarry" value="${durIn(s().carry)}"></label>
       <p class="hint">${t('settings.accountsHint')}</p></section>`;
   },
@@ -89,5 +98,16 @@ export const accounts = {
     $('#sVac', view).onchange = e => update(x => setOrDelete(x.vacation, e.target.value));
     $('#sVacCarry', view).onchange = e => { update(x => setOrDelete(x.vacationCarry, e.target.value)); rerender(); };
     $('#sCarry', view).onchange = e => update(x => (x.carry = parseDur(e.target.value) || 0));
+    $('#sProrate', view).onchange = e => {
+      update(x => { x.vacationProrate = e.target.checked; if (e.target.checked && !x.vacationStart) x.vacationStart = defaultStart(); });
+      rerender();
+    };
+    $('#sStart', view)?.addEventListener('change', e => { if (e.target.value) { update(x => (x.vacationStart = e.target.value)); rerender(); } });
   },
 };
+
+// Vorschlag fürs Eintrittsdatum: erster Soll-Zeitraum mit Arbeitszeit, sonst erster erfasster Tag
+function defaultStart() {
+  const withHours = sortedPeriods().find(p => p.min.some(m => m > 0));
+  return withHours?.from || Object.keys(store.state.days).sort()[0] || todayStr();
+}

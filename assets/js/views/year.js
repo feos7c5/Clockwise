@@ -34,6 +34,7 @@ export function renderYear(view) {
   const dayMin = s.periods.at(-1).min[0] || 480;
   const { rows, total } = monthRows(y, n);
   const usedText = t('year.vacationUsed', { used: formatNumber(used), total: formatNumber(vac.total) })
+    + (vac.prorated ? ' · ' + t('year.prorated') : '')
     + (vac.carry ? ' · ' + t('year.carryIncluded', { n: formatNumber(vac.carry), year: y - 1 }) : '')
     + (planned ? ' · ' + t('year.planned', { n: formatNumber(planned) }) : '');
 

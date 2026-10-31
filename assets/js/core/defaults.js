@@ -12,6 +12,8 @@ export const DEFAULT_STATE = {
     // Soll-Minuten je Wochentag (Mo–So), gültig ab Datum
     periods: [{ from: '2026-01-01', min: [420, 420, 420, 420, 420, 0, 0] }],
     vacation: {},
+    vacationProrate: false,
+    vacationStart: '',
     vacationCarry: {},
     carry: 0,
     theme: 'system',

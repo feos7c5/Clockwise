@@ -116,10 +116,30 @@ export function vacationUsed(state, year) {
   return n;
 }
 
-// Jahresanspruch: gilt ab dem eingetragenen Jahr, bis ein späteres Jahr etwas anderes festlegt
-export function vacationBase(settings, year) {
+// Voller Jahresanspruch: gilt ab dem eingetragenen Jahr, bis ein späteres Jahr etwas anderes festlegt
+export function vacationAnnual(settings, year) {
   const years = Object.keys(settings.vacation).map(Number).filter(y => y <= year).sort((a, b) => a - b);
   return years.length ? settings.vacation[years[years.length - 1]] : 0;
+}
+
+const DAY_MS = 86_400_000;
+
+// Anteil des Eintrittsjahres ab dem Eintrittsdatum (tagesgenau), sonst 1
+export function prorateFactor(settings, year) {
+  const start = settings.vacationProrate && settings.vacationStart;
+  if (!start) return 1;
+  const startYear = +start.slice(0, 4);
+  if (year < startYear) return 0;
+  if (year > startYear) return 1;
+  const end = Date.UTC(year + 1, 0, 1);
+  const from = Date.UTC(year, +start.slice(5, 7) - 1, +start.slice(8, 10));
+  return (end - from) / (end - Date.UTC(year, 0, 1));
+}
+
+// Anspruch des Jahres, im Eintrittsjahr anteilig – Bruchteile auf halbe Tage gerundet
+export function vacationBase(settings, year) {
+  const factor = prorateFactor(settings, year);
+  return factor === 1 ? vacationAnnual(settings, year) : Math.round(vacationAnnual(settings, year) * factor * 2) / 2;
 }
 
 function firstTrackedYear(state) {
@@ -135,5 +155,6 @@ export function vacationAccount(state, year) {
   const autoCarry = first !== null && year > first ? vacationAccount(state, year - 1).left : 0;
   const carry = manual ?? autoCarry;
   const used = vacationUsed(state, String(year));
-  return { base, carry, autoCarry, manual: manual != null, total: base + carry, used, left: base + carry - used };
+  const prorated = prorateFactor(state.settings, year) < 1;
+  return { base, prorated, carry, autoCarry, manual: manual != null, total: base + carry, used, left: base + carry - used };
 }
