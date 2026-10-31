@@ -5,14 +5,15 @@ class SyncHttpError extends Error {
   constructor(status, body) { super(`HTTP ${status}`); this.status = status; this.body = body; }
 }
 
-async function request(method, path, { token, body } = {}) {
+async function request(method, path, { token, body, keepalive = false } = {}) {
   const json = body === undefined ? undefined : JSON.stringify(body);
   const res = await fetch(SYNC_URL + path, {
     method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: json,
     signal: AbortSignal.timeout(15000),
-    keepalive: json !== undefined && json.length < 60_000, // darf beim Schließen der App weiterlaufen
+    // Nur beim Schließen der App: darf dann weiterlaufen (Chrome hängt sonst bei Anfragen mit Login-Header)
+    keepalive: keepalive && json !== undefined && json.length < 60_000,
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok && res.status !== 409) throw new SyncHttpError(res.status, data);
@@ -29,8 +30,8 @@ export async function getVault(token) {
 }
 
 // Liefert { version } oder bei Konflikt { conflict: true, version, blob }
-export async function putVault(token, version, blob) {
-  const { status, data } = await request('PUT', '/v1/vault', { token, body: { version, blob } });
+export async function putVault(token, version, blob, { keepalive = false } = {}) {
+  const { status, data } = await request('PUT', '/v1/vault', { token, body: { version, blob }, keepalive });
   return status === 409 ? { conflict: true, ...data } : data;
 }
 

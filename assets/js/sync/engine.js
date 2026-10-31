@@ -37,7 +37,7 @@ async function activate(secret) {
   return syncNow();
 }
 
-async function runOnce() {
+async function runOnce({ keepalive = false } = {}) {
   let remote = await api.getVault(keys.token);
   for (let attempt = 0; attempt < 4; attempt++) {
     let remoteData = null;
@@ -52,20 +52,20 @@ async function runOnce() {
     }
     const local = payload(store.state);
     if (remoteData && canonical(local) === canonical(remoteData)) return;
-    const result = await api.putVault(keys.token, remote ? remote.version : 0, await seal(keys.key, local));
+    const result = await api.putVault(keys.token, remote ? remote.version : 0, await seal(keys.key, local), { keepalive });
     if (!result.conflict) return;
     remote = result.blob ? { version: result.version, blob: result.blob } : null;
   }
   throw new Error('conflict');
 }
 
-export function syncNow() {
+export function syncNow(options = {}) {
   if (!keys) return Promise.resolve();
   if (running) { again = true; return running; }
   setStatus('syncing');
   running = (async () => {
     try {
-      do { again = false; await runOnce(); } while (again);
+      do { again = false; await runOnce(options); } while (again);
       setStatus('ok');
     } catch (e) {
       setStatus(navigator.onLine === false || e.name === 'TypeError' || e.name === 'TimeoutError' ? 'offline' : 'error', e.message);
@@ -82,7 +82,7 @@ const schedule = () => { clearTimeout(timer); timer = setTimeout(() => { timer =
 function flush() {
   if (!timer) return;
   clearTimeout(timer); timer = null;
-  syncNow();
+  syncNow({ keepalive: true });
 }
 
 export async function initSync() {
