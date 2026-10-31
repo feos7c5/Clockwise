@@ -8,5 +8,5 @@ ALLOWED_ORIGINS = "https://feos7c5.github.io,http://localhost:8765"
 [[d1_databases]]
 binding = "DB"
 database_name = "clockwise-sync"
-database_id = "00000000-0000-0000-0000-000000000000" # wird beim ersten Deploy ersetzt
+database_id = "baefd4a8-e235-4be2-ae68-083059bd4f2f"
 migrations_dir = "migrations"
