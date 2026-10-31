@@ -30,6 +30,17 @@ test('vault: create, read, version conflict', async () => {
   assert.equal((await call('GET', '/v1/vault', { auth: t })).status, 404);
 });
 
+test('vault: unchanged version answers 304 without data', async () => {
+  const t = token();
+  await call('PUT', '/v1/vault', { auth: t, body: { version: 0, blob: 'A' } });
+  const same = await fetch(BASE + '/v1/vault', { headers: { Authorization: `Bearer ${t}`, 'If-None-Match': '"1"' } });
+  assert.equal(same.status, 304);
+  assert.equal(await same.text(), '');
+  const older = await fetch(BASE + '/v1/vault', { headers: { Authorization: `Bearer ${t}`, 'If-None-Match': '"0"' } });
+  assert.deepEqual(await older.json(), { version: 1, blob: 'A' });
+  await call('DELETE', '/v1/vault', { auth: t });
+});
+
 test('vault: no access without a valid token', async () => {
   assert.equal((await call('GET', '/v1/vault')).status, 401);
   assert.equal((await call('GET', '/v1/vault', { auth: 'kurz' })).status, 401);
@@ -39,6 +50,7 @@ test('vaults are isolated from each other', async () => {
   const a = token(), b = token();
   await call('PUT', '/v1/vault', { auth: a, body: { version: 0, blob: 'nur-a' } });
   assert.equal((await call('GET', '/v1/vault', { auth: b })).status, 404);
+  await call('DELETE', '/v1/vault', { auth: a });
 });
 
 test('pairing: can be claimed exactly once', async () => {

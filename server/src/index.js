@@ -15,7 +15,8 @@ function cors(request, env) {
   return {
     'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : allowed[0],
     'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, If-None-Match',
+    'Access-Control-Expose-Headers': 'ETag',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -44,9 +45,12 @@ async function vaultId(request) {
 }
 
 async function getVault(request, env) {
-  const row = await env.DB.prepare('SELECT version, blob FROM vaults WHERE id = ?').bind(await vaultId(request)).first();
+  const known = Number((request.headers.get('If-None-Match') || '').replace(/\D/g, '')) || 0;
+  const row = await env.DB.prepare('SELECT version, CASE WHEN version = ? THEN NULL ELSE blob END AS blob FROM vaults WHERE id = ?')
+    .bind(known, await vaultId(request)).first();
   if (!row) throw new HttpError(404, 'not_found');
-  return { version: row.version, blob: row.blob };
+  if (row.blob === null) return { status: 304, body: null, etag: row.version };
+  return { status: 200, body: { version: row.version, blob: row.blob }, etag: row.version };
 }
 
 async function putVault(request, env) {
@@ -100,7 +104,7 @@ export default {
     const route = `${request.method} ${pathname}`;
     try {
       switch (route) {
-        case 'GET /v1/vault': return json(await getVault(request, env), 200, headers);
+        case 'GET /v1/vault': { const r = await getVault(request, env); return json(r.body, r.status, { ...headers, ETag: `"${r.etag}"`, 'Cache-Control': 'no-store' }); }
         case 'PUT /v1/vault': { const r = await putVault(request, env); return json(r.body, r.status, headers); }
         case 'DELETE /v1/vault': await deleteVault(request, env); return json(null, 204, headers);
         case 'POST /v1/pair': await createPairing(request, env); return json(null, 201, headers);
