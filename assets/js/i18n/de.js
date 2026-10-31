@@ -54,6 +54,7 @@ export default {
 
   settings: {
     appearance: 'Darstellung', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel',
+    accent: 'Farbe', accents: { sage: 'Salbei', ocean: 'Ozean', lavender: 'Lavendel', terracotta: 'Terrakotta', graphite: 'Graphit' },
     language: 'Sprache', languageSystem: 'System',
     reminders: 'Erinnerungen', notifications: 'Benachrichtigungen', notifyTarget: 'Melden, wenn Soll erreicht',
     remindAt: 'Einstempeln bis', forgotAfter: 'Ausstempeln nach', off: 'aus',
@@ -138,7 +139,8 @@ export default {
     title: 'Arbeitszeitnachweis {month} {year}', pnr: 'Personal-Nr. {pnr}',
     day: 'Tag', clockIn: 'Kommt', clockOut: 'Geht', pause: 'Pause',
     carryPrev: 'Übertrag Vormonat', target: 'Soll-Arbeitszeit', actual: 'Ist-Arbeitszeit', carryNext: 'Übertrag nächster Monat',
-    absences: 'Urlaub / Krank / Homeoffice', absenceDays: '{vac} / {sick} / {ho} Tage',
+    absences: 'Diesen Monat: Urlaub / Krank / Homeoffice',
+    vacation: 'Urlaubskonto {year}', vacationValue: '{total} Anspruch · {used} genommen · {left} übrig', absenceDays: '{vac} / {sick} / {ho} Tage',
     signEmployee: 'Datum, Arbeitnehmer', signEmployer: 'Datum, Arbeitgeber',
   },
 

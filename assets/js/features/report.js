@@ -1,7 +1,7 @@
 import { iso, parseISO, range, fmtDur, pad } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
-import { dayStats, sumRange, balance, pauseMin, grossMin } from '../core/calc.js';
+import { dayStats, sumRange, balance, pauseMin, grossMin, vacationAccount } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now } from '../core/session.js';
 import { t, weekdayShort, formatDayMonth, formatDate, monthName, formatNumber } from '../i18n/index.js';
@@ -71,15 +71,22 @@ export function buildMonthPdf(y, m) {
   yPos += 14;
   const sumRow = (label, value, bold = false) => {
     doc.text(M, yPos, label, { bold });
-    doc.text(COL.ist + 16, yPos, value, { bold, align: 'right' });
+    doc.text(A4.w - M, yPos, value, { bold, align: 'right' });
     yPos += 15;
   };
   sumRow(t('print.carryPrev'), plain(carry));
   sumRow(t('print.target'), fmtDur(sum.soll));
   sumRow(t('print.actual'), fmtDur(sum.ist));
-  doc.line(M, yPos - 10, COL.ist + 16, yPos - 10, { gray: 0.6 });
+  doc.line(M, yPos - 10, A4.w - M, yPos - 10, { gray: 0.6 });
   sumRow(t('print.carryNext'), plain(carry + sum.diff), true);
   sumRow(t('print.absences'), t('print.absenceDays', { vac: formatNumber(totals.vac), sick: totals.sick, ho: totals.ho }));
+  const vac = vacationAccount(store.state, y);
+  const usedToDate = Object.entries(store.state.days)
+    .filter(([ds]) => ds.startsWith(String(y)) && ds <= last)
+    .reduce((a, [, d]) => a + vacationValue(d.code), 0);
+  sumRow(t('print.vacation', { year: y }), t('print.vacationValue', {
+    total: formatNumber(vac.total), used: formatNumber(usedToDate), left: formatNumber(vac.total - usedToDate),
+  }));
 
   const signY = Math.min(yPos + 55, A4.h - 60);
   doc.line(M, signY, 260, signY, { gray: 0, width: 0.6 });
