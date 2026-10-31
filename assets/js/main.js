@@ -9,7 +9,7 @@ import { $, $$, tone } from './ui/dom.js';
 import { ICON } from './ui/icons.js';
 import { applyTheme } from './ui/theme.js';
 import { dialogOpen } from './ui/dialog.js';
-import { nav, setRenderer, goTo, stepPeriod, resetPeriod, isCurrentPeriod } from './ui/nav.js';
+import { nav, TABS, setRenderer, goTo, stepPeriod, resetPeriod, isCurrentPeriod } from './ui/nav.js';
 import { renderToday, tickTimer } from './views/today.js';
 import { renderMonth } from './views/month.js';
 import { renderYear } from './views/year.js';
@@ -45,7 +45,9 @@ function renderHeadActions() {
 }
 
 function renderTabs() {
-  $('.tabs').setAttribute('aria-label', t('nav.main'));
+  const tabs = $('.tabs');
+  tabs.setAttribute('aria-label', t('nav.main'));
+  tabs.style.setProperty('--tab', TABS.indexOf(nav.tab));
   $$('.tabs button').forEach(b => {
     b.classList.toggle('on', b.dataset.tab === nav.tab);
     $('span', b).textContent = t(`nav.${b.dataset.tab}`);
