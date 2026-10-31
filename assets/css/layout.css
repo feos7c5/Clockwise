@@ -7,11 +7,12 @@
 }
 .compact-bar {
   position: fixed; z-index: 20; top: 0; left: 0; right: 0; padding-top: env(safe-area-inset-top);
-  background: var(--glass); box-shadow: 0 1px 0 var(--line);
-  backdrop-filter: saturate(1.8) blur(20px); -webkit-backdrop-filter: saturate(1.8) blur(20px);
-  opacity: 0; transform: translateY(-.5rem); pointer-events: none; transition: opacity .2s, transform .2s;
+  background: var(--bg); box-shadow: 0 1px 0 var(--line);
+  opacity: 0; pointer-events: none; transition: opacity .15s;
 }
-body.scrolled .compact-bar { opacity: 1; transform: none; pointer-events: auto; }
+body.compact .compact-bar { opacity: 1; pointer-events: auto; }
+body[data-tab="month"] .top, body[data-tab="year"] .top { position: sticky; top: 0; transition: box-shadow .2s; }
+body.stuck .top { box-shadow: 0 1px 0 var(--line); }
 .compact-inner {
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
   max-width: var(--content-w); height: 3rem; margin: 0 auto; padding: 0 var(--gutter);
