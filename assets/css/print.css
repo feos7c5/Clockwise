@@ -1,0 +1,17 @@
+/* Druck / PDF: Monatsnachweis. */
+
+#print { display: none; }
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: #fff; color: #000; padding: 0; }
+  .top, main, .tabs, dialog { display: none !important; }
+  #print { display: block; font-size: 10.5pt; }
+  #print h1 { margin: 0 0 2pt; font-size: 16pt; }
+  #print .meta { margin-bottom: 10pt; color: #555; }
+  #print table { font-size: 9.5pt; }
+  #print th, #print td { padding: 3pt 4pt; border-bottom: .5pt solid #ccc; color: #000; }
+  #print tr.we td { color: #888; }
+  #print .sum { width: 50%; margin-top: 12pt; }
+  #print .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 30pt; margin-top: 40pt; }
+  #print .sign div { padding-top: 3pt; border-top: .5pt solid #000; font-size: 9pt; }
+}
