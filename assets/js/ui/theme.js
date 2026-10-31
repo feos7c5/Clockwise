@@ -8,6 +8,9 @@ export function applyTheme() {
   const t = store.state.settings.theme, root = document.documentElement;
   if (t === 'system') delete root.dataset.theme;
   else root.dataset.theme = t;
+  const accent = store.state.settings.accent;
+  if (!accent || accent === 'sage') delete root.dataset.accent;
+  else root.dataset.accent = accent;
 
   const [light, dark] = $$('meta[name="theme-color"]');
   light.content = t === 'dark' ? DARK : LIGHT;

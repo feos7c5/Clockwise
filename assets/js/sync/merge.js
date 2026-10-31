@@ -1,4 +1,4 @@
-export const DEVICE_SETTINGS = ['theme', 'language', 'remind'];
+export const DEVICE_SETTINGS = ['theme', 'accent', 'language', 'remind'];
 
 export const sharedSettings = settings =>
   Object.fromEntries(Object.entries(settings).filter(([k]) => !DEVICE_SETTINGS.includes(k)));

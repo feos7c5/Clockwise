@@ -7,6 +7,8 @@ import { rerender } from '../../ui/nav.js';
 import { notify, notificationPermission, checkReminders } from '../../features/reminders.js';
 
 const s = () => store.state.settings;
+
+const ACCENTS = [['sage', '#2f6b55'], ['ocean', '#2b5f8a'], ['lavender', '#5b4f9a'], ['terracotta', '#a4553a'], ['graphite', '#3a3a40']];
 const update = fn => { fn(s()); save(); };
 
 const segment = (attr, current, options) =>
@@ -15,11 +17,14 @@ const segment = (attr, current, options) =>
 export const appearance = {
   html: () => `<section class="card">${cardHead(t('settings.appearance'))}
     ${segment('th', s().theme, [['system', t('settings.themeSystem')], ['light', t('settings.themeLight')], ['dark', t('settings.themeDark')]])}
+    <div class="card-head sub"><h2>${t('settings.accent')}</h2></div>
+    <div class="swatches">${ACCENTS.map(([k, color]) => `<button class="swatch ${(s().accent || 'sage') === k ? 'on' : ''}" data-accent-pick="${k}" style="--c:${color}" aria-label="${t(`settings.accents.${k}`)}"><i></i>${t(`settings.accents.${k}`)}</button>`).join('')}</div>
     <div class="card-head sub"><h2>${t('settings.language')}</h2></div>
     ${segment('lang', s().language, [['system', t('settings.languageSystem')], ['de', 'Deutsch'], ['en', 'English']])}
   </section>`,
   bind: view => {
     $$('[data-th]', view).forEach(b => (b.onclick = () => { update(x => (x.theme = b.dataset.th)); applyTheme(); rerender(); }));
+    $$('[data-accent-pick]', view).forEach(b => (b.onclick = () => { update(x => (x.accent = b.dataset.accentPick)); applyTheme(); rerender(); }));
     $$('[data-lang]', view).forEach(b => (b.onclick = () => { update(x => (x.language = b.dataset.lang)); rerender(); }));
   },
 };

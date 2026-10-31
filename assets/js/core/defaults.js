@@ -14,6 +14,7 @@ export const DEFAULT_STATE = {
     vacationCarry: {},
     carry: 0,
     theme: 'system',
+    accent: 'sage',
     language: 'system',
     remind: { on: false, at: '09:00', soll: true, forgot: 10 },
   },

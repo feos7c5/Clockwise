@@ -1,9 +1,9 @@
-const CACHE = 'clockwise-v15';
+const CACHE = 'clockwise-v16';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/css/tokens.css', 'assets/css/base.css', 'assets/css/components.css',
-  'assets/css/layout.css', 'assets/css/views.css',
+  'assets/css/layout.css', 'assets/css/views.css', 'assets/css/themes.css',
   'assets/js/main.js',
   'assets/js/i18n/index.js', 'assets/js/i18n/de.js', 'assets/js/i18n/en.js',
   'assets/js/sync/api.js', 'assets/js/sync/config.js', 'assets/js/sync/crypto.js', 'assets/js/sync/engine.js', 'assets/js/sync/merge.js',
