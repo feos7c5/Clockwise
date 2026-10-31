@@ -6,3 +6,7 @@ Excel-Import.json
 
 .DS_Store
 node_modules/
+
+# Cloudflare lokal
+.wrangler/
+.dev.vars

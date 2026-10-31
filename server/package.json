@@ -1,0 +1,17 @@
+{
+  "name": "clockwise-sync",
+  "version": "1.0.0",
+  "description": "Ende-zu-Ende-verschlüsselter Sync-Speicher für Clockwise (Cloudflare Worker + D1)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8787",
+    "migrate:local": "wrangler d1 migrations apply clockwise-sync --local",
+    "migrate:remote": "wrangler d1 migrations apply clockwise-sync --remote",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.0"
+  }
+}

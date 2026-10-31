@@ -1,0 +1,12 @@
+name = "clockwise-sync"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://feos7c5.github.io,http://localhost:8765"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "clockwise-sync"
+database_id = "00000000-0000-0000-0000-000000000000" # wird beim ersten Deploy ersetzt
+migrations_dir = "migrations"
