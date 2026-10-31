@@ -1,5 +1,5 @@
 // Service Worker: Netz zuerst (Updates kommen sofort an), offline aus dem Cache.
-const CACHE = 'clockwise-v9';
+const CACHE = 'clockwise-v10';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
