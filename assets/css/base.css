@@ -9,7 +9,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   font-size: var(--fs-base);
   line-height: var(--lh-base);
-  padding: env(safe-area-inset-top) 0 calc(var(--tabbar-h) + var(--sp-6) + env(safe-area-inset-bottom));
+  padding: env(safe-area-inset-top) 0 calc(var(--tabbar-h) + var(--sp-8) + env(safe-area-inset-bottom));
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
