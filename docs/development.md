@@ -42,6 +42,10 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 - **Conflict-free:** Every day carries a change timestamp, the newer change wins, deletions propagate.
   Theme, language and reminders stay per device.
 - **Recovery key:** for when all devices are lost.
+- **Offline first:** everything works without a connection. Changes are buffered for 3 seconds, sent in one
+  upload and remembered as pending until the server confirms them – also across restarts.
+- **Few requests:** uploads go straight to the server with the last known version (a conflict returns the
+  newer state to merge). Polling happens on open and every 2 minutes while visible; unchanged data answers 304.
 
 The server is a Cloudflare Worker with a D1 database in [`server/`](../server/) (about 130 lines).
 
