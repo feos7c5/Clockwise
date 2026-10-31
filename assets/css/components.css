@@ -60,7 +60,8 @@ input[type=text], input[type=number], input[type=time], input[type=date], select
   font-size: max(1rem, 16px); /* unter 16 px zoomt iOS beim Fokus */
   text-align: left; color: var(--ink);
 }
-/* iOS: Datum/Zeit nicht zentrieren und keine Mindestbreite */
+/* iOS-Safari: Datum/Uhrzeit sonst oben statt mittig, zentriert und ohne Mindestbreite */
+input[type=time], input[type=date] { display: flex; align-items: center; }
 input::-webkit-date-and-time-value { text-align: left; margin: 0; }
 input[type=time]::-webkit-calendar-picker-indicator, input[type=date]::-webkit-calendar-picker-indicator { opacity: .5; }
 /* Eigener Pfeil statt nativer Dropdown-Optik */
