@@ -52,13 +52,17 @@
 @media (hover: hover) { .dayrow:hover { background: var(--fill); } }
 .dayrow + .dayrow::before { content: ""; position: absolute; top: 0; left: calc(var(--sp-4) + 2.5rem + var(--sp-3)); right: var(--sp-4); border-top: 1px solid var(--line); }
 .dayrow.compact { min-height: 2.75rem; }
-.date { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
-.date b { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: var(--r-full); font-size: var(--fs-base); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
-.date small { font-size: var(--fs-xs); color: var(--muted); }
+.date {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  width: 2.5rem; height: 2.75rem; border-radius: var(--r-md); line-height: 1;
+}
+.date small { font-size: .625rem; font-weight: var(--fw-semibold); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.date b { font-size: var(--fs-md); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .dayrow.compact { padding-block: var(--sp-1); }
-.dayrow.compact .date b { height: 1.5rem; }
+.dayrow.compact .date { height: 2.25rem; }
 .dayrow.we .date b, .dayrow.we .date small { color: var(--faint); }
-.dayrow.today .date b { background: var(--ink); color: var(--bg); }
+.dayrow.today .date { background: var(--accent); }
+.dayrow.today .date b, .dayrow.today .date small { color: var(--on-accent); }
 .dayrow .main { min-width: 0; font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
 .dayrow .sub { margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-xs); color: var(--muted); }
 .dayrow .side { text-align: right; font-size: var(--fs-base); font-variant-numeric: tabular-nums; }

@@ -24,7 +24,7 @@ function dayRow(ds, n, today) {
   const classes = [wd === 0 || wd === 6 ? 'we' : '', ds === today ? 'today' : '', compact ? 'compact' : ''].join(' ');
 
   return `<button class="dayrow ${classes}" data-day="${ds}">
-    <div class="date"><b>${parseISO(ds).getDate()}</b><small>${weekdayShort(wd)}</small></div>
+    <div class="date"><small>${weekdayShort(wd)}</small><b>${parseISO(ds).getDate()}</b></div>
     <div class="main">${times || (missing ? `<span class="minus">${t('month.noTimes')}</span>` : '')}${sub ? `<div class="sub">${sub}</div>` : ''}</div>
     <div class="side">${st.ist ? fmtDur(st.ist) : ''}<small class="${tone(st.diff)}">${st.counts && (st.ist || st.soll) ? fmtDur(st.diff, true) : ''}</small></div>
   </button>`;
@@ -47,8 +47,8 @@ export function renderMonth(view) {
       ${summaryItem(t('month.endBalance'), fmtDur(end, true), tone(end))}
     </section>
     <div class="btn-row">
-      <button class="btn" id="absence">${ICON.plus}${t('month.absence')}</button>
-      <button class="btn" id="printMonth">${ICON.print}${t('month.print')}</button>
+      <button class="btn btn-raised" id="absence">${ICON.plus}${t('month.absence')}</button>
+      <button class="btn btn-raised" id="printMonth">${ICON.print}${t('month.print')}</button>
     </div>
     <div class="days">${range(first, last).map(ds => dayRow(ds, n, todayStr())).join('')}</div>
   </div>`;

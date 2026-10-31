@@ -18,6 +18,9 @@
 .btn-ink { background: var(--ink); color: var(--bg); }
 @media (hover: hover) { .btn-ink:hover { background: var(--ink); opacity: .88; } }
 .btn-ghost { background: transparent; }
+/* Auf dem Seitenhintergrund (außerhalb von Karten): weiß und leicht erhöht */
+.btn-raised { background: var(--surface); box-shadow: var(--shadow-raised); }
+@media (hover: hover) { .btn-raised:hover { background: var(--surface); box-shadow: var(--shadow-float); } }
 .btn-ghost.accent { color: var(--accent); }
 .btn-ghost.danger { color: var(--minus); }
 
