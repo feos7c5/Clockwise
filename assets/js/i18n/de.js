@@ -37,7 +37,7 @@ export default {
 
   year: {
     vacationLeft: 'Resturlaub', days: { one: '{n} Tag', other: '{n} Tage' },
-    vacationUsed: '{used} von {total} genommen', planned: '{n} geplant',
+    vacationUsed: '{used} von {total} genommen', planned: '{n} geplant', carryIncluded: 'inkl. {n} aus {year}',
     overtime: 'Überstunden', approxDays: '≈ {n} Arbeitstage',
     months: 'Monate', month: 'Monat', noData: 'Keine Daten',
     dayCounts: 'Tage', present: 'Anwesend', vacation: 'Urlaub', sick: 'Krank',
@@ -75,7 +75,9 @@ export default {
     pause: 'Pause', pauseFixed: 'Fester Abzug', pauseLegal: 'Nach Gesetz', pausePerDay: 'Minuten pro Tag',
     pauseFixedHint: 'Gestempelte Pausen werden angerechnet. Pro Tag änderbar.',
     pauseLegalHint: 'Ab 6 h 30 min, ab 9 h 45 min, gestempelte Pausen zählen mit. Pro Tag änderbar.',
-    accounts: 'Konten', vacationDays: 'Urlaubstage {year}', vacationCarry: 'Resturlaub aus {year}', hourCarry: 'Stunden-Übertrag beim Start (z. B. -2:30)',
+    accounts: 'Konten', vacationDays: 'Urlaubstage pro Jahr', vacationCarry: 'Resturlaub aus {year}', carryAuto: 'automatisch: {n}',
+    hourCarry: 'Stunden-Übertrag beim Start (z. B. -2:30)',
+    accountsHint: 'Urlaubstage gelten auch für die Folgejahre. Resturlaub wird automatisch ins neue Jahr übertragen – nur eintragen, wenn er abweicht (z. B. verfallen). Der Stunden-Saldo läuft über den Jahreswechsel einfach weiter.',
     reset: 'Zurücksetzen', resetButton: 'Alle Daten löschen', resetHint: 'Löscht alles, was in der App erfasst ist – bei aktivem Sync auf allen Geräten. Vorher ein Backup sichern.',
     confirmReset: 'Wirklich ALLE erfassten Daten löschen? Das lässt sich nicht rückgängig machen.',
   },

@@ -37,7 +37,7 @@ export default {
 
   year: {
     vacationLeft: 'Vacation left', days: { one: '{n} day', other: '{n} days' },
-    vacationUsed: '{used} of {total} taken', planned: '{n} planned',
+    vacationUsed: '{used} of {total} taken', planned: '{n} planned', carryIncluded: 'incl. {n} from {year}',
     overtime: 'Overtime', approxDays: '≈ {n} working days',
     months: 'Months', month: 'Month', noData: 'No data',
     dayCounts: 'Days', present: 'Present', vacation: 'Vacation', sick: 'Sick',
@@ -75,7 +75,9 @@ export default {
     pause: 'Break', pauseFixed: 'Fixed deduction', pauseLegal: 'By law', pausePerDay: 'Minutes per day',
     pauseFixedHint: 'Clocked breaks count towards it. Can be changed per day.',
     pauseLegalHint: '30 min after 6 h, 45 min after 9 h, clocked breaks count. Can be changed per day.',
-    accounts: 'Balances', vacationDays: 'Vacation days {year}', vacationCarry: 'Vacation left from {year}', hourCarry: 'Starting hour balance (e.g. -2:30)',
+    accounts: 'Balances', vacationDays: 'Vacation days per year', vacationCarry: 'Carried over from {year}', carryAuto: 'automatic: {n}',
+    hourCarry: 'Starting hour balance (e.g. -2:30)',
+    accountsHint: 'Vacation days also apply to the following years. Unused vacation is carried over automatically – only enter it if it differs (e.g. expired). The hour balance simply continues across years.',
     reset: 'Reset', resetButton: 'Delete all data', resetHint: 'Deletes everything recorded in the app – on all devices if sync is on. Save a backup first.',
     confirmReset: 'Really delete ALL recorded data? This cannot be undone.',
   },

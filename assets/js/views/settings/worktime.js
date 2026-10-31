@@ -1,6 +1,8 @@
 // Einstellungen: Soll-Arbeitszeit, Pause, Urlaubs- und Stundenkonto.
 import { fmtDur, parseDur } from '../../core/time.js';
 import { store, save } from '../../core/store.js';
+import { vacationAccount } from '../../core/calc.js';
+import { formatNumber } from '../../i18n/index.js';
 import { todayStr, now } from '../../core/session.js';
 import { t } from '../../i18n/index.js';
 import { $, $$, cardHead } from '../../ui/dom.js';
@@ -73,18 +75,20 @@ export const pause = {
 export const accounts = {
   html: () => {
     const y = now().getFullYear();
+    const vac = vacationAccount(store.state, y);
     return `<section class="card">${cardHead(t('settings.accounts'))}
       <div class="grid-2">
-        <label class="field"><span>${t('settings.vacationDays', { year: y })}</span><input type="number" step="0.5" id="sVac" value="${s().vacation[y] ?? ''}"></label>
-        <label class="field"><span>${t('settings.vacationCarry', { year: y - 1 })}</span><input type="number" step="0.5" id="sVacCarry" value="${s().vacationCarry[y] ?? ''}"></label>
+        <label class="field"><span>${t('settings.vacationDays')}</span><input type="number" step="0.5" min="0" id="sVac" value="${vac.base || ''}"></label>
+        <label class="field"><span>${t('settings.vacationCarry', { year: y - 1 })}</span><input type="number" step="0.5" id="sVacCarry" value="${vac.manual ? vac.carry : ''}" placeholder="${t('settings.carryAuto', { n: formatNumber(vac.autoCarry) })}"></label>
       </div>
-      <label class="field"><span>${t('settings.hourCarry')}</span><input type="text" id="sCarry" value="${durIn(s().carry)}"></label></section>`;
+      <label class="field"><span>${t('settings.hourCarry')}</span><input type="text" id="sCarry" value="${durIn(s().carry)}"></label>
+      <p class="hint">${t('settings.accountsHint')}</p></section>`;
   },
   bind: view => {
     const y = now().getFullYear();
     const setOrDelete = (obj, v) => { if (v === '') delete obj[y]; else obj[y] = +v; };
     $('#sVac', view).onchange = e => update(x => setOrDelete(x.vacation, e.target.value));
-    $('#sVacCarry', view).onchange = e => update(x => setOrDelete(x.vacationCarry, e.target.value));
+    $('#sVacCarry', view).onchange = e => { update(x => setOrDelete(x.vacationCarry, e.target.value)); rerender(); };
     $('#sCarry', view).onchange = e => update(x => (x.carry = parseDur(e.target.value) || 0));
   },
 };

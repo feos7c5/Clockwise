@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fmtDur, parseDur } from '../assets/js/core/time.js';
 import { easter, holidays } from '../assets/js/core/holidays.js';
-import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, pauseWarning } from '../assets/js/core/calc.js';
+import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, pauseWarning } from '../assets/js/core/calc.js';
 
 const settings = {
   land: 'NW', halfHolidays: true, pauseMode: 'fix', pauseMin: 45, carry: 0,
@@ -82,4 +82,18 @@ test('Vor dem ersten Eintrag zählt nichts – auch nicht in Monats-/Jahressumme
   assert.deepEqual(jan, { ist: 0, soll: 0, diff: 0 });
   assert.equal(dayStats(state, '2026-10-28', NOW).counts, false);
   assert.equal(sumRange(state, '2026-01-01', '2026-10-31', NOW).diff, balance(state, '2026-10-31', NOW));
+});
+
+test('Urlaub: Anspruch gilt weiter, Resturlaub wird automatisch übertragen', () => {
+  const state = {
+    settings: { ...settings, vacation: { 2026: 21 }, vacationCarry: {} },
+    days: { '2026-07-06': { blocks: [], code: 'U' }, '2026-07-07': { blocks: [], code: 'UH' }, '2027-03-01': { blocks: [], code: 'U' } },
+  };
+  assert.deepEqual([vacationAccount(state, 2026).carry, vacationAccount(state, 2026).left], [0, 19.5]);
+  const y27 = vacationAccount(state, 2027);
+  assert.deepEqual([y27.base, y27.carry, y27.left], [21, 19.5, 39.5]);
+  state.settings.vacationCarry[2027] = 5;                       // Rest teilweise verfallen
+  assert.deepEqual([vacationAccount(state, 2027).carry, vacationAccount(state, 2028).carry], [5, 25]);
+  state.settings.vacation[2028] = 30;                           // neuer Anspruch ab 2028
+  assert.equal(vacationAccount(state, 2029).base, 30);
 });

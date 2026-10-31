@@ -115,3 +115,25 @@ export function vacationUsed(state, year) {
   for (const [ds, day] of Object.entries(state.days)) if (ds.startsWith(year)) n += vacationValue(day.code);
   return n;
 }
+
+// Jahresanspruch: gilt ab dem eingetragenen Jahr, bis ein späteres Jahr etwas anderes festlegt
+export function vacationBase(settings, year) {
+  const years = Object.keys(settings.vacation).map(Number).filter(y => y <= year).sort((a, b) => a - b);
+  return years.length ? settings.vacation[years[years.length - 1]] : 0;
+}
+
+function firstTrackedYear(state) {
+  const years = [...Object.keys(state.settings.vacation).map(Number), ...Object.keys(state.days).map(ds => +ds.slice(0, 4))];
+  return years.length ? Math.min(...years) : null;
+}
+
+// Urlaubskonto eines Jahres. Resturlaub kommt automatisch aus dem Vorjahr, außer er ist eingetragen.
+export function vacationAccount(state, year) {
+  const base = vacationBase(state.settings, year);
+  const manual = state.settings.vacationCarry[year];
+  const first = firstTrackedYear(state);
+  const autoCarry = first !== null && year > first ? vacationAccount(state, year - 1).left : 0;
+  const carry = manual ?? autoCarry;
+  const used = vacationUsed(state, String(year));
+  return { base, carry, autoCarry, manual: manual != null, total: base + carry, used, left: base + carry - used };
+}

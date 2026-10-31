@@ -1,7 +1,7 @@
 // Ansicht "Jahr": Monate, Urlaub, Überstunden, Tagesarten.
 import { iso, fmtDur } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
-import { sumRange, balance, vacationUsed } from '../core/calc.js';
+import { sumRange, balance, vacationAccount } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
 import { t, tn, monthName, formatNumber } from '../i18n/index.js';
@@ -23,27 +23,23 @@ function monthRows(y, n) {
   return { rows, total };
 }
 
-function entitlement(s, y) {
-  const latest = s.vacation[Object.keys(s.vacation).sort().pop()];
-  return (s.vacation[y] ?? latest ?? 0) + (s.vacationCarry[y] || 0);
-}
-
 export function renderYear(view) {
   const y = nav.year, n = now(), s = store.state.settings;
   const entries = Object.entries(store.state.days).filter(([d]) => d.startsWith(y));
   const count = code => entries.filter(([, v]) => v.code === code).length;
-  const used = vacationUsed(store.state, String(y));
+  const vac = vacationAccount(store.state, y);
+  const used = vac.used;
   const planned = entries.filter(([d]) => d > todayStr()).reduce((a, [, v]) => a + vacationValue(v.code), 0);
-  const entitled = entitlement(s, y);
   const bal = balance(store.state, todayStr(), n);
   const dayMin = s.periods.at(-1).min[0] || 480;
   const { rows, total } = monthRows(y, n);
-  const usedText = t('year.vacationUsed', { used: formatNumber(used), total: formatNumber(entitled) })
+  const usedText = t('year.vacationUsed', { used: formatNumber(used), total: formatNumber(vac.total) })
+    + (vac.carry ? ' · ' + t('year.carryIncluded', { n: formatNumber(vac.carry), year: y - 1 }) : '')
     + (planned ? ' · ' + t('year.planned', { n: formatNumber(planned) }) : '');
 
   view.innerHTML = `<div class="stack">
     <section class="stats">
-      ${stat(t('year.vacationLeft'), tn('year.days', entitled - used, { n: formatNumber(entitled - used) }), usedText)}
+      ${stat(t('year.vacationLeft'), tn('year.days', vac.left, { n: formatNumber(vac.left) }), usedText)}
       ${stat(t('year.overtime'), fmtDur(bal, true), t('year.approxDays', { n: formatNumber(bal / dayMin) }), tone(bal))}
     </section>
     <section class="card">
