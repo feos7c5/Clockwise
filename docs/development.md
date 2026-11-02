@@ -49,6 +49,30 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 - **Few requests:** uploads go straight to the server with the last known version (a conflict returns the
   newer state to merge). Polling happens on open and every 2 minutes while visible; unchanged data answers 304.
 
+## Notifications
+
+Reminders and the automatic clock-out reach the device even when the app is closed (on iPhone once it is
+added to the Home Screen). The app sends its upcoming notifications – clock-in reminder for the next 7 workdays,
+target reached, automatic clock-out – to the server whenever they change. A cron trigger checks every minute
+and delivers due ones via Web Push (VAPID, encrypted payload). The clock-out itself is written into the data
+the next time the app runs, backdated to the moment the limit was reached.
+
+One-time setup for the server:
+
+```sh
+cd server
+npm run vapid                              # prints a key pair
+# public key → VAPID_PUBLIC_KEY in wrangler.toml, private key:
+npx wrangler secret put VAPID_PRIVATE_KEY
+npm run migrate:remote && npm run deploy
+```
+
+## Updates
+
+The service worker activates new versions immediately and the open app reloads itself (deferred while a
+dialog or input is in use). The `pre-commit` hook derives the cache name in `sw.js` from the app files, so
+every change ships as a new version.
+
 The server is a Cloudflare Worker with a D1 database in [`server/`](../server/) (about 130 lines).
 
 ```sh
