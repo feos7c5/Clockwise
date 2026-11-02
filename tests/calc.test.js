@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fmtDur, parseDur } from '../assets/js/core/time.js';
 import { easter, holidays } from '../assets/js/core/holidays.js';
-import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, vacationBase, pauseWarning } from '../assets/js/core/calc.js';
+import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, vacationBase, pauseWarning, reachMin } from '../assets/js/core/calc.js';
 
 const settings = {
   land: 'NW', halfHolidays: true, pauseMode: 'fix', pauseMin: 45, carry: 0,
@@ -105,4 +105,11 @@ test('vacation prorated in the first year (by day, half days)', () => {
   assert.equal(vacationBase(s, 2025), 0);
   assert.equal(vacationBase({ ...s, vacationStart: '2026-07-01' }, 2026), 15);
   assert.equal(vacationBase({ ...s, vacationProrate: false }, 2026), 30);
+});
+
+test('minute at which net work time reaches a target', () => {
+  assert.equal(reachMin(settings, day(['08:24', null]), 600, 504), 504 + 645);
+  assert.equal(reachMin(settings, day(['08:00', '12:00'], ['12:30', null]), 600, 750), 750 + 375);
+  assert.equal(istMin(settings, day(['08:00', '12:00'], ['12:30', null]), 780), 240 + 30 - 15);
+  assert.equal(reachMin(settings, day(['22:00', null]), 600, 1320), 1320 + 645);
 });

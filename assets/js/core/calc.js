@@ -21,10 +21,11 @@ export function grossMin(day, nowMin = null) {
 }
 
 export function gapMin(day) {
-  const done = (day.blocks || []).filter(b => b.in && b.out);
+  const blocks = (day.blocks || []).filter(b => b.in);
   let gaps = 0;
-  for (let i = 1; i < done.length; i++) {
-    let d = toMin(done[i].in) - toMin(done[i - 1].out);
+  for (let i = 1; i < blocks.length; i++) {
+    if (!blocks[i - 1].out) continue;
+    let d = toMin(blocks[i].in) - toMin(blocks[i - 1].out);
     if (d < 0) d += 1440;
     gaps += d;
   }
@@ -43,6 +44,11 @@ export function pauseMin(settings, day, gross) {
 export function istMin(settings, day, nowMin = null) {
   const gross = grossMin(day, nowMin);
   return Math.max(0, gross - pauseMin(settings, day, gross));
+}
+
+export function reachMin(settings, day, target, from) {
+  for (let m = from; m <= from + 1440; m++) if (istMin(settings, day, m) >= target) return m;
+  return null;
 }
 
 export function pauseWarning(settings, day, nowMin = null) {
