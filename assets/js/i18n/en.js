@@ -57,10 +57,10 @@ export default {
     accent: 'Color', accents: { sage: 'Sage', ocean: 'Ocean', lavender: 'Lavender', terracotta: 'Clay', graphite: 'Graphite' },
     language: 'Language', languageSystem: 'System',
     reminders: 'Reminders', notifications: 'Notifications', notifyTarget: 'Notify when target is reached',
-    remindAt: 'Clock in by', forgotAfter: 'Clock out after', off: 'off',
+    remindAt: 'Clock in by', forgotAfter: 'Clock out automatically after', off: 'off',
     sendTest: 'Send test', testBody: 'This is how your reminders look.',
     notifyBlocked: 'Notifications are blocked in the browser – please allow them in the site settings.',
-    notifyHint: 'Reminds you if you haven’t clocked in by that time on a working day, or are still clocked in after that many hours. Works while the app is open.',
+    notifyHint: 'Reminds you if you haven’t clocked in by that time on a working day and tells you when you reach your target. After that many hours of work you are clocked out automatically. Arrives even when the app is closed – on iPhone once Clockwise is added to the Home Screen.',
     storage: 'Backup & export',
     syncUnsupported: 'This browser cannot save to a file automatically (works in Chrome or Edge on desktop). Use “Save backup” and choose iCloud Drive.',
     syncIntro: 'Saves every change to a file automatically, e.g. in iCloud Drive.',
@@ -136,7 +136,7 @@ export default {
   notify: {
     missingTitle: 'Not clocked in yet', missingBody: 'Today is a working day – don’t forget to clock in.',
     targetTitle: 'Target reached', targetBody: 'You have worked {dur} h today.',
-    forgotTitle: 'Still clocked in?', forgotBody: 'Clocked in since {time} – forgot to clock out?',
+    autoOutTitle: 'Clocked out automatically', autoOutBody: 'Clocked out at {time} after {hours} h of work.',
   },
 
   print: {

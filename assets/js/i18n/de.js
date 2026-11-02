@@ -57,10 +57,10 @@ export default {
     accent: 'Farbe', accents: { sage: 'Salbei', ocean: 'Ozean', lavender: 'Lavendel', terracotta: 'Ziegel', graphite: 'Graphit' },
     language: 'Sprache', languageSystem: 'System',
     reminders: 'Erinnerungen', notifications: 'Benachrichtigungen', notifyTarget: 'Melden, wenn Soll erreicht',
-    remindAt: 'Einstempeln bis', forgotAfter: 'Ausstempeln nach', off: 'aus',
+    remindAt: 'Einstempeln bis', forgotAfter: 'Automatisch ausstempeln nach', off: 'aus',
     sendTest: 'Test senden', testBody: 'So sehen deine Erinnerungen aus.',
     notifyBlocked: 'Benachrichtigungen sind im Browser blockiert – bitte in den Website-Einstellungen erlauben.',
-    notifyHint: 'Erinnert, wenn du an einem Arbeitstag bis zur Uhrzeit nicht eingestempelt hast oder nach so vielen Stunden noch eingestempelt bist. Funktioniert, solange die App geöffnet ist.',
+    notifyHint: 'Erinnert, wenn du an einem Arbeitstag bis zur Uhrzeit nicht eingestempelt hast, und meldet das Soll. Nach so vielen Stunden Arbeitszeit wird automatisch ausgestempelt. Kommt auch bei geschlossener App an – auf dem iPhone, wenn Clockwise zum Home-Bildschirm hinzugefügt ist.',
     storage: 'Backup & Export',
     syncUnsupported: 'Dieser Browser kann nicht automatisch in eine Datei speichern (geht in Chrome oder Edge am Computer). Nutze „Backup sichern“ und wähle dort iCloud Drive.',
     syncIntro: 'Speichert jede Änderung automatisch in eine Datei, z. B. in iCloud Drive.',
@@ -136,7 +136,7 @@ export default {
   notify: {
     missingTitle: 'Noch nicht eingestempelt', missingBody: 'Heute ist ein Arbeitstag – Kommen nicht vergessen.',
     targetTitle: 'Soll erreicht', targetBody: 'Du hast heute {dur} h gearbeitet.',
-    forgotTitle: 'Noch eingestempelt?', forgotBody: 'Seit {time} eingestempelt – ausstempeln vergessen?',
+    autoOutTitle: 'Automatisch ausgestempelt', autoOutBody: 'Nach {hours} h Arbeitszeit um {time} ausgestempelt.',
   },
 
   print: {

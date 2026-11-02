@@ -1,7 +1,7 @@
 import { fmtDur } from './core/time.js';
 import { balance } from './core/calc.js';
 import { store } from './core/store.js';
-import { now, todayStr } from './core/session.js';
+import { now, todayStr, autoClockOut } from './core/session.js';
 import { initFileSync, onSyncChange } from './core/file-sync.js';
 import { t, setLanguage, formatLongDate, monthName } from './i18n/index.js';
 import { $, $$, tone } from './ui/dom.js';
@@ -117,6 +117,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 applyTheme();
+autoClockOut();
 render();
 initFileSync();
 initSync();

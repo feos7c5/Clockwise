@@ -4,7 +4,7 @@ import { t } from '../../i18n/index.js';
 import { $, $$, esc, cardHead, settingRow } from '../../ui/dom.js';
 import { applyTheme } from '../../ui/theme.js';
 import { rerender } from '../../ui/nav.js';
-import { notify, notificationPermission, checkReminders } from '../../features/reminders.js';
+import { sendTest, notificationPermission, checkReminders } from '../../features/reminders.js';
 
 const s = () => store.state.settings;
 
@@ -49,14 +49,14 @@ export const reminders = {
         e.target.checked = false;
       } else {
         update(x => (x.remind.on = e.target.checked));
-        checkReminders();
+        await checkReminders({ subscribe: e.target.checked });
       }
       rerender();
     };
-    $('#rAt', view).onchange = e => update(x => (x.remind.at = e.target.value || '09:00'));
-    $('#rForgot', view).onchange = e => update(x => (x.remind.forgot = +e.target.value));
-    $('#rSoll', view).onchange = e => update(x => (x.remind.soll = e.target.checked));
-    $('#rTest', view)?.addEventListener('click', () => notify('Clockwise', t('settings.testBody'), 'test'));
+    $('#rAt', view).onchange = e => { update(x => (x.remind.at = e.target.value || '09:00')); checkReminders(); };
+    $('#rForgot', view).onchange = e => { update(x => (x.remind.forgot = +e.target.value)); checkReminders(); };
+    $('#rSoll', view).onchange = e => { update(x => (x.remind.soll = e.target.checked)); checkReminders(); };
+    $('#rTest', view)?.addEventListener('click', sendTest);
   },
 };
 

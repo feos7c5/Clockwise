@@ -15,7 +15,7 @@ const FILES = [
   'assets/js/views/day-dialog.js', 'assets/js/views/absence-dialog.js',
   'assets/js/views/settings/index.js', 'assets/js/views/settings/general.js',
   'assets/js/views/settings/worktime.js', 'assets/js/views/settings/data.js',
-  'assets/js/features/export.js', 'assets/js/features/pdf.js', 'assets/js/features/report.js', 'assets/js/features/install.js', 'assets/js/features/update.js', 'assets/js/views/install-notice.js', 'assets/js/ui/notice.js', 'assets/js/features/reminders.js',
+  'assets/js/features/export.js', 'assets/js/features/pdf.js', 'assets/js/features/report.js', 'assets/js/features/install.js', 'assets/js/features/update.js', 'assets/js/views/install-notice.js', 'assets/js/ui/notice.js', 'assets/js/features/reminders.js', 'assets/js/features/push.js',
   'assets/icons/logo.svg', 'assets/icons/icon-180.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
 ];
 
@@ -44,6 +44,11 @@ self.addEventListener('fetch', e => {
       })
       .catch(() => caches.match(e.request, { ignoreSearch: true })),
   );
+});
+
+self.addEventListener('push', e => {
+  const { title = 'Clockwise', body = '', tag } = e.data?.json() || {};
+  e.waitUntil(self.registration.showNotification(title, { body, tag, icon: 'assets/icons/icon-192.png', badge: 'assets/icons/icon-192.png' }));
 });
 
 self.addEventListener('notificationclick', e => {
