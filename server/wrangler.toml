@@ -4,6 +4,11 @@ compatibility_date = "2026-09-01"
 
 [vars]
 ALLOWED_ORIGINS = "https://feos7c5.github.io,http://localhost:8765"
+VAPID_SUBJECT = "https://feos7c5.github.io/Clockwise/"
+VAPID_PUBLIC_KEY = "BKJpYyb0LUhUqemyKZ7h4RgOjimuvTsYPvLFVi8DRkuuvP7V1w9gK-Pktj5K0GXg2j8V-BwEsTa7YfR6iCXaxcM"
+
+[triggers]
+crons = ["* * * * *"]
 
 [[d1_databases]]
 binding = "DB"

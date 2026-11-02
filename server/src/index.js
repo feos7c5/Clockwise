@@ -1,10 +1,16 @@
 export { VaultChannel } from './channel.js';
+import { sendPush } from './webpush.js';
 
 const MAX_BLOB = 2_000_000;
 const MAX_PAYLOAD = 2_000;
 const PAIR_TTL_MS = 10 * 60 * 1000;
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 const LOOKUP_RE = /^[0-9a-f]{64}$/;
+const KEY_RE = /^[A-Za-z0-9_-]{16,128}$/;
+const TAG_RE = /^[\w-]{1,40}$/;
+const MAX_JOBS = 20;
+const PUSH_RETRY_MS = 15 * 60 * 1000;
+const PUSH_IDLE_MS = 60 * 86_400_000;
 
 async function sha256Hex(text) {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -110,7 +116,65 @@ async function claimPairing(request, env) {
   return { payload: row.payload };
 }
 
+function pushSubscription(sub) {
+  let url;
+  try { url = new URL(sub.endpoint); } catch { throw new HttpError(400, 'bad_request'); }
+  if (url.protocol !== 'https:' || sub.endpoint.length > 1000 || !KEY_RE.test(sub.keys?.p256dh || '') || !KEY_RE.test(sub.keys?.auth || '')) {
+    throw new HttpError(400, 'bad_request');
+  }
+  return { endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth };
+}
+
+const validJob = j => j && TAG_RE.test(j.tag) && Number.isInteger(j.at)
+  && typeof j.title === 'string' && j.title.length <= 100 && typeof j.body === 'string' && j.body.length <= 300;
+
+async function putPush(request, env) {
+  const { subscription, items } = await readJson(request, 20_000);
+  const sub = pushSubscription(subscription || {});
+  if (!Array.isArray(items) || items.length > MAX_JOBS || !items.every(validJob)) throw new HttpError(400, 'bad_request');
+  const id = await sha256Hex(sub.endpoint), now = Date.now();
+  await env.DB.batch([
+    env.DB.prepare('INSERT OR REPLACE INTO push_subs (id, endpoint, p256dh, auth, updated_at) VALUES (?, ?, ?, ?, ?)')
+      .bind(id, sub.endpoint, sub.p256dh, sub.auth, now),
+    env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND at > ?').bind(id, now),
+    ...items.filter(j => j.at > now).map(j => env.DB.prepare('INSERT OR REPLACE INTO push_jobs (sub_id, tag, at, title, body) VALUES (?, ?, ?, ?, ?)')
+      .bind(id, j.tag, j.at, j.title, j.body)),
+  ]);
+}
+
+async function testPush(request, env) {
+  const { endpoint, title, body } = await readJson(request, 2_000);
+  const sub = await env.DB.prepare('SELECT * FROM push_subs WHERE id = ?').bind(await sha256Hex(String(endpoint))).first();
+  if (!sub) throw new HttpError(404, 'not_found');
+  return { status: await sendPush(sub, { title: String(title).slice(0, 100), body: String(body).slice(0, 300), tag: 'test' }, env).catch(() => 0) };
+}
+
+const dropSub = (env, id) => env.DB.batch([
+  env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ?').bind(id),
+  env.DB.prepare('DELETE FROM push_subs WHERE id = ?').bind(id),
+]);
+
+async function sendDuePushes(env) {
+  const now = Date.now();
+  const { results } = await env.DB.prepare(`SELECT j.sub_id, j.tag, j.at, j.title, j.body, s.endpoint, s.p256dh, s.auth
+    FROM push_jobs j JOIN push_subs s ON s.id = j.sub_id WHERE j.at <= ? ORDER BY j.at LIMIT 200`).bind(now).all();
+  await Promise.all(results.map(async job => {
+    const status = await sendPush(job, { title: job.title, body: job.body, tag: job.tag }, env).catch(() => 0);
+    if (status === 404 || status === 410) return dropSub(env, job.sub_id);
+    if (status >= 200 && status < 300 || now - job.at > PUSH_RETRY_MS) {
+      await env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ?').bind(job.sub_id, job.tag, job.at).run();
+    }
+  }));
+  const { results: idle } = await env.DB.prepare('SELECT id FROM push_subs WHERE updated_at < ?').bind(now - PUSH_IDLE_MS).all();
+  await Promise.all(idle.map(s => dropSub(env, s.id)));
+}
+
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendDuePushes(env));
+  },
+
+
   async fetch(request, env, ctx) {
     const headers = cors(request, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
@@ -128,6 +192,9 @@ export default {
         case 'DELETE /v1/vault': await deleteVault(request, env); return json(null, 204, headers);
         case 'POST /v1/pair': await createPairing(request, env); return json(null, 201, headers);
         case 'POST /v1/pair/claim': return json(await claimPairing(request, env), 200, headers);
+        case 'GET /v1/push/key': return json({ key: env.VAPID_PUBLIC_KEY }, 200, headers);
+        case 'PUT /v1/push': await putPush(request, env); return json(null, 204, headers);
+        case 'POST /v1/push/test': return json(await testPush(request, env), 200, headers);
         case 'GET /': return json({ service: 'clockwise-sync', ok: true }, 200, headers);
         default: return json({ error: 'not_found' }, 404, headers);
       }

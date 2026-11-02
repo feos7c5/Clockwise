@@ -9,6 +9,7 @@
     "migrate:local": "wrangler d1 migrations apply clockwise-sync --local",
     "migrate:remote": "wrangler d1 migrations apply clockwise-sync --remote",
     "deploy": "wrangler deploy",
+    "vapid": "node scripts/vapid-keys.mjs",
     "test": "node --test test/*.test.js"
   },
   "devDependencies": {

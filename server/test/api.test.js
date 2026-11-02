@@ -98,3 +98,17 @@ test('live: rejects connections without a valid token', async () => {
   const opened = await new Promise(r => { ws.onopen = () => r(true); ws.onerror = () => r(false); });
   assert.equal(opened, false);
 });
+
+test('push: key, schedule validation, test send', async () => {
+  const { key } = await (await call('GET', '/v1/push/key')).json();
+  assert.match(key, /^[A-Za-z0-9_-]{87}$/);
+
+  const subscription = { endpoint: `https://push.invalid/${token()}`, keys: { p256dh: key, auth: token().slice(0, 22) } };
+  const item = { tag: 'out-2026-11-02', at: Date.now() + 60_000, title: 'Clockwise', body: 'Test' };
+  assert.equal((await call('PUT', '/v1/push', { body: { subscription, items: [item] } })).status, 204);
+  assert.equal((await call('PUT', '/v1/push', { body: { subscription: { ...subscription, endpoint: 'http://x' }, items: [] } })).status, 400);
+  assert.equal((await call('PUT', '/v1/push', { body: { subscription, items: [{ ...item, tag: 'a b' }] } })).status, 400);
+
+  assert.deepEqual(await (await call('POST', '/v1/push/test', { body: { endpoint: subscription.endpoint, title: 't', body: 'b' } })).json(), { status: 0 });
+  assert.equal((await call('POST', '/v1/push/test', { body: { endpoint: 'https://push.invalid/unknown', title: 't', body: 'b' } })).status, 404);
+});
