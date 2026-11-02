@@ -1,5 +1,6 @@
 export { VaultChannel } from './channel.js';
 import { sendPush } from './webpush.js';
+import pushSchema from '../migrations/0002_push.sql';
 
 const MAX_BLOB = 2_000_000;
 const MAX_PAYLOAD = 2_000;
@@ -116,6 +117,12 @@ async function claimPairing(request, env) {
   return { payload: row.payload };
 }
 
+// The push tables create themselves, so a deploy alone is enough to enable push.
+let pushReady;
+const ensurePushSchema = env => (pushReady ||= env.DB.batch(
+  pushSchema.split(';').map(q => q.trim()).filter(Boolean).map(q => env.DB.prepare(q)),
+).catch(e => { pushReady = null; throw e; }));
+
 function pushSubscription(sub) {
   let url;
   try { url = new URL(sub.endpoint); } catch { throw new HttpError(400, 'bad_request'); }
@@ -129,6 +136,7 @@ const validJob = j => j && TAG_RE.test(j.tag) && Number.isInteger(j.at)
   && typeof j.title === 'string' && j.title.length <= 100 && typeof j.body === 'string' && j.body.length <= 300;
 
 async function putPush(request, env) {
+  await ensurePushSchema(env);
   const { subscription, items } = await readJson(request, 20_000);
   const sub = pushSubscription(subscription || {});
   if (!Array.isArray(items) || items.length > MAX_JOBS || !items.every(validJob)) throw new HttpError(400, 'bad_request');
@@ -143,6 +151,7 @@ async function putPush(request, env) {
 }
 
 async function testPush(request, env) {
+  await ensurePushSchema(env);
   const { endpoint, title, body } = await readJson(request, 2_000);
   const sub = await env.DB.prepare('SELECT * FROM push_subs WHERE id = ?').bind(await sha256Hex(String(endpoint))).first();
   if (!sub) throw new HttpError(404, 'not_found');
@@ -155,6 +164,7 @@ const dropSub = (env, id) => env.DB.batch([
 ]);
 
 async function sendDuePushes(env) {
+  await ensurePushSchema(env);
   const now = Date.now();
   const { results } = await env.DB.prepare(`SELECT j.sub_id, j.tag, j.at, j.title, j.body, s.endpoint, s.p256dh, s.auth
     FROM push_jobs j JOIN push_subs s ON s.id = j.sub_id WHERE j.at <= ? ORDER BY j.at LIMIT 200`).bind(now).all();
