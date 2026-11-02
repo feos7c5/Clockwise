@@ -1,11 +1,13 @@
-import { iso, toMin, addDays } from './time.js';
-import { sollMin } from './calc.js';
+import { iso, toMin, fromMin, addDays, parseISO } from './time.js';
+import { sollMin, reachMin } from './calc.js';
 import { store, getDay, save } from './store.js';
 
 export const now = () => new Date();
 export const todayStr = () => iso(now());
 export const nowMin = () => { const n = now(); return n.getHours() * 60 + n.getMinutes(); };
 export const hhmm = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+export const atMin = (ds, min) => { const d = parseISO(ds); d.setMinutes(min); return d; };
 
 export function running() {
   const t = now();
@@ -47,4 +49,19 @@ export function stamp(kind) {
     delete brk.brk;
   }
   save();
+}
+
+export function clockOutDue() {
+  const r = running(), limit = store.state.settings.remind.forgot * 60;
+  if (!r || !limit) return null;
+  const min = reachMin(store.state.settings, store.state.days[r.ds], limit, toMin(r.block.in));
+  return min == null ? null : { ...r, min, at: atMin(r.ds, min) };
+}
+
+export function autoClockOut() {
+  const due = clockOutDue();
+  if (!due || due.at > now()) return false;
+  due.block.out = fromMin(due.min);
+  save();
+  return true;
 }

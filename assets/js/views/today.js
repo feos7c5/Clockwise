@@ -1,7 +1,7 @@
 import { fmtDur, toMin, fromMin, iso, range, addDays } from '../core/time.js';
 import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
-import { dayStats, balance, istMin, grossMin, pauseMin, pauseWarning } from '../core/calc.js';
+import { dayStats, balance, grossMin, pauseMin, pauseWarning, reachMin } from '../core/calc.js';
 import { store, getDay, cleanDay, save } from '../core/store.js';
 import { now, todayStr, nowMin, running, onBreak, missingStamp, stamp } from '../core/session.js';
 import { t, weekdayShort } from '../i18n/index.js';
@@ -31,11 +31,9 @@ export function liveSeconds(ds) {
 }
 
 function reachAt(ds, target) {
-  const day = store.state.days[ds], base = nowMin(), offset = ds === todayStr() ? 0 : 1440;
-  for (let m = 0; m <= 1440; m++) {
-    if (istMin(store.state.settings, day, base + offset + m) >= target) return fromMin(base + m);
-  }
-  return null;
+  const from = nowMin() + (ds === todayStr() ? 0 : 1440);
+  const m = reachMin(store.state.settings, store.state.days[ds], target, from);
+  return m == null ? null : fromMin(m);
 }
 
 function statusLine(r, brk, day, ds) {
