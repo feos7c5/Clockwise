@@ -1,0 +1,5 @@
+#!/bin/sh
+# Every change to the app gives the service worker a new cache name, so installed apps update themselves.
+version=$(git ls-files -s -- index.html manifest.webmanifest assets | git hash-object --stdin | cut -c1-10)
+sed -i.bak "s/^const CACHE = '.*';/const CACHE = 'clockwise-$version';/" sw.js && rm -f sw.js.bak
+git add sw.js

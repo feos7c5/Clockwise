@@ -83,7 +83,6 @@ export default {
     confirmReset: 'Really delete ALL recorded data? This cannot be undone.',
   },
 
-  update: { title: 'New version available', text: 'Updating reloads the app – your data is kept.', action: 'Update' },
 
   install: {
     title: 'Install as app', action: 'Install', dismiss: 'Dismiss',

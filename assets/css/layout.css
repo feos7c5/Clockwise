@@ -29,8 +29,6 @@ body.compact .compact-bar { opacity: 1; pointer-events: auto; }
   font-size: var(--fs-sm); font-weight: var(--fw-semibold); white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 
-#banner { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter); }
-#banner:not(:empty) { margin-bottom: var(--sp-3); }
 main { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter) var(--sp-4); }
 .stack > * + * { margin-top: var(--sp-3); }
 

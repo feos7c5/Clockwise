@@ -1,4 +1,4 @@
-const CACHE = 'clockwise-v28';
+const CACHE = 'clockwise-5ee92f3cef';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
@@ -20,10 +20,10 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
+  e.waitUntil(caches.open(CACHE)
+    .then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
-
-self.addEventListener('message', e => { if (e.data === 'skip-waiting') self.skipWaiting(); });
 
 self.addEventListener('activate', e => {
   e.waitUntil(

@@ -16,8 +16,7 @@ import { renderSettings } from './views/settings/index.js';
 import { startReminders, checkReminders } from './features/reminders.js';
 import { initSync, onSyncStatus, onRemoteData } from './sync/engine.js';
 import { onInstallChange } from './features/install.js';
-import { registerServiceWorker, onUpdateChange, updateAvailable, applyUpdate, hideUpdate } from './features/update.js';
-import { notice } from './ui/notice.js';
+import { registerServiceWorker } from './features/update.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
@@ -72,17 +71,7 @@ function render() {
   renderTabs();
   view.render($('#view'));
   renderHeadActions(title, subtitle);
-  renderBanner();
   markScrolled();
-}
-
-function renderBanner() {
-  const el = $('#banner');
-  el.innerHTML = updateAvailable()
-    ? notice({ id: 'update', title: t('update.title'), text: t('update.text'), action: `<button class="btn btn-sm btn-primary" id="applyUpdate">${t('update.action')}</button>` })
-    : '';
-  $('#applyUpdate', el)?.addEventListener('click', applyUpdate);
-  $('[data-dismiss]', el)?.addEventListener('click', e => { e.stopImmediatePropagation(); hideUpdate(); });
 }
 
 setRenderer(render);
@@ -101,7 +90,6 @@ const typing = () => document.activeElement?.matches('textarea, input, select');
 onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) render(); });
 onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
 onInstallChange(() => { if (nav.tab === 'today') render(); });
-onUpdateChange(renderBanner);
 
 setInterval(() => {
   if (nav.tab !== 'today' || document.hidden) return;

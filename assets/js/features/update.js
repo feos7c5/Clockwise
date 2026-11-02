@@ -1,29 +1,18 @@
-let waiting = null, requested = false, hidden = false;
-const listeners = new Set();
-export const onUpdateChange = fn => listeners.add(fn);
-const changed = () => listeners.forEach(fn => fn());
+import { dialogOpen } from '../ui/dialog.js';
 
-export const updateAvailable = () => Boolean(waiting) && !hidden;
-export const hideUpdate = () => { hidden = true; changed(); };
+const busy = () => dialogOpen() || document.activeElement?.matches('textarea, input, select');
 
-export function applyUpdate() {
-  if (!waiting) return location.reload();
-  requested = true;
-  waiting.postMessage('skip-waiting');
-}
-
+// A new version activates right away; the open app reloads as soon as nobody is in the middle of an edit.
 export async function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
-  const reg = await navigator.serviceWorker.register('sw.js');
+  const replacing = Boolean(navigator.serviceWorker.controller);
+  const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
 
-  const offer = worker => { waiting = worker; hidden = false; changed(); };
-  const watch = worker => worker?.addEventListener('statechange', () => {
-    if (worker.state === 'installed' && navigator.serviceWorker.controller) offer(worker);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!replacing) return;
+    if (document.hidden || !busy()) location.reload();
+    else document.addEventListener('visibilitychange', () => location.reload(), { once: true });
   });
-
-  if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
-  reg.addEventListener('updatefound', () => watch(reg.installing));
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (requested) location.reload(); });
 
   const check = () => reg.update().catch(() => {});
   document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });

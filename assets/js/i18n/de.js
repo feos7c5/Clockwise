@@ -83,7 +83,6 @@ export default {
     confirmReset: 'Wirklich ALLE erfassten Daten löschen? Das lässt sich nicht rückgängig machen.',
   },
 
-  update: { title: 'Neue Version verfügbar', text: 'Aktualisieren lädt sie – deine Daten bleiben erhalten.', action: 'Aktualisieren' },
 
   install: {
     title: 'Als App installieren', action: 'Installieren', dismiss: 'Ausblenden',
