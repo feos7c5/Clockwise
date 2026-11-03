@@ -1,10 +1,10 @@
-const CACHE = 'clockwise-1d0933d515';
+const CACHE = 'clockwise-aea52e12cb';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/css/tokens.css', 'assets/css/base.css', 'assets/css/components.css',
   'assets/css/layout.css', 'assets/css/views.css', 'assets/css/themes.css',
-  'assets/js/main.js',
+  'assets/js/main.js', 'assets/js/version.js',
   'assets/js/i18n/index.js', 'assets/js/i18n/de.js', 'assets/js/i18n/en.js',
   'assets/js/sync/api.js', 'assets/js/sync/config.js', 'assets/js/sync/crypto.js', 'assets/js/sync/engine.js', 'assets/js/sync/live.js', 'assets/js/sync/merge.js',
   'assets/js/views/cloud-dialogs.js', 'assets/js/views/settings/cloud.js',

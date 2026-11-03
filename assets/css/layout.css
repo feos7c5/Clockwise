@@ -38,6 +38,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter) var
 .card-head h2 .muted { font-weight: var(--fw-regular); font-size: var(--fs-sm); }
 
 .hint { margin: var(--sp-2) 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.hint.version { text-align: center; }
 .warn { margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--warn); }
 .tabs {
   --pad: var(--sp-1);

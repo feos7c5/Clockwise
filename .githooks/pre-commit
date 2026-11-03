@@ -1,5 +1,11 @@
 #!/bin/sh
-# Every change to the app gives the service worker a new cache name, so installed apps update themselves.
-version=$(git ls-files -s -- index.html manifest.webmanifest assets | git hash-object --stdin | cut -c1-10)
-sed -i.bak "s/^const CACHE = '.*';/const CACHE = 'clockwise-$version';/" sw.js && rm -f sw.js.bak
+# Every change to the app bumps the version and gives the service worker a new cache name,
+# so installed apps update themselves.
+APP='index.html manifest.webmanifest assets'
+if git diff --cached --name-only -- $APP | grep -qv '^assets/js/version.js$'; then
+  echo "export const VERSION = '1.$(( $(git rev-list --count HEAD 2>/dev/null || echo 0) + 1 ))';" > assets/js/version.js
+  git add assets/js/version.js
+fi
+cache=$(git ls-files -s -- $APP | git hash-object --stdin | cut -c1-10)
+sed -i.bak "s/^const CACHE = '.*';/const CACHE = 'clockwise-$cache';/" sw.js && rm -f sw.js.bak
 git add sw.js

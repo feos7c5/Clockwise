@@ -70,8 +70,9 @@ npm run migrate:remote && npm run deploy
 ## Updates
 
 The service worker activates new versions immediately and the open app reloads itself (deferred while a
-dialog or input is in use). The `pre-commit` hook derives the cache name in `sw.js` from the app files, so
-every change ships as a new version.
+dialog or input is in use). On every commit that touches the app, the `pre-commit` hook sets the version in
+`assets/js/version.js` (shown at the bottom of the settings) and derives the cache name in `sw.js` from the app
+files, so every change ships as a new version.
 
 The server is a Cloudflare Worker with a D1 database in [`server/`](../server/) (about 130 lines).
 
