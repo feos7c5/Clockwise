@@ -133,7 +133,7 @@ export default {
   },
 
   notify: {
-    missingTitle: 'Not clocked in', missingBody: 'Today is a workday.',
+    missingTitle: 'Not clocked in', missingBody: 'Clock in now.',
     targetTitle: 'Target reached', targetBody: '{dur} h worked.',
     autoOutTitle: 'Clocked out', autoOutBody: 'Automatically at {time}, after {hours} h.',
   },

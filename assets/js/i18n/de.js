@@ -133,7 +133,7 @@ export default {
   },
 
   notify: {
-    missingTitle: 'Nicht eingestempelt', missingBody: 'Heute ist Arbeitstag.',
+    missingTitle: 'Nicht eingestempelt', missingBody: 'Jetzt einstempeln.',
     targetTitle: 'Soll erreicht', targetBody: '{dur} h gearbeitet.',
     autoOutTitle: 'Ausgestempelt', autoOutBody: 'Automatisch um {time}, nach {hours} h.',
   },
