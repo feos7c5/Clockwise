@@ -1,4 +1,4 @@
-import { iso, parseISO, toMin, range } from './time.js';
+import { iso, parseISO, toMin, fromMin, range } from './time.js';
 import { holidayOn } from './holidays.js';
 import { CODES, vacationValue } from './codes.js';
 
@@ -36,14 +36,15 @@ export const legalPause = gross => (gross > 540 ? 45 : gross > 360 ? 30 : 0);
 
 export const PAUSE_AFTER = 360;
 
-// While a block is running the break is deducted only after 6 h of work, so the clock runs from clock-in.
+// While a block is running the break is deducted once more than 6 h are worked (§ 4 ArbZG), so the clock
+// runs from clock-in and keeps running after the deduction.
 export function pauseMin(settings, day, gross) {
   if (day.pause != null) return day.pause;
   const blocks = day.blocks || [];
   if (!blocks.length) return 0;
   const base = settings.pauseMode === 'gesetz' ? legalPause(gross) : settings.pauseMin;
   const due = Math.max(0, base - gapMin(day));
-  return blocks.some(b => !b.out) ? Math.min(due, Math.max(0, gross - PAUSE_AFTER)) : due;
+  return blocks.some(b => !b.out) && gross <= PAUSE_AFTER ? 0 : due;
 }
 
 export function istMin(settings, day, nowMin = null) {
@@ -51,8 +52,12 @@ export function istMin(settings, day, nowMin = null) {
   return Math.max(0, gross - pauseMin(settings, day, gross));
 }
 
+// First minute at which clocking out would book at least `target` minutes of work.
 export function reachMin(settings, day, target, from) {
-  for (let m = from; m <= from + 1440; m++) if (istMin(settings, day, m) >= target) return m;
+  for (let m = from; m <= from + 1440; m++) {
+    const closed = { ...day, blocks: day.blocks.map(b => (b.out ? b : { ...b, out: fromMin(m) })) };
+    if (istMin(settings, closed) >= target) return m;
+  }
   return null;
 }
 

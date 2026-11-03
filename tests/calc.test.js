@@ -114,15 +114,23 @@ test('minute at which net work time reaches a target', () => {
   assert.equal(reachMin(settings, day(['22:00', null]), 600, 1320), 1320 + 645);
 });
 
-test('break is deducted only after 6 h while clocked in', () => {
+test('break is deducted once more than 6 h are worked while clocked in', () => {
   const s = { ...settings, pauseMode: 'gesetz' };
   assert.equal(istMin(settings, day(['08:20', null]), 502), 2);
   assert.equal(istMin(settings, day(['08:00', null]), 480 + 360), 360);
-  assert.equal(istMin(settings, day(['08:00', null]), 480 + 390), 360);
+  assert.equal(istMin(settings, day(['08:00', null]), 480 + 361), 316);
+  assert.equal(istMin(settings, day(['08:00', null]), 480 + 390), 345);
   assert.equal(istMin(settings, day(['08:00', null]), 480 + 420), 375);
   assert.equal(istMin(settings, day(['08:00', '08:02']), 482), 0);
   assert.equal(istMin(settings, day(['08:00', '12:00'], ['12:30', null]), 750 + 120), 360);
   assert.equal(istMin(s, day(['08:00', null]), 480 + 400), 370);
   assert.equal(reachMin(settings, day(['08:20', null]), 420, 502), 500 + 465);
   assert.equal(reachMin(settings, day(['08:20', null]), 600, 502), 500 + 645);
+});
+
+test('target is reached when clocking out would book it', () => {
+  const short = { ...settings, periods: [{ from: '2026-01-01', min: [360, 360, 360, 360, 360, 0, 0] }] };
+  assert.equal(reachMin(short, day(['08:00', null]), 360, 480), 480 + 405);
+  assert.equal(reachMin({ ...settings, pauseMode: 'gesetz' }, day(['08:00', null]), 360, 480), 480 + 360);
+  assert.equal(reachMin({ ...settings, pauseMode: 'gesetz' }, day(['08:00', null]), 361, 480), 480 + 391);
 });
