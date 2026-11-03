@@ -4,7 +4,7 @@ import { store } from '../core/store.js';
 import { now, running, isWorkday, atMin, clockOutDue, autoClockOut } from '../core/session.js';
 import { rerender } from '../ui/nav.js';
 import { t } from '../i18n/index.js';
-import { syncPush, pushActive, sendPushTest } from './push.js';
+import { initPush, syncPush, pushActive, sendPushTest } from './push.js';
 
 const FLAGS_KEY = 'stempeluhr-notified';
 const LOCAL_WINDOW_MS = 6 * 3600_000;
@@ -58,19 +58,19 @@ async function notifyLocally(items) {
   localStorage.setItem(FLAGS_KEY, JSON.stringify(flags));
 }
 
-export async function checkReminders({ subscribe = false } = {}) {
+export async function checkReminders() {
   const before = upcoming();
   if (autoClockOut()) rerender();
-  await syncPush(upcoming(), { subscribe });
+  await syncPush(upcoming());
   if (!pushActive()) await notifyLocally(before);
 }
 
 export async function sendTest() {
-  const message = { title: 'Clockwise', body: t('settings.testBody'), tag: 'test' };
-  if (!(await sendPushTest(message.title, message.body))) await notify(message);
+  const title = 'Clockwise', body = t('settings.testBody');
+  if (!(await sendPushTest(title, body))) await notify({ title, body, tag: 'test' });
 }
 
 export function startReminders() {
-  checkReminders();
+  initPush(checkReminders);
   setInterval(checkReminders, 30000);
 }

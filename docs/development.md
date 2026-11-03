@@ -62,7 +62,7 @@ One-time setup for the server:
 ```sh
 cd server
 npm run vapid                              # prints a key pair
-# public key → VAPID_PUBLIC_KEY in wrangler.toml, private key:
+# public key → VAPID_PUBLIC_KEY in wrangler.toml and VAPID_KEY in assets/js/sync/config.js, private key:
 npx wrangler secret put VAPID_PRIVATE_KEY
 npm run migrate:remote && npm run deploy
 ```

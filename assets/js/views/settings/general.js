@@ -5,6 +5,7 @@ import { $, $$, esc, cardHead, settingRow } from '../../ui/dom.js';
 import { applyTheme } from '../../ui/theme.js';
 import { rerender } from '../../ui/nav.js';
 import { sendTest, notificationPermission, checkReminders } from '../../features/reminders.js';
+import { subscribe } from '../../features/push.js';
 
 const s = () => store.state.settings;
 
@@ -33,7 +34,7 @@ export const appearance = {
 export const reminders = {
   html: () => {
     const rs = s().remind, perm = notificationPermission();
-    const test = perm === 'granted' && rs.on ? `<button class="btn btn-sm btn-ghost accent" id="rTest">${t('settings.sendTest')}</button>` : '';
+    const test = perm === 'granted' && rs.on ? `<button class="btn btn-sm" id="rTest">${t('settings.sendTest')}</button>` : '';
     const hours = [0, 9, 10, 11, 12].map(h => `<option value="${h}" ${rs.forgot === h ? 'selected' : ''}>${h ? h + ' h' : t('settings.off')}</option>`).join('');
     return `<section class="card">${cardHead(t('settings.reminders'), test)}
       <label class="switch"><span>${t('settings.notifications')}</span>
@@ -49,7 +50,8 @@ export const reminders = {
         e.target.checked = false;
       } else {
         update(x => (x.remind.on = e.target.checked));
-        await checkReminders({ subscribe: e.target.checked });
+        await subscribe();
+        await checkReminders();
       }
       rerender();
     };
