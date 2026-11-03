@@ -202,7 +202,6 @@ export default {
         case 'DELETE /v1/vault': await deleteVault(request, env); return json(null, 204, headers);
         case 'POST /v1/pair': await createPairing(request, env); return json(null, 201, headers);
         case 'POST /v1/pair/claim': return json(await claimPairing(request, env), 200, headers);
-        case 'GET /v1/push/key': return json({ key: env.VAPID_PUBLIC_KEY }, 200, headers);
         case 'PUT /v1/push': await putPush(request, env); return json(null, 204, headers);
         case 'POST /v1/push/test': return json(await testPush(request, env), 200, headers);
         case 'GET /': return json({ service: 'clockwise-sync', ok: true }, 200, headers);

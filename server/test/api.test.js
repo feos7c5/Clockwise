@@ -99,9 +99,8 @@ test('live: rejects connections without a valid token', async () => {
   assert.equal(opened, false);
 });
 
-test('push: key, schedule validation, test send', async () => {
-  const { key } = await (await call('GET', '/v1/push/key')).json();
-  assert.match(key, /^[A-Za-z0-9_-]{87}$/);
+test('push: schedule validation, test send', async () => {
+  const key = 'BKJpYyb0LUhUqemyKZ7h4RgOjimuvTsYPvLFVi8DRkuuvP7V1w9gK-Pktj5K0GXg2j8V-BwEsTa7YfR6iCXaxcM';
 
   const subscription = { endpoint: `https://push.invalid/${token()}`, keys: { p256dh: key, auth: token().slice(0, 22) } };
   const item = { tag: 'out-2026-11-02', at: Date.now() + 60_000, title: 'Clockwise', body: 'Test' };
