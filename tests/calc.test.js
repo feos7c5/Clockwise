@@ -110,6 +110,19 @@ test('vacation prorated in the first year (by day, half days)', () => {
 test('minute at which net work time reaches a target', () => {
   assert.equal(reachMin(settings, day(['08:24', null]), 600, 504), 504 + 645);
   assert.equal(reachMin(settings, day(['08:00', '12:00'], ['12:30', null]), 600, 750), 750 + 375);
-  assert.equal(istMin(settings, day(['08:00', '12:00'], ['12:30', null]), 780), 240 + 30 - 15);
+  assert.equal(istMin(settings, day(['08:00', '12:00'], ['12:30', null]), 780), 270);
   assert.equal(reachMin(settings, day(['22:00', null]), 600, 1320), 1320 + 645);
+});
+
+test('break is deducted only after 6 h while clocked in', () => {
+  const s = { ...settings, pauseMode: 'gesetz' };
+  assert.equal(istMin(settings, day(['08:20', null]), 502), 2);
+  assert.equal(istMin(settings, day(['08:00', null]), 480 + 360), 360);
+  assert.equal(istMin(settings, day(['08:00', null]), 480 + 390), 360);
+  assert.equal(istMin(settings, day(['08:00', null]), 480 + 420), 375);
+  assert.equal(istMin(settings, day(['08:00', '08:02']), 482), 0);
+  assert.equal(istMin(settings, day(['08:00', '12:00'], ['12:30', null]), 750 + 120), 360);
+  assert.equal(istMin(s, day(['08:00', null]), 480 + 400), 370);
+  assert.equal(reachMin(settings, day(['08:20', null]), 420, 502), 500 + 465);
+  assert.equal(reachMin(settings, day(['08:20', null]), 600, 502), 500 + 645);
 });

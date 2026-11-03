@@ -27,7 +27,7 @@ export function liveSeconds(ds) {
     if (end < start) end += 86400;
     gross += end - start;
   }
-  return Math.max(0, gross - pauseMin(store.state.settings, day, Math.floor(gross / 60)) * 60);
+  return Math.max(0, gross - Math.round(pauseMin(store.state.settings, day, gross / 60) * 60));
 }
 
 function reachAt(ds, target) {
@@ -97,7 +97,7 @@ function entriesCard(day, gross) {
   const list = day.blocks.length
     ? `<ul class="list">${day.blocks.map(b => `<li><span>${b.in} – ${b.out || t('today.running')}</span>
         <span class="muted">${b.out ? fmtDur(grossMin({ blocks: [b] })) + ' h' : ''}</span></li>`).join('')}
-        <li><span class="muted">${t('today.pauseDeduction')}</span><span class="muted">${pauseMin(store.state.settings, day, gross)} min</span></li></ul>`
+        <li><span class="muted">${t('today.pauseDeduction')}</span><span class="muted">${Math.floor(pauseMin(store.state.settings, day, gross))} min</span></li></ul>`
     : `<div class="empty-text">${t('today.noEntries')}</div>`;
   const edit = `<button class="btn btn-sm btn-ghost accent" id="editToday">${ICON.edit}${t('common.edit')}</button>`;
   return `<section class="card">${cardHead(t('today.entries'), edit)}${list}</section>`;

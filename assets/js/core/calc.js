@@ -34,11 +34,16 @@ export function gapMin(day) {
 
 export const legalPause = gross => (gross > 540 ? 45 : gross > 360 ? 30 : 0);
 
+export const PAUSE_AFTER = 360;
+
+// While a block is running the break is deducted only after 6 h of work, so the clock runs from clock-in.
 export function pauseMin(settings, day, gross) {
   if (day.pause != null) return day.pause;
-  if (!(day.blocks || []).length) return 0;
+  const blocks = day.blocks || [];
+  if (!blocks.length) return 0;
   const base = settings.pauseMode === 'gesetz' ? legalPause(gross) : settings.pauseMin;
-  return Math.max(0, base - gapMin(day));
+  const due = Math.max(0, base - gapMin(day));
+  return blocks.some(b => !b.out) ? Math.min(due, Math.max(0, gross - PAUSE_AFTER)) : due;
 }
 
 export function istMin(settings, day, nowMin = null) {
