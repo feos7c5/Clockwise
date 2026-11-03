@@ -1,4 +1,4 @@
-const CACHE = 'clockwise-aea52e12cb';
+const CACHE = 'clockwise-aa087fae2d';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
