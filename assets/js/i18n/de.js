@@ -58,7 +58,7 @@ export default {
     language: 'Sprache', languageSystem: 'System',
     reminders: 'Erinnerungen', notifications: 'Benachrichtigungen', notifyTarget: 'Melden, wenn Soll erreicht',
     remindAt: 'Einstempeln bis', forgotAfter: 'Automatisch ausstempeln nach', off: 'aus',
-    sendTest: 'Test senden', testBody: 'So sehen deine Erinnerungen aus.',
+    sendTest: 'Test senden', testTitle: 'Test', testBody: 'Benachrichtigungen funktionieren.',
     notifyBlocked: 'Benachrichtigungen sind im Browser blockiert – bitte in den Website-Einstellungen erlauben.',
     notifyHint: 'Erinnert, wenn du an einem Arbeitstag bis zur Uhrzeit nicht eingestempelt hast, und meldet das Soll. Nach so vielen Stunden Arbeitszeit wird automatisch ausgestempelt. Kommt auch bei geschlossener App an – auf dem iPhone, wenn Clockwise zum Home-Bildschirm hinzugefügt ist.',
     storage: 'Backup & Export',
@@ -133,9 +133,9 @@ export default {
   },
 
   notify: {
-    missingTitle: 'Noch nicht eingestempelt', missingBody: 'Heute ist ein Arbeitstag – Kommen nicht vergessen.',
-    targetTitle: 'Soll erreicht', targetBody: 'Du hast heute {dur} h gearbeitet.',
-    autoOutTitle: 'Automatisch ausgestempelt', autoOutBody: 'Nach {hours} h Arbeitszeit um {time} ausgestempelt.',
+    missingTitle: 'Nicht eingestempelt', missingBody: 'Heute ist Arbeitstag.',
+    targetTitle: 'Soll erreicht', targetBody: '{dur} h gearbeitet.',
+    autoOutTitle: 'Ausgestempelt', autoOutBody: 'Automatisch um {time}, nach {hours} h.',
   },
 
   print: {

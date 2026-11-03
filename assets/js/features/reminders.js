@@ -66,7 +66,7 @@ export async function checkReminders() {
 }
 
 export async function sendTest() {
-  const title = 'Clockwise', body = t('settings.testBody');
+  const title = t('settings.testTitle'), body = t('settings.testBody');
   if (!(await sendPushTest(title, body))) await notify({ title, body, tag: 'test' });
 }
 
