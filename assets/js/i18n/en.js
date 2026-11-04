@@ -39,7 +39,7 @@ export default {
     vacationUsed: '{used} of {total} taken', planned: '{n} planned', prorated: 'prorated', carryIncluded: 'incl. {n} from {year}',
     overtime: 'Overtime', approxDays: '≈ {n} working days',
     months: 'Months', month: 'Month', noData: 'No data',
-    dayCounts: 'Days', present: 'Present', vacation: 'Vacation', sick: 'Sick',
+    dayCounts: 'Days', present: 'Present', vacation: 'Vacation', sick: 'Sick', calendar: 'Year calendar',
   },
 
   dayDialog: {
@@ -146,6 +146,8 @@ export default {
     absences: 'This month: vacation / sick / home office',
     vacation: 'Vacation account {year}', vacationValue: '{total} entitled · {used} taken · {left} left', absenceDays: '{vac} / {sick} / {ho} days',
     signEmployee: 'Date, employee', signEmployer: 'Date, employer',
+    yearFile: 'Year-overview-{year}.pdf', yearTitle: 'Year overview {year}', carryPrevYear: 'Carried over from last year',
+    yearChange: 'Over/under hours this year', balanceAt: 'Balance on {date}', yearAbsences: 'Vacation / sick / home office',
   },
 
   csv: {

@@ -1,10 +1,12 @@
-import { iso, fmtDur } from '../core/time.js';
+import { iso, fmtDur, addDays } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
-import { sumRange, balance, vacationAccount } from '../core/calc.js';
+import { sumRange, balance, vacationAccount, dayStats } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
 import { t, tn, monthName, formatNumber } from '../i18n/index.js';
-import { $$, tone, stat, cardHead, codeLabel } from '../ui/dom.js';
+import { $, $$, tone, stat, cardHead, codeLabel } from '../ui/dom.js';
+import { ICON } from '../ui/icons.js';
+import { exportYearPdf } from '../features/report.js';
 import { nav, goTo } from '../ui/nav.js';
 
 function monthRows(y, n) {
@@ -20,6 +22,24 @@ function monthRows(y, n) {
       <td class="${tone(r.diff)}">${fmtDur(r.diff, true)}</td><td class="${tone(bal)}">${fmtDur(bal, true)}</td></tr>`;
   }
   return { rows, total };
+}
+
+// Shade of a day in the year calendar: worked (darker = longer), absent, or empty.
+function cell(ds, n, today) {
+  const st = dayStats(store.state, ds, n), code = st.day.code;
+  const kind = st.ist ? 'work' : code && !['G', 'H', 'D'].includes(code) ? 'off' : '';
+  const level = st.ist ? Math.min(4, Math.max(1, Math.ceil(st.ist / 150))) : 0;
+  return `<i class="${kind} ${level ? 'l' + level : ''} ${ds === today ? 'now' : ''}"></i>`;
+}
+
+function calendar(y, n) {
+  const today = todayStr();
+  const months = [...Array(12)].map((_, m) => {
+    const first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    const cells = '<i class="pad"></i>'.repeat(lead) + [...Array(days)].map((_, d) => cell(iso(addDays(first, d)), n, today)).join('');
+    return `<button class="ym" data-m="${m}"><span>${monthName(m).slice(0, 3)}</span><div>${cells}</div></button>`;
+  }).join('');
+  return `<section class="card">${cardHead(t('year.calendar'))}<div class="yearcal">${months}</div></section>`;
 }
 
 export function renderYear(view) {
@@ -42,6 +62,8 @@ export function renderYear(view) {
       ${stat(t('year.vacationLeft'), tn('year.days', vac.left, { n: formatNumber(vac.left) }), usedText)}
       ${stat(t('year.overtime'), fmtDur(bal, true), t('year.approxDays', { n: formatNumber(bal / dayMin) }), tone(bal))}
     </section>
+    ${calendar(+y, n)}
+    <div class="btn-row"><button class="btn btn-raised" id="printYear">${ICON.print}${t('month.print')}</button></div>
     <section class="card">
       ${cardHead(t('year.months'))}
       <table>
@@ -64,5 +86,6 @@ export function renderYear(view) {
     </section>
   </div>`;
 
-  $$('tr[data-m]', view).forEach(tr => (tr.onclick = () => { nav.month = { y, m: +tr.dataset.m }; goTo('month'); }));
+  $$('[data-m]', view).forEach(el => (el.onclick = () => { nav.month = { y, m: +el.dataset.m }; goTo('month'); }));
+  $('#printYear', view).onclick = () => exportYearPdf(+y);
 }

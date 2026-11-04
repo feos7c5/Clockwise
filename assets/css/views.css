@@ -70,3 +70,14 @@
 .notice .ic + .notice-text { margin-left: 0; }
 .dot.err { background: var(--minus); }
 .notice-actions { display: flex; align-items: center; gap: var(--sp-1); flex: none; }
+
+.yearcal { display: grid; grid-template-columns: repeat(3, 1fr); align-items: start; gap: var(--sp-4) var(--sp-3); }
+.ym { display: block; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.ym span { display: block; margin-bottom: var(--sp-1); font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--muted); }
+.ym div { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.ym i { aspect-ratio: 1; border-radius: 3px; background: var(--fill); }
+.ym i.pad { background: none; }
+.ym i.work { background: var(--accent); }
+.ym i.l1 { opacity: .35; } .ym i.l2 { opacity: .55; } .ym i.l3 { opacity: .8; }
+.ym i.off { background: var(--warn); opacity: .5; }
+.ym i.now { outline: 1.5px solid var(--ink); outline-offset: 1px; }

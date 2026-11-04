@@ -39,7 +39,7 @@ export default {
     vacationUsed: '{used} von {total} genommen', planned: '{n} geplant', prorated: 'anteilig', carryIncluded: 'inkl. {n} aus {year}',
     overtime: 'Überstunden', approxDays: '≈ {n} Arbeitstage',
     months: 'Monate', month: 'Monat', noData: 'Keine Daten',
-    dayCounts: 'Tage', present: 'Anwesend', vacation: 'Urlaub', sick: 'Krank',
+    dayCounts: 'Tage', present: 'Anwesend', vacation: 'Urlaub', sick: 'Krank', calendar: 'Jahreskalender',
   },
 
   dayDialog: {
@@ -146,6 +146,8 @@ export default {
     absences: 'Diesen Monat: Urlaub / Krank / Homeoffice',
     vacation: 'Urlaubskonto {year}', vacationValue: '{total} Anspruch · {used} genommen · {left} übrig', absenceDays: '{vac} / {sick} / {ho} Tage',
     signEmployee: 'Datum, Arbeitnehmer', signEmployer: 'Datum, Arbeitgeber',
+    yearFile: 'Jahresuebersicht-{year}.pdf', yearTitle: 'Jahresübersicht {year}', carryPrevYear: 'Übertrag Vorjahr',
+    yearChange: 'Mehr-/Minderstunden im Jahr', balanceAt: 'Saldo am {date}', yearAbsences: 'Urlaub / Krank / Homeoffice',
   },
 
   csv: {
