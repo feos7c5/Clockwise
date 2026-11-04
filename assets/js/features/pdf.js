@@ -46,6 +46,11 @@ export class PdfDoc {
     this.ops.push(`BT ${gray} g /${bold ? 'F2' : 'F1'} ${size} Tf ${dx.toFixed(2)} ${(A4.h - y).toFixed(2)} Td (${encode(text)}) Tj ET`);
   }
 
+  rect(x, y, w, h, [r, g, b], alpha = 1) {
+    const mix = c => (1 - alpha + alpha * c).toFixed(3);
+    this.ops.push(`${mix(r)} ${mix(g)} ${mix(b)} rg ${x.toFixed(2)} ${(A4.h - y - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  }
+
   line(x1, y1, x2, y2, { gray = 0.8, width = 0.5 } = {}) {
     this.ops.push(`${gray} G ${width} w ${x1.toFixed(2)} ${(A4.h - y1).toFixed(2)} m ${x2.toFixed(2)} ${(A4.h - y2).toFixed(2)} l S`);
   }
