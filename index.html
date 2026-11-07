@@ -21,6 +21,12 @@
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/views.css">
   <link rel="stylesheet" href="assets/css/themes.css">
+  <style>
+    .boot { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; animation: boot-in .2s .25s both; }
+    .boot i { width: 1.75rem; height: 1.75rem; border-radius: 50%; border: 2.5px solid var(--fill, #262629); border-top-color: var(--accent, #8fbfa6); animation: boot-spin .8s linear infinite; }
+    @keyframes boot-in { from { opacity: 0; } }
+    @keyframes boot-spin { to { transform: rotate(1turn); } }
+  </style>
   <script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
@@ -34,7 +40,7 @@
     <div id="headRight"></div>
   </header>
 
-  <main id="view"></main>
+  <main id="view"><div class="boot" aria-hidden="true"><i></i></div></main>
 
   <nav class="tabs">
     <button data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Heute</span></button>
