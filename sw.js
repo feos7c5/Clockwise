@@ -33,16 +33,14 @@ self.addEventListener('activate', e => {
   );
 });
 
+// App files come straight from the cache of this version, so the app starts instantly even offline or on a
+// weak connection. New versions arrive as a new service worker with its own cache.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request, { cache: 'no-cache' })
-      .then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-        return res;
-      })
-      .catch(() => caches.match(e.request, { ignoreSearch: true })),
+    caches.open(CACHE)
+      .then(c => c.match(e.request, { ignoreSearch: true }))
+      .then(hit => hit || fetch(e.request)),
   );
 });
 
