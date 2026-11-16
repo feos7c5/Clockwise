@@ -4,6 +4,7 @@ import { SYNC_AVAILABLE } from './config.js';
 import * as api from './api.js';
 import { openLive, closeLive, liveConnected } from './live.js';
 import { merge, payload, canonical } from './merge.js';
+import { normalizeState } from '../core/validate.js';
 import {
   deriveKeys, seal, unseal, newSecret, newPairCode, formatPairCode, normalizePairCode,
   pairKeys, toRecoveryKey, parseRecoveryKey,
@@ -68,7 +69,7 @@ function markDirty() {
 
 async function applyRemote(remote) {
   const data = await unseal(keys.key, remote.blob);
-  const merged = merge(store.state, data);
+  const merged = merge(store.state, normalizeState(data));
   if (canonical(payload(merged)) !== canonical(payload(store.state))) {
     applyMerged(merged);
     dataListeners.forEach(fn => fn());

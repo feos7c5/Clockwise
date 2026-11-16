@@ -14,16 +14,25 @@ const time = v => (typeof v === 'string' && TIME_RE.test(v) ? v : null);
 
 const numberMap = v => Object.fromEntries(Object.entries(obj(v)).filter(([, n]) => typeof n === 'number' && Number.isFinite(n)));
 
+// Blocks from before ids existed get one derived from their start time, so every device that still has the
+// same old block gives it the same id.
+export function withIds(blocks) {
+  const ids = new Set(blocks.map(b => b.id).filter(id => typeof id === 'string' && id && id.length <= 24));
+  const seen = new Set();
+  return blocks.map(b => {
+    let id = typeof b.id === 'string' && b.id && b.id.length <= 24 && !seen.has(b.id) ? b.id : `L${String(b.in).replace(':', '')}`;
+    while (seen.has(id) || (id !== b.id && ids.has(id))) id += 'x';
+    seen.add(id);
+    return id === b.id ? b : { ...b, id };
+  });
+}
+
 function cleanDay(day) {
   if (!isObject(day)) return null;
   const out = { blocks: [] };
-  const ids = new Set();
-  (Array.isArray(day.blocks) ? day.blocks : []).forEach((b, i) => {
-    if (!isObject(b) || !time(b.in)) return;
-    let id = typeof b.id === 'string' && b.id && b.id.length <= 24 ? b.id : `L${i}`;
-    while (ids.has(id)) id += 'x';
-    ids.add(id);
-    const block = { id, in: b.in, out: time(b.out) };
+  const valid = (Array.isArray(day.blocks) ? day.blocks : []).filter(b => isObject(b) && time(b.in));
+  withIds(valid).forEach(b => {
+    const block = { id: b.id, in: b.in, out: time(b.out) };
     if (b.brk === true && block.out) block.brk = true;
     out.blocks.push(block);
   });

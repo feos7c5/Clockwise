@@ -161,7 +161,7 @@ test('validation: damaged data is repaired instead of breaking the app', async (
     settings: { periods: 'x', remind: { at: 'nope', forgot: 'ten' }, pauseMin: null, vacation: { 2026: '30', 2025: 28 } },
     days: { 'bad': {}, '2026-11-16': { blocks: [null, { in: '25:00' }, { in: '08:00', out: 'x' }, { in: '09:00', out: '10:00', id: 'q' }], code: 'ZZ', pause: -5 }, '2026-11-17': 'oops' },
   });
-  assert.deepEqual(s.days, { '2026-11-16': { blocks: [{ id: 'L2', in: '08:00', out: null }, { id: 'q', in: '09:00', out: '10:00' }] } });
+  assert.deepEqual(s.days, { '2026-11-16': { blocks: [{ id: 'L0800', in: '08:00', out: null }, { id: 'q', in: '09:00', out: '10:00' }] } });
   assert.equal(s.settings.periods.length, 1);
   assert.deepEqual(s.settings.remind, { on: false, at: '09:00', soll: true, forgot: 10 });
   assert.equal(s.settings.pauseMin, 45);
@@ -180,4 +180,33 @@ test('encryption: large data is compressed and old uncompressed data still opens
   const raw = await globalThis.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode('{"a":1}'));
   const b64 = b => Buffer.from(b).toString('base64url');
   assert.deepEqual(await unseal(key, `${b64(iv)}.${b64(new Uint8Array(raw))}`), { a: 1 });
+});
+
+test('merge: blocks without ids from an old app version are all kept', () => {
+  const fresh = state({ '2026-11-16': { blocks: [{ id: 'L0800', in: '08:00', out: '12:00' }] } });
+  stamp(fresh, { days: {}, blocks: {}, settings: '' }, 100);
+  const old = state({ '2026-11-16': { blocks: [{ in: '08:00', out: '12:00' }, { in: '13:00', out: '15:00' }, { in: '16:00', out: '18:00' }] } });
+  old.meta = { days: { '2026-11-16': 500 }, settings: 0 };
+  for (const m of [merge(fresh, old), merge(old, fresh)]) {
+    assert.deepEqual(m.days['2026-11-16'].blocks.map(b => `${b.in}-${b.out}`), ['08:00-12:00', '13:00-15:00', '16:00-18:00']);
+  }
+});
+
+test('merge: a deleted old block is not brought back by an unrelated edit on another device', async () => {
+  const { normalizeState } = await import('../assets/js/core/validate.js');
+  const legacy = { settings: {}, days: { '2026-11-16': { blocks: [{ in: '08:00', out: '12:00' }, { in: '13:00', out: '17:00' }] } }, meta: { days: { '2026-11-16': 50 }, settings: 0 } };
+  const a = normalizeState(structuredClone(legacy)), b = normalizeState(structuredClone(legacy));
+  assert.deepEqual(a.days['2026-11-16'].blocks.map(x => x.id), ['L0800', 'L1300']);
+  let sa = snapshot(a); a.days['2026-11-16'].blocks.splice(0, 1); stamp(a, sa, 300);
+  let sb = snapshot(b); b.days['2026-11-16'].note = 'Kunde'; stamp(b, sb, 400);
+  for (const m of [merge(a, b), merge(b, a)]) {
+    assert.deepEqual(m.days['2026-11-16'].blocks.map(x => x.in), ['13:00']);
+    assert.equal(m.days['2026-11-16'].note, 'Kunde');
+  }
+});
+
+test('encryption: small data stays uncompressed for older app versions', async () => {
+  const { key } = await deriveKeys(newSecret());
+  const blob = await seal(key, { days: { '2026-11-16': { blocks: [] } } });
+  assert.ok(!blob.startsWith('z.'));
 });

@@ -1,3 +1,5 @@
+import { withIds } from '../core/validate.js';
+
 export const DEVICE_SETTINGS = ['theme', 'accent', 'language', 'remind'];
 
 export const sharedSettings = settings =>
@@ -80,17 +82,21 @@ const maxMerge = (a = {}, b = {}) => {
 
 // Day fields (type, note, break) come from the side that changed the day last; blocks are combined one by one,
 // so a block added on one device and a block edited on the other both survive.
+// Without its own timestamp a block counts as unchanged (0) – unless the data comes from an app version that
+// has no block timestamps at all; then its day's timestamp applies.
+const blockFallback = (meta, dayTs) => (meta && 'blocks' in meta ? 0 : dayTs);
+
 function mergeBlocks(ds, local, remote, lm, rm, lt, rt) {
   const gone = maxMerge(lm.gone?.[ds], rm.gone?.[ds]);
   const picks = new Map();
   const add = (blocks, times, fallback, preferOnTie) => {
-    for (const b of blocks || []) {
+    for (const b of withIds(blocks || [])) {
       const ts = times?.[b.id] ?? fallback, cur = picks.get(b.id);
       if (!cur || ts > cur.ts || (ts === cur.ts && preferOnTie)) picks.set(b.id, { b, ts });
     }
   };
-  add(local.days[ds]?.blocks, lm.blocks?.[ds], lt, false);
-  add(remote.days[ds]?.blocks, rm.blocks?.[ds], rt, true);
+  add(local.days[ds]?.blocks, lm.blocks?.[ds], blockFallback(local.meta, lt), false);
+  add(remote.days[ds]?.blocks, rm.blocks?.[ds], blockFallback(remote.meta, rt), true);
   const kept = [...picks.values()].filter(p => !(gone[p.b.id] >= p.ts));
   kept.sort((a, b) => (a.b.in < b.b.in ? -1 : a.b.in > b.b.in ? 1 : 0));
   return {
