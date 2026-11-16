@@ -88,7 +88,12 @@ export function openDayDialog(ds) {
         <button type="button" class="btn btn-primary" id="ok">${t('common.save')}</button>
       </div>`, dlg => {
       $$('input[type=time]', dlg).forEach(inp => {
-        inp.oninput = inp.onchange = () => { draft.blocks[inp.dataset.i][inp.dataset.k] = inp.value || null; refresh(dlg); };
+        inp.oninput = inp.onchange = () => {
+          const b = draft.blocks[inp.dataset.i];
+          b[inp.dataset.k] = inp.value || null;
+          if (inp.dataset.k === 'in') delete b.s;
+          refresh(dlg);
+        };
       });
       $$('[data-del]', dlg).forEach(b => (b.onclick = () => { draft.blocks.splice(+b.dataset.del, 1); draw(); }));
       $('#addBlock', dlg).onclick = () => {

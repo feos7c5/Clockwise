@@ -22,7 +22,7 @@ export function liveSeconds(ds) {
   const nowS = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds() + (ds === todayStr() ? 0 : 86400);
   let gross = 0;
   for (const b of day.blocks) {
-    const start = toMin(b.in) * 60;
+    const start = toMin(b.in) * 60 + (b.out ? 0 : b.s || 0);
     let end = b.out ? toMin(b.out) * 60 : nowS;
     if (end < start) end += 86400;
     gross += end - start;

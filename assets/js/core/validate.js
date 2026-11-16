@@ -34,6 +34,7 @@ function cleanDay(day) {
   withIds(valid).forEach(b => {
     const block = { id: b.id, in: b.in, out: time(b.out) };
     if (b.brk === true && block.out) block.brk = true;
+    if (Number.isInteger(b.s) && b.s > 0 && b.s < 60) block.s = b.s;
     out.blocks.push(block);
   });
   if (typeof day.code === 'string' && CODES[day.code]) out.code = day.code;

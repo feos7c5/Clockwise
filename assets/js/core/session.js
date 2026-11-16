@@ -49,10 +49,13 @@ export function missingStamp() {
 }
 
 export function stamp(kind) {
-  const t = hhmm(now()), r = running(), brk = onBreak();
+  const n = now(), t = hhmm(n), r = running(), brk = onBreak();
   if (kind === 'in') {
     if (brk) delete brk.brk;
-    getDay(todayStr()).blocks.push({ in: t, out: null });
+    // `s` is the second of clocking in: only the live clock uses it, all times and reports stay in minutes.
+    const block = { in: t, out: null };
+    if (n.getSeconds()) block.s = n.getSeconds();
+    getDay(todayStr()).blocks.push(block);
   } else if (kind === 'pause' && r) {
     r.block.out = t;
     r.block.brk = true;
