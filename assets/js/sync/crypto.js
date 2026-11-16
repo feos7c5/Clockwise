@@ -20,16 +20,17 @@ export async function deriveKeys(secret) {
 }
 
 const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
-const canZip = () => typeof CompressionStream === 'function';
+const ZIP_FROM = 40_000;
 
-// Data is compressed before encryption ("z." prefix), so years of entries stay small enough to be sent
-// reliably, even while the app is being closed.
+// Large data (years of entries) is compressed before encryption ("z." prefix), so it stays small enough to be
+// sent reliably, even while the app is being closed. Smaller data stays readable for older app versions.
 export async function seal(key, value) {
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
   let plain = enc.encode(JSON.stringify(value));
-  if (canZip()) plain = await pipe(plain, new CompressionStream('gzip'));
+  const zip = plain.length > ZIP_FROM && typeof CompressionStream === 'function';
+  if (zip) plain = await pipe(plain, new CompressionStream('gzip'));
   const data = await subtle().encrypt({ name: 'AES-GCM', iv }, key, plain);
-  return `${canZip() ? 'z.' : ''}${toB64url(iv)}.${toB64url(new Uint8Array(data))}`;
+  return `${zip ? 'z.' : ''}${toB64url(iv)}.${toB64url(new Uint8Array(data))}`;
 }
 
 export async function unseal(key, blob) {
