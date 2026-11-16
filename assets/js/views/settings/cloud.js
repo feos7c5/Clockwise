@@ -1,7 +1,7 @@
 import { SYNC_AVAILABLE } from '../../sync/config.js';
 import { syncEnabled, syncState, enableSync, listDevices, removeDevice, syncFingerprint } from '../../sync/engine.js';
-import { hhmm } from '../../core/session.js';
-import { t, language } from '../../i18n/index.js';
+import { hhmm, todayStr } from '../../core/session.js';
+import { t, formatRelativeDays } from '../../i18n/index.js';
 import { parseISO } from '../../core/time.js';
 import { $, $$, esc, cardHead } from '../../ui/dom.js';
 import { ICON } from '../../ui/icons.js';
@@ -10,8 +10,8 @@ import { openPairDialog, openJoinDialog, openRecoveryDialog, openDisableDialog, 
 
 function lastSeen(seen) {
   if (!seen) return '';
-  const days = Math.round((parseISO(seen) - parseISO(new Date().toISOString().slice(0, 10))) / 86_400_000);
-  return new Intl.RelativeTimeFormat(language(), { numeric: 'auto' }).format(days, 'day');
+  const days = Math.round((parseISO(seen) - parseISO(todayStr())) / 86_400_000);
+  return formatRelativeDays(days);
 }
 
 function deviceList() {
