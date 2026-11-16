@@ -1,4 +1,4 @@
-import { parseISO, fmtDur } from '../core/time.js';
+import { parseISO, fmtDur, toMin } from '../core/time.js';
 import { CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, pauseMin, grossMin } from '../core/calc.js';
@@ -21,8 +21,23 @@ function blockRows(blocks) {
     </div>`).join('');
 }
 
+const label = b => `${b.in}–${b.out || '…'}`;
+
+// Entries that are probably typos: a block ending on the next day, overlapping blocks, an open block in between.
+function blockWarnings(blocks) {
+  const list = blocks.filter(b => b.in), out = [];
+  for (const b of list) if (b.out && toMin(b.out) < toMin(b.in)) out.push(t('dayDialog.overnight', { block: label(b) }));
+  const sorted = [...list].sort((a, b) => toMin(a.in) - toMin(b.in));
+  sorted.forEach((b, i) => {
+    const prev = sorted[i - 1];
+    if (prev && prev.out && toMin(prev.out) >= toMin(prev.in) && toMin(b.in) < toMin(prev.out)) out.push(t('dayDialog.overlap', { a: label(prev), b: label(b) }));
+    if (!b.out && i < sorted.length - 1) out.push(t('dayDialog.openNotLast', { block: label(b) }));
+  });
+  return out.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+}
+
 function commit(ds, draft) {
-  const out = { blocks: draft.blocks.filter(b => b.in) };
+  const out = { blocks: draft.blocks.filter(b => b.in).sort((a, b) => toMin(a.in) - toMin(b.in)) };
   if (draft.pause != null) out.pause = draft.pause;
   if (draft.code) out.code = draft.code;
   if (draft.note && draft.note.trim()) out.note = draft.note.trim();
@@ -46,6 +61,7 @@ export function openDayDialog(ds) {
 
   const refresh = dlg => {
     $('#dlgResult', dlg).innerHTML = resultLine();
+    $('#dlgWarn', dlg).innerHTML = blockWarnings(draft.blocks);
     $('#pause', dlg).placeholder = autoPauseHint();
   };
 
@@ -64,6 +80,7 @@ export function openDayDialog(ds) {
       </div>
       <label class="field dlg-section"><span>${t('common.note')}</span><textarea id="note">${esc(draft.note)}</textarea></label>
       <div class="dlg-result" id="dlgResult">${resultLine()}</div>
+      <div id="dlgWarn">${blockWarnings(draft.blocks)}</div>
       <div class="dlg-foot">
         <button type="button" class="btn btn-ghost danger" id="clear">${t('dayDialog.clear')}</button>
         <span class="spacer"></span>

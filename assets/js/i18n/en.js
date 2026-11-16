@@ -46,6 +46,7 @@ export default {
   dayDialog: {
     clockIn: 'In', clockOut: 'Out', removeBlock: 'Remove time block', addBlock: 'Time block',
     pauseMin: 'Break (min)', auto: 'auto: {n}', clear: 'Clear day', confirmClear: 'Delete all entries for this day?',
+    overnight: '{block} ends on the next day.', overlap: '{a} and {b} overlap – the time counts twice.', openNotLast: '{block} has no end.',
   },
 
   absence: {
