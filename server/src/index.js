@@ -184,13 +184,17 @@ async function sendDuePushes(env) {
   const { results } = await env.DB.prepare(`SELECT j.sub_id, j.tag, j.at, j.title, j.body, s.endpoint, s.p256dh, s.auth
     FROM push_jobs j JOIN push_subs s ON s.id = j.sub_id WHERE j.at <= ? ORDER BY j.at LIMIT 200`).bind(now).all();
   await Promise.all(results.map(async job => {
+    // Claim the job before sending: once it is marked as sent, a new list from a device cannot put it back.
+    const keys = [job.sub_id, job.tag, job.at];
+    const claimed = (await env.DB.prepare('INSERT OR IGNORE INTO push_sent (sub_id, tag, at) VALUES (?, ?, ?)').bind(...keys).run()).meta.changes === 1;
+    const taken = await env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ? RETURNING tag').bind(...keys).first();
+    const unclaim = () => env.DB.prepare('DELETE FROM push_sent WHERE sub_id = ? AND tag = ? AND at = ?').bind(...keys).run();
+    if (!claimed || !taken) return claimed ? unclaim() : null;
     const status = await sendPush(job, { title: job.title, body: job.body, tag: job.tag }, env).catch(() => 0);
     if (status === 404 || status === 410) return dropSub(env, job.sub_id);
-    const done = env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ?').bind(job.sub_id, job.tag, job.at);
-    if (status >= 200 && status < 300) {
-      await env.DB.batch([done, env.DB.prepare('INSERT OR IGNORE INTO push_sent (sub_id, tag, at) VALUES (?, ?, ?)').bind(job.sub_id, job.tag, job.at)]);
-    } else if (now - job.at > PUSH_RETRY_MS) {
-      await done.run();
+    if ((status < 200 || status >= 300) && now - job.at <= PUSH_RETRY_MS) {
+      await unclaim();
+      await env.DB.prepare('INSERT OR IGNORE INTO push_jobs (sub_id, tag, at, title, body) VALUES (?, ?, ?, ?, ?)').bind(...keys, job.title, job.body).run();
     }
   }));
 }
