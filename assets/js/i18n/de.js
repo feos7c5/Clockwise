@@ -19,7 +19,8 @@ export default {
     ofTarget: 'von {dur} h Soll',
     clockIn: 'Kommen', clockOut: 'Gehen', pause: 'Pause', resume: 'Weiter', finish: 'Feierabend',
     targetReached: 'Soll erreicht', remaining: 'noch {dur} h', over: '{dur} h drüber',
-    latestEnd: 'Spätestens gehen', maxHours: '10 h Höchstarbeitszeit',
+    latestEnd: 'Spätestens gehen', maxHours: '10 h Höchstarbeitszeit', autoOutAfter: 'Automatisch nach {h} h',
+    forgottenTitle: 'Ausstempeln vergessen', forgottenText: '{date}: Eintrag ohne Ende. Tippen zum Nachtragen.',
     day: 'Heute', target: 'Soll', overtime: 'Überstunden', totalBalance: 'Saldo gesamt',
     week: 'Diese Woche', weekOf: 'von {dur} h',
     entries: 'Zeiten', running: 'läuft', pauseDeduction: 'Pausenabzug',
@@ -130,6 +131,7 @@ export default {
   backup: {
     invalid: 'Keine Clockwise-Datei', confirmReplace: 'Aktuelle Daten durch das Backup ersetzen?',
     importFailed: 'Import fehlgeschlagen: {error}', saveFailed: 'Speichern fehlgeschlagen: {error}',
+    renderFailed: 'Diese Ansicht konnte nicht angezeigt werden.', reload: 'Neu laden', saveData: 'Daten sichern',
   },
 
   notify: {

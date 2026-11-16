@@ -81,3 +81,4 @@
 .ym i.l1 { opacity: .35; } .ym i.l2 { opacity: .55; } .ym i.l3 { opacity: .8; }
 .ym i.off { background: var(--warn); opacity: .5; }
 .ym i.now { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+button.notice.tappable { width: 100%; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }

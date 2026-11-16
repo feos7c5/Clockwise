@@ -19,7 +19,8 @@ export default {
     ofTarget: 'of {dur} h target',
     clockIn: 'Clock in', clockOut: 'Clock out', pause: 'Break', resume: 'Resume', finish: 'Done for today',
     targetReached: 'Target reached', remaining: '{dur} h to go', over: '{dur} h over',
-    latestEnd: 'Leave by', maxHours: '10 h legal maximum',
+    latestEnd: 'Leave by', maxHours: '10 h legal maximum', autoOutAfter: 'Automatically after {h} h',
+    forgottenTitle: 'Forgot to clock out', forgottenText: '{date}: entry without an end. Tap to complete it.',
     day: 'Today', target: 'Target', overtime: 'Overtime', totalBalance: 'Total balance',
     week: 'This week', weekOf: 'of {dur} h',
     entries: 'Times', running: 'running', pauseDeduction: 'Break deduction',
@@ -129,7 +130,7 @@ export default {
   },
   backup: {
     invalid: 'Not a Clockwise file', confirmReplace: 'Replace current data with the backup?',
-    importFailed: 'Import failed: {error}', saveFailed: 'Saving failed: {error}',
+    importFailed: 'Import failed: {error}', renderFailed: 'This view could not be shown.', reload: 'Reload', saveData: 'Save data', saveFailed: 'Saving failed: {error}',
   },
 
   notify: {

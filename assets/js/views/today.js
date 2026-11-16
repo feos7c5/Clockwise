@@ -1,10 +1,10 @@
-import { fmtDur, toMin, fromMin, iso, range, addDays } from '../core/time.js';
+import { fmtDur, toMin, fromMin, iso, range, addDays, parseISO } from '../core/time.js';
 import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, grossMin, pauseMin, pauseWarning, reachMin } from '../core/calc.js';
 import { store, getDay, cleanDay, save } from '../core/store.js';
-import { now, todayStr, nowMin, running, onBreak, missingStamp, stamp } from '../core/session.js';
-import { t, weekdayShort } from '../i18n/index.js';
+import { now, todayStr, nowMin, running, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock } from '../core/session.js';
+import { t, weekdayShort, formatLongDate } from '../i18n/index.js';
 import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { rerender } from '../ui/nav.js';
@@ -13,7 +13,7 @@ import { openJoinDialog } from './cloud-dialogs.js';
 import { installNotice, bindInstallNotice } from './install-notice.js';
 import { notice, isDismissed, bindNotices } from '../ui/notice.js';
 import { SYNC_AVAILABLE } from '../sync/config.js';
-import { syncEnabled, removedNotice } from '../sync/engine.js';
+import { syncEnabled, removedNotice, syncImmediately } from '../sync/engine.js';
 
 export function liveSeconds(ds) {
   const day = store.state.days[ds];
@@ -43,7 +43,7 @@ function statusLine(r, brk, day, ds) {
     text = t('today.clockedInSince', { time: r.block.in }) + (r.ds !== ds ? ' ' + t('today.yesterday') : '');
   } else if (brk) {
     dot = 'brk';
-    text = t('today.onBreakSince', { time: brk.out, dur: fmtDur(Math.max(0, nowMin() - toMin(brk.out))) });
+    text = t('today.onBreakSince', { time: brk.out, dur: fmtDur(breakMinutes()) });
   } else if (day.blocks.length) {
     text = t('today.finishedAt', { time: day.blocks[day.blocks.length - 1].out });
   }
@@ -61,12 +61,22 @@ function stampButtons(r, brk) {
   return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}${t('today.clockIn')}</button>`;
 }
 
+const LEGAL_MAX = 600;
+
+// Latest end: the legal 10 h, or earlier if the automatic clock-out is set lower.
+function latestEnd(activeDs) {
+  const auto = store.state.settings.remind.forgot * 60;
+  const limit = auto ? Math.min(auto, LEGAL_MAX) : LEGAL_MAX;
+  const sub = auto && auto < LEGAL_MAX ? t('today.autoOutAfter', { h: auto / 60 }) : t('today.maxHours');
+  return stat(t('today.latestEnd'), reachAt(activeDs, limit) || '–', sub);
+}
+
 function statTiles(r, st, activeDs, bal) {
   if (r && st.soll > 0) {
     const left = st.soll - st.ist;
     return stat(t('today.targetReached'), left > 0 ? reachAt(activeDs, st.soll) || '–' : '✓',
       left > 0 ? t('today.remaining', { dur: fmtDur(left) }) : t('today.over', { dur: fmtDur(-left, true) }))
-      + stat(t('today.latestEnd'), reachAt(activeDs, 600) || '–', t('today.maxHours'));
+      + latestEnd(activeDs);
   }
   const today = st.counts
     ? stat(t('today.day'), fmtDur(st.ist - st.soll, true), t('common.istSoll', { ist: fmtDur(st.ist), soll: fmtDur(st.soll) }), tone(st.ist - st.soll))
@@ -110,6 +120,24 @@ function codesCard(day) {
     <textarea id="todayNote" placeholder="${t('today.notePlaceholder')}">${esc(day.note)}</textarea></label></section>`;
 }
 
+function forgottenNotice() {
+  const f = forgottenBlock();
+  if (!f) return '';
+  return `<button class="notice warning tappable" id="forgotten" data-ds="${f.ds}"><div class="ic">${ICON.bell}</div>
+    <div class="notice-text"><b>${t('today.forgottenTitle')}</b>${t('today.forgottenText', { date: esc(formatLongDate(parseISO(f.ds))) })}</div></button>`;
+}
+
+// One tap is one stamp: a quick second tap must not hit the button that replaced the first one.
+let lastStampAt = 0;
+function onStamp(act) {
+  if (Date.now() - lastStampAt < 1200) return;
+  lastStampAt = Date.now();
+  navigator.vibrate?.(20);
+  stamp(act);
+  syncImmediately();
+  rerender();
+}
+
 function onboardingNotice() {
   if (!SYNC_AVAILABLE || syncEnabled() || Object.keys(store.state.days).length || isDismissed('onboard')) return '';
   const action = `<button class="btn btn-sm btn-primary" id="onboardJoin">${t('cloud.onboardAction')}</button>`;
@@ -121,6 +149,7 @@ export function renderToday(view) {
   const activeDs = r ? r.ds : ds;
   const st = dayStats(store.state, activeDs, n);
   const day = store.state.days[ds] || { blocks: [] };
+  const shown = store.state.days[activeDs] || { blocks: [] };
   const warn = st.day.blocks.length && !r && !brk && pauseWarning(store.state.settings, st.day);
   const progress = st.soll ? Math.min(100, (st.ist / st.soll) * 100) : 0;
 
@@ -128,6 +157,7 @@ export function renderToday(view) {
     ${removedNotice() && !isDismissed('removed', removedNotice()) ? notice({ id: 'removed', value: removedNotice(), tone: 'warning', title: t('cloud.removedTitle'), text: t('cloud.removedText') }) : ''}
     ${installNotice()}
     ${onboardingNotice()}
+    ${forgottenNotice()}
     ${missingStamp() && !isDismissed('missing', ds) ? notice({ id: 'missing', value: ds, tone: 'warning', icon: ICON.bell, title: t('today.missingTitle'), text: t('today.missingText') }) : ''}
     <section class="card clock">
       ${statusLine(r, brk, day, ds)}
@@ -139,12 +169,13 @@ export function renderToday(view) {
     </section>
     <section class="stats">${statTiles(r, st, activeDs, balance(store.state, ds, n))}</section>
     ${weekCard(n)}
-    ${entriesCard(day, grossMin(day, r && r.ds === ds ? nowMin() : null))}
+    ${entriesCard(shown, grossMin(shown, r ? nowMin() + (r.ds === ds ? 0 : 1440) : null))}
     ${codesCard(day)}
   </div>`;
 
-  $$('[data-act]', view).forEach(b => (b.onclick = () => { navigator.vibrate?.(20); stamp(b.dataset.act); rerender(); }));
-  $('#editToday', view).onclick = () => openDayDialog(ds);
+  $$('[data-act]', view).forEach(b => (b.onclick = () => onStamp(b.dataset.act)));
+  $('#editToday', view).onclick = () => openDayDialog(activeDs);
+  $('#forgotten', view)?.addEventListener('click', e => openDayDialog(e.currentTarget.dataset.ds));
   $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
   bindInstallNotice(view);
   bindNotices(view, rerender);
