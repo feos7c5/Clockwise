@@ -24,11 +24,14 @@ export function setLanguage(pref) {
 
 export const language = () => current;
 
-export function t(key, params) {
-  const value = lookup(LANGUAGES[current], key) ?? lookup(LANGUAGES[FALLBACK], key) ?? key;
+// Text in a given language, e.g. for a notification shown on another device.
+export function tIn(lang, key, params) {
+  const value = lookup(LANGUAGES[lang] || LANGUAGES[FALLBACK], key) ?? lookup(LANGUAGES[FALLBACK], key) ?? key;
   if (typeof value !== 'string' || !params) return value;
   return value.replace(/\{(\w+)\}/g, (m, k) => (params[k] ?? m));
 }
+
+export const t = (key, params) => tIn(current, key, params);
 
 const intlCache = new Map();
 const cached = (kind, opts) => {

@@ -32,6 +32,8 @@ const setStatus = (status, error = '') => {
 let config = null, keys = null, running = null, again = null;
 let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0, leaving = false;
 let resumedAt = Date.now(), settledAt = 0;
+// Registered when the module loads, before any other listener, so nothing acts on data from before the pause.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resumedAt = Date.now(); });
 
 function deviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
@@ -186,13 +188,28 @@ function registerDevice() {
   const devices = (store.state.devices ||= {});
   const me = devices[config.device], today = iso(new Date());
   if (me && me.seen === today && !me.left) return;
-  devices[config.device] = { name: me?.name || defaultDeviceName(), seen: today, updated: Date.now() };
+  devices[config.device] = { ...me, name: me?.name || defaultDeviceName(), seen: today, updated: Date.now() };
+  save();
+}
+
+export const ownDeviceId = () => config?.device || null;
+
+// Shares what other devices need to schedule this device's notifications: its push address, reminder settings
+// and language.
+export function publishDevice(info) {
+  if (!config || leaving) return;
+  const devices = (store.state.devices ||= {});
+  const me = devices[config.device];
+  if (me && Object.keys(info).every(k => canonical(me[k] ?? null) === canonical(info[k] ?? null))) return;
+  devices[config.device] = { name: defaultDeviceName(), seen: iso(new Date()), ...me, ...info, updated: Date.now() };
   save();
 }
 
 const wasRemoved = () => Boolean(store.state.devices?.[config.device]?.removed);
 
-function wipeRemovedDevice() {
+async function wipeRemovedDevice() {
+  const reg = await navigator.serviceWorker?.getRegistration().catch(() => null);
+  await (await reg?.pushManager.getSubscription().catch(() => null))?.unsubscribe().catch(() => {});
   closeLive();
   clearTimeout(pushTimer);
   clearTimeout(retryTimer);
@@ -232,7 +249,7 @@ export async function initSync() {
   window.addEventListener('online', () => { syncNow({ forcePull: true }); startLive(); });
   window.addEventListener('offline', () => { if (keys) setStatus('offline'); closeLive(); });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { flush(); closeLive(); } else { resumedAt = Date.now(); syncNow({ forcePull: true }); startLive(); }
+    if (document.hidden) { flush(); closeLive(); } else { syncNow({ forcePull: true }); startLive(); }
   });
   window.addEventListener('pagehide', flush);
   setInterval(() => {

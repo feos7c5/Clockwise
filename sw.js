@@ -1,4 +1,4 @@
-const CACHE = 'clockwise-3a0a60af08';
+const CACHE = 'clockwise-260d8380b5';
 
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
@@ -28,7 +28,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('clockwise-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -44,9 +44,14 @@ self.addEventListener('fetch', e => {
   );
 });
 
+// Every push must show a notification, otherwise iOS may withdraw the permission.
 self.addEventListener('push', e => {
-  const { title = 'Clockwise', body = '', tag } = e.data?.json() || {};
-  e.waitUntil(self.registration.showNotification(title, { body, tag, icon: 'assets/icons/icon-192.png', badge: 'assets/icons/icon-192.png' }));
+  let data = {};
+  try { data = e.data?.json() || {}; } catch { try { data = { body: e.data?.text() || '' }; } catch { } }
+  const title = typeof data.title === 'string' && data.title ? data.title : 'Clockwise';
+  const options = { body: typeof data.body === 'string' ? data.body : '', icon: 'assets/icons/icon-192.png', badge: 'assets/icons/icon-192.png' };
+  if (typeof data.tag === 'string' && data.tag) options.tag = data.tag;
+  e.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', e => {

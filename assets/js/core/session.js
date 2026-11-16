@@ -72,8 +72,8 @@ export function openBlocks() {
   return out.sort((a, b) => a.ds.localeCompare(b.ds));
 }
 
-export function clockOutDue(r = running()) {
-  const limit = store.state.settings.remind.forgot * 60;
+export function clockOutDue(r = running(), forgot = store.state.settings.remind.forgot) {
+  const limit = forgot * 60;
   if (!r || !limit) return null;
   const min = reachMin(store.state.settings, store.state.days[r.ds], limit, toMin(r.block.in));
   return min == null ? null : { ...r, min, at: atMin(r.ds, min) };

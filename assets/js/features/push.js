@@ -2,16 +2,18 @@ import { SYNC_URL, VAPID_KEY } from '../sync/config.js';
 import { store } from '../core/store.js';
 
 const SENT_KEY = 'clockwise-push-sent';
+const RESEND_MS = 15 * 60_000;
 const SERVER_KEY = Uint8Array.from(atob(VAPID_KEY.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 
-let reg = null, sub = null, pending = null, active = false, busy = false, onSubscribed = async () => {};
+let reg = null, sub = null, pending = null, active = false, running = null, queued = null, onSubscribed = async () => {};
 export const pushActive = () => active;
+export const currentSubscription = () => (sub ? sub.toJSON() : null);
 
 const supported = () => Boolean(SYNC_URL) && 'PushManager' in window && 'serviceWorker' in navigator;
 const wanted = () => store.state.settings.remind.on && Notification.permission === 'granted';
 
-const post = (method, path, body) => fetch(SYNC_URL + path, {
-  method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store',
+const post = (method, path, body, keepalive = false) => fetch(SYNC_URL + path, {
+  method, headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body), cache: 'no-store', keepalive,
 });
 
 // iOS only accepts pushManager.subscribe() as the first thing a tap does – no await before it.
@@ -37,23 +39,39 @@ export async function initPush(resync) {
   await resync();
 }
 
-// Hands the upcoming notifications to the server, which sends them even while the app is closed.
-export async function syncPush(items) {
-  if (!sub) { active = false; return; }
-  if (busy) return;
-  busy = true;
+const readSent = () => { try { return JSON.parse(localStorage.getItem(SENT_KEY)) || {}; } catch { return {}; } };
+
+// Hands every device its list of upcoming notifications; the server sends them even while the app is closed.
+// A list is only sent again when it changed (or now and then, in case another device replaced it).
+async function upload(targets, keepalive) {
+  const sent = readSent(), next = {};
+  let ownOk = !sub;
   try {
-    const body = JSON.stringify({ subscription: sub.toJSON(), items: items.filter(i => i.at > Date.now()) });
-    if (body !== localStorage.getItem(SENT_KEY)) {
-      if (!(await post('PUT', '/v1/push', JSON.parse(body))).ok) throw new Error('push schedule rejected');
-      localStorage.setItem(SENT_KEY, body);
+    for (const { subscription, items } of targets) {
+      const body = JSON.stringify({ subscription, items }), prev = sent[subscription.endpoint];
+      const fresh = prev && prev.body === body && (!items.length || Date.now() - prev.at < RESEND_MS);
+      if (!fresh) {
+        if (!(await post('PUT', '/v1/push', body, keepalive)).ok) throw new Error('push schedule rejected');
+      }
+      next[subscription.endpoint] = fresh ? prev : { body, at: Date.now() };
+      if (sub && subscription.endpoint === sub.endpoint) ownOk = true;
     }
-    active = true;
+    active = Boolean(sub) && ownOk;
   } catch (e) {
     active = false;
   } finally {
-    busy = false;
+    localStorage.setItem(SENT_KEY, JSON.stringify({ ...sent, ...next }));
   }
+}
+
+export function syncPush(targets, { keepalive = false } = {}) {
+  if (running) { queued = { targets, keepalive }; return running; }
+  running = (async () => {
+    let job = { targets, keepalive };
+    while (job) { queued = null; await upload(job.targets, job.keepalive); job = queued; }
+    running = null;
+  })();
+  return running;
 }
 
 export async function sendPushTest(title, body) {
