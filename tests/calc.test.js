@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fmtDur, parseDur } from '../assets/js/core/time.js';
 import { easter, holidays } from '../assets/js/core/holidays.js';
-import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, vacationBase, pauseWarning, reachMin } from '../assets/js/core/calc.js';
+import { pauseMin, istMin, sollMin, dayStats, sumRange, balance, vacationUsed, vacationAccount, vacationBase, pauseWarning, reachMin, invalidateCalc } from '../assets/js/core/calc.js';
 
 const settings = {
   land: 'NW', halfHolidays: true, pauseMode: 'fix', pauseMin: 45, carry: 0,
@@ -62,6 +62,7 @@ test('balance starts at the first recorded day', () => {
   assert.equal(balance(state, '2026-10-31', NOW), 0);
   state.days['2026-10-29'] = day(['08:00', '16:00']);
   state.days['2026-10-30'] = { blocks: [], code: 'U' };
+  invalidateCalc();
   assert.equal(balance(state, '2026-10-31', NOW), 15);
   assert.equal(vacationUsed(state, '2026'), 1);
 });
@@ -71,6 +72,7 @@ test('today only counts once clocked in', () => {
   const fri = new Date(2026, 9, 30, 9, 0);
   assert.equal(dayStats(state, '2026-10-30', fri).counts, false);
   state.days['2026-10-30'] = day(['08:00', null]);
+  invalidateCalc();
   const st = dayStats(state, '2026-10-30', fri);
   assert.equal(st.counts, true);
   assert.equal(st.running, true);
@@ -133,4 +135,29 @@ test('target is reached when clocking out would book it', () => {
   assert.equal(reachMin(short, day(['08:00', null]), 360, 480), 480 + 405);
   assert.equal(reachMin({ ...settings, pauseMode: 'gesetz' }, day(['08:00', null]), 360, 480), 480 + 360);
   assert.equal(reachMin({ ...settings, pauseMode: 'gesetz' }, day(['08:00', null]), 361, 480), 480 + 391);
+});
+
+test('Buß- und Bettag is the last Wednesday before 23 November', async () => {
+  const { holidays } = await import('../assets/js/core/holidays.js');
+  const day = y => Object.entries(holidays(y, 'SN', false)).find(([, h]) => h.id === 'repentance')[0];
+  assert.deepEqual([2026, 2027, 2033, 2039].map(day), ['2026-11-18', '2027-11-17', '2033-11-16', '2039-11-16']);
+});
+
+test('cached balance equals a fresh day-by-day sum and follows changes', async () => {
+  const { balance, sumRange, invalidateCalc, avgWorkdayMin } = await import('../assets/js/core/calc.js');
+  const s = { ...settings, carry: 30 };
+  const days = {};
+  for (let d = new Date(2025, 0, 1); d < new Date(2026, 10, 16); d.setDate(d.getDate() + 1)) {
+    if (d.getDay() % 6) days[`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`] = { blocks: [{ in: '08:00', out: d.getDate() % 3 ? '16:30' : '15:00' }] };
+  }
+  days['2026-11-16'] = { blocks: [{ in: '08:00', out: null }] };
+  const state = { settings: s, days };
+  const now = new Date(2026, 10, 16, 12, 0);
+  for (const to of ['2025-03-31', '2026-10-31', '2026-11-14', '2026-11-15', '2026-11-16', '2026-11-30']) {
+    assert.equal(balance(state, to, now), 30 + sumRange(state, '2025-01-01', to, now).diff, to);
+  }
+  state.days['2025-02-03'].blocks[0].out = '20:00';
+  invalidateCalc();
+  assert.equal(balance(state, '2026-11-16', now), 30 + sumRange(state, '2025-01-01', '2026-11-16', now).diff);
+  assert.equal(avgWorkdayMin({ periods: [{ from: '2026-01-01', min: [480, 480, 480, 480, 300, 0, 0] }] }, '2026-11-16'), 444);
 });

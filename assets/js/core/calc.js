@@ -1,11 +1,29 @@
-import { iso, parseISO, toMin, fromMin, range } from './time.js';
+import { iso, parseISO, toMin, fromMin, range, addDays } from './time.js';
 import { holidayOn } from './holidays.js';
 import { CODES, vacationValue } from './codes.js';
 
-export function contractMin(settings, ds) {
+const sortedPeriods = new WeakMap();
+const periodsOf = settings => {
+  let sorted = sortedPeriods.get(settings.periods);
+  if (!sorted) sortedPeriods.set(settings.periods, (sorted = [...settings.periods].sort((a, b) => a.from.localeCompare(b.from))));
+  return sorted;
+};
+
+export function periodAt(settings, ds) {
   let current = null;
-  for (const p of [...settings.periods].sort((a, b) => a.from.localeCompare(b.from))) if (p.from <= ds) current = p;
+  for (const p of periodsOf(settings)) if (p.from <= ds) current = p;
+  return current;
+}
+
+export function contractMin(settings, ds) {
+  const current = periodAt(settings, ds);
   return current ? current.min[(parseISO(ds).getDay() + 6) % 7] || 0 : 0;
+}
+
+// Average target of a working day in the schedule valid on `ds`.
+export function avgWorkdayMin(settings, ds) {
+  const days = (periodAt(settings, ds)?.min || []).filter(m => m > 0);
+  return days.length ? days.reduce((a, b) => a + b, 0) / days.length : 480;
 }
 
 export function grossMin(day, nowMin = null) {
@@ -79,10 +97,24 @@ export function sollMin(settings, ds, day, ist) {
   return hol.f * c.f * az;
 }
 
+// Results that only depend on the data are cached per state until the next change (see invalidateCalc).
+let generation = 0;
+export const invalidateCalc = () => { generation++; };
+const caches = new WeakMap();
+function cacheFor(state) {
+  let c = caches.get(state);
+  if (!c || c.gen !== generation) caches.set(state, (c = { gen: generation, first: undefined, cum: new Map(), cumEnd: null }));
+  return c;
+}
+
 export function firstDay(state) {
-  let first = null;
-  for (const ds in state.days) if (first === null || ds < first) first = ds;
-  return first;
+  const c = cacheFor(state);
+  if (c.first === undefined) {
+    let first = null;
+    for (const ds in state.days) if (first === null || ds < first) first = ds;
+    c.first = first;
+  }
+  return c.first;
 }
 
 export function dayStats(state, ds, now) {
@@ -110,11 +142,27 @@ export function sumRange(state, fromStr, toStr, now) {
   return { ist, soll, diff };
 }
 
+// Days before yesterday are final: their difference no longer depends on the current time, so the running
+// total up to each of them is computed once and reused.
+function finalTotal(state, first, until, now) {
+  const c = cacheFor(state);
+  if (c.cum.has(until)) return c.cum.get(until);
+  let total = 0, start = first;
+  if (c.cumEnd && c.cumEnd < until) { total = c.cum.get(c.cumEnd); start = iso(addDays(parseISO(c.cumEnd), 1)); }
+  for (const ds of range(start, until)) { total += dayStats(state, ds, now).diff; c.cum.set(ds, total); }
+  if (!c.cumEnd || until > c.cumEnd) c.cumEnd = until;
+  return total;
+}
+
 export function balance(state, toStr, now) {
   const carry = state.settings.carry || 0;
   const first = firstDay(state);
   if (!first || first > toStr) return carry;
-  return carry + sumRange(state, first, toStr, now).diff;
+  const final = iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2));
+  const until = toStr < final ? toStr : final;
+  if (until < first) return carry + sumRange(state, first, toStr, now).diff;
+  const rest = until < toStr ? sumRange(state, iso(addDays(parseISO(until), 1)), toStr, now).diff : 0;
+  return carry + finalTotal(state, first, until, now) + rest;
 }
 
 export function vacationUsed(state, year) {

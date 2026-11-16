@@ -1,5 +1,6 @@
 import { DEFAULT_STATE } from './defaults.js';
 import { snapshot, stamp } from '../sync/merge.js';
+import { invalidateCalc } from './calc.js';
 import { t } from '../i18n/index.js';
 
 const KEY = 'stempeluhr-v1';
@@ -21,6 +22,7 @@ export const store = { state: load() };
 let lastSnapshot = snapshot(store.state);
 
 function persist() {
+  invalidateCalc();
   store.state.savedAt = Date.now();
   try {
     localStorage.setItem(KEY, JSON.stringify(store.state));
