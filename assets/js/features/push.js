@@ -42,26 +42,25 @@ export async function initPush(resync) {
 const readSent = () => { try { return JSON.parse(localStorage.getItem(SENT_KEY)) || {}; } catch { return {}; } };
 
 // Hands every device its list of upcoming notifications; the server sends them even while the app is closed.
-// A list is only sent again when it changed (or now and then, in case another device replaced it).
+// A list is only sent again when it changed. This device's own list is also refreshed now and then, in case
+// another device replaced it with an older one. One rejected list does not stop the others.
 async function upload(targets, keepalive) {
-  const sent = readSent(), next = {};
-  let ownOk = !sub;
-  try {
-    for (const { subscription, items } of targets) {
-      const body = JSON.stringify({ subscription, items }), prev = sent[subscription.endpoint];
-      const fresh = prev && prev.body === body && (!items.length || Date.now() - prev.at < RESEND_MS);
-      if (!fresh) {
-        if (!(await post('PUT', '/v1/push', body, keepalive)).ok) throw new Error('push schedule rejected');
-      }
-      next[subscription.endpoint] = fresh ? prev : { body, at: Date.now() };
-      if (sub && subscription.endpoint === sub.endpoint) ownOk = true;
+  const sent = readSent();
+  let ownOk = false;
+  for (const { subscription, items, own } of targets) {
+    const body = JSON.stringify({ subscription, items }), prev = sent[subscription.endpoint];
+    const fresh = prev && prev.body === body && (!own || !items.length || Date.now() - prev.at < RESEND_MS);
+    let ok = fresh;
+    if (!fresh) {
+      const res = await post('PUT', '/v1/push', body, keepalive).catch(() => null);
+      ok = Boolean(res?.ok);
+      // A list the server refuses (e.g. an outdated push address) is not retried until it changes.
+      if (ok || res?.status === 400) sent[subscription.endpoint] = { body, at: Date.now() };
     }
-    active = Boolean(sub) && ownOk;
-  } catch (e) {
-    active = false;
-  } finally {
-    localStorage.setItem(SENT_KEY, JSON.stringify({ ...sent, ...next }));
+    if (own) ownOk = ok;
   }
+  active = Boolean(sub) && ownOk;
+  localStorage.setItem(SENT_KEY, JSON.stringify(sent));
 }
 
 export function syncPush(targets, { keepalive = false } = {}) {

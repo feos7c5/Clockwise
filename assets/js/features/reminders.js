@@ -53,17 +53,20 @@ function itemsFor(rs, lang, n) {
 
 export const upcoming = (n = now()) => itemsFor(store.state.settings.remind, language(), n);
 
-// This device plus every other device that shares the data: whoever changes something keeps all of their
-// notifications right. Removed devices get an empty list.
-function targets(n) {
+// This device's list, plus – after a change made here – the lists of all other devices sharing the data, so
+// e.g. clocking out here cancels the reminders there. Only the device that made a change updates the others,
+// so a device that has not yet received the newest data never overwrites them. Removed devices get an empty
+// list.
+function targets(n, others) {
   const recent = items => items.filter(i => i.at > Date.now() - RECENT_MS);
   const list = [], own = currentSubscription(), me = ownDeviceId();
+  if (own) list.push({ subscription: own, items: recent(upcoming(n)), own: true });
+  if (!others) return list;
   for (const [id, d] of Object.entries(store.state.devices || {})) {
-    if (id === me || !d.push?.endpoint) continue;
+    if (id === me || !d.push?.endpoint || d.push.endpoint === own?.endpoint) continue;
     const gone = d.removed || d.left;
     list.push({ subscription: d.push, items: gone ? [] : recent(itemsFor(d.remind, d.lang, n)) });
   }
-  if (own) list.push({ subscription: own, items: recent(upcoming(n)) });
   return list;
 }
 
@@ -77,14 +80,18 @@ async function notifyLocally(items) {
   localStorage.setItem(FLAGS_KEY, JSON.stringify(flags));
 }
 
-let changedSinceResume = false, saveTimer = 0;
+let changedSinceResume = false, changedHere = false, saveTimer = 0;
 
 export async function checkReminders({ keepalive = false } = {}) {
   clearTimeout(saveTimer);
   const before = upcoming();
   if (autoClockOut()) rerender();
   publishDevice({ push: currentSubscription(), remind: store.state.settings.remind, lang: language() });
-  if (syncSettled() || changedSinceResume) await syncPush(targets(now()), { keepalive });
+  if (syncSettled() || changedSinceResume) {
+    const others = changedHere && syncSettled();
+    if (others) changedHere = false;
+    await syncPush(targets(now(), others), { keepalive });
+  }
   if (!pushActive()) await notifyLocally(before);
 }
 
@@ -96,7 +103,7 @@ export async function sendTest() {
 export function startReminders() {
   // Every change (clock-in, clock-out, edits) updates the schedules right away, and closing the app sends
   // whatever is still waiting.
-  onSave(() => { changedSinceResume = true; clearTimeout(saveTimer); saveTimer = setTimeout(checkReminders, 400); });
+  onSave(() => { changedSinceResume = changedHere = true; clearTimeout(saveTimer); saveTimer = setTimeout(checkReminders, 400); });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) checkReminders({ keepalive: true });
     else changedSinceResume = false;
