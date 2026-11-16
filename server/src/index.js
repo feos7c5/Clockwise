@@ -1,6 +1,7 @@
 export { VaultChannel } from './channel.js';
 import { sendPush } from './webpush.js';
 import pushSchema from '../migrations/0002_push.sql';
+import sentSchema from '../migrations/0003_push_sent.sql';
 
 const MAX_BLOB = 2_000_000;
 const MAX_PAYLOAD = 2_000;
@@ -12,6 +13,10 @@ const TAG_RE = /^[\w-]{1,40}$/;
 const MAX_JOBS = 20;
 const PUSH_RETRY_MS = 15 * 60 * 1000;
 const PUSH_IDLE_MS = 60 * 86_400_000;
+const SENT_KEEP_MS = 2 * 86_400_000;
+const SEND_CRON = '* * * * *';
+// Only the browsers' own push services may be called, so the server cannot be used to reach other hosts.
+const PUSH_HOSTS = ['push.apple.com', 'fcm.googleapis.com', 'push.services.mozilla.com', 'notify.windows.com'];
 
 async function sha256Hex(text) {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -120,13 +125,19 @@ async function claimPairing(request, env) {
 // The push tables create themselves, so a deploy alone is enough to enable push.
 let pushReady;
 const ensurePushSchema = env => (pushReady ||= env.DB.batch(
-  pushSchema.split(';').map(q => q.trim()).filter(Boolean).map(q => env.DB.prepare(q)),
+  (pushSchema + ';' + sentSchema).split(';').map(q => q.trim()).filter(Boolean).map(q => env.DB.prepare(q)),
 ).catch(e => { pushReady = null; throw e; }));
 
-function pushSubscription(sub) {
+function allowedPushHost(host, env) {
+  const extra = (env.PUSH_TEST_HOSTS || '').split(',').map(s => s.trim()).filter(Boolean);
+  return [...PUSH_HOSTS, ...extra].some(h => host === h || host.endsWith('.' + h));
+}
+
+function pushSubscription(sub, env) {
   let url;
   try { url = new URL(sub.endpoint); } catch { throw new HttpError(400, 'bad_request'); }
-  if (url.protocol !== 'https:' || sub.endpoint.length > 1000 || !KEY_RE.test(sub.keys?.p256dh || '') || !KEY_RE.test(sub.keys?.auth || '')) {
+  if (url.protocol !== 'https:' || sub.endpoint.length > 1000 || !allowedPushHost(url.hostname, env)
+    || !KEY_RE.test(sub.keys?.p256dh || '') || !KEY_RE.test(sub.keys?.auth || '')) {
     throw new HttpError(400, 'bad_request');
   }
   return { endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth };
@@ -138,15 +149,18 @@ const validJob = j => j && TAG_RE.test(j.tag) && Number.isInteger(j.at)
 async function putPush(request, env) {
   await ensurePushSchema(env);
   const { subscription, items } = await readJson(request, 20_000);
-  const sub = pushSubscription(subscription || {});
+  const sub = pushSubscription(subscription || {}, env);
   if (!Array.isArray(items) || items.length > MAX_JOBS || !items.every(validJob)) throw new HttpError(400, 'bad_request');
   const id = await sha256Hex(sub.endpoint), now = Date.now();
+  // The new list replaces everything still waiting, also jobs that are due but not sent yet; a job that was
+  // already delivered is never sent twice.
   await env.DB.batch([
     env.DB.prepare('INSERT OR REPLACE INTO push_subs (id, endpoint, p256dh, auth, updated_at) VALUES (?, ?, ?, ?, ?)')
       .bind(id, sub.endpoint, sub.p256dh, sub.auth, now),
-    env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND at > ?').bind(id, now),
-    ...items.filter(j => j.at > now).map(j => env.DB.prepare('INSERT OR REPLACE INTO push_jobs (sub_id, tag, at, title, body) VALUES (?, ?, ?, ?, ?)')
-      .bind(id, j.tag, j.at, j.title, j.body)),
+    env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ?').bind(id),
+    ...items.filter(j => j.at > now - PUSH_RETRY_MS).map(j => env.DB.prepare(`INSERT OR REPLACE INTO push_jobs (sub_id, tag, at, title, body)
+      SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM push_sent WHERE sub_id = ? AND tag = ? AND at = ?)`)
+      .bind(id, j.tag, j.at, j.title, j.body, id, j.tag, j.at)),
   ]);
 }
 
@@ -160,6 +174,7 @@ async function testPush(request, env) {
 
 const dropSub = (env, id) => env.DB.batch([
   env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ?').bind(id),
+  env.DB.prepare('DELETE FROM push_sent WHERE sub_id = ?').bind(id),
   env.DB.prepare('DELETE FROM push_subs WHERE id = ?').bind(id),
 ]);
 
@@ -171,17 +186,27 @@ async function sendDuePushes(env) {
   await Promise.all(results.map(async job => {
     const status = await sendPush(job, { title: job.title, body: job.body, tag: job.tag }, env).catch(() => 0);
     if (status === 404 || status === 410) return dropSub(env, job.sub_id);
-    if (status >= 200 && status < 300 || now - job.at > PUSH_RETRY_MS) {
-      await env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ?').bind(job.sub_id, job.tag, job.at).run();
+    const done = env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ?').bind(job.sub_id, job.tag, job.at);
+    if (status >= 200 && status < 300) {
+      await env.DB.batch([done, env.DB.prepare('INSERT OR IGNORE INTO push_sent (sub_id, tag, at) VALUES (?, ?, ?)').bind(job.sub_id, job.tag, job.at)]);
+    } else if (now - job.at > PUSH_RETRY_MS) {
+      await done.run();
     }
   }));
+}
+
+async function cleanUp(env) {
+  await ensurePushSchema(env);
+  const now = Date.now();
+  await env.DB.prepare('DELETE FROM push_sent WHERE at < ?').bind(now - SENT_KEEP_MS).run();
+  await env.DB.prepare('DELETE FROM pairings WHERE expires_at < ?').bind(now).run();
   const { results: idle } = await env.DB.prepare('SELECT id FROM push_subs WHERE updated_at < ?').bind(now - PUSH_IDLE_MS).all();
   await Promise.all(idle.map(s => dropSub(env, s.id)));
 }
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendDuePushes(env));
+    ctx.waitUntil(event.cron === SEND_CRON ? sendDuePushes(env) : cleanUp(env));
   },
 
 

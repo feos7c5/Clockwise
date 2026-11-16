@@ -107,6 +107,9 @@ test('push: schedule validation, test send', async () => {
   assert.equal((await call('PUT', '/v1/push', { body: { subscription, items: [item] } })).status, 204);
   assert.equal((await call('PUT', '/v1/push', { body: { subscription: { ...subscription, endpoint: 'http://x' }, items: [] } })).status, 400);
   assert.equal((await call('PUT', '/v1/push', { body: { subscription, items: [{ ...item, tag: 'a b' }] } })).status, 400);
+  for (const endpoint of ['https://example.com/hook', 'https://push.apple.com.evil.net/x', 'https://169.254.169.254/latest']) {
+    assert.equal((await call('PUT', '/v1/push', { body: { subscription: { ...subscription, endpoint }, items: [] } })).status, 400, endpoint);
+  }
 
   assert.deepEqual(await (await call('POST', '/v1/push/test', { body: { endpoint: subscription.endpoint, title: 't', body: 'b' } })).json(), { status: 0 });
   assert.equal((await call('POST', '/v1/push/test', { body: { endpoint: 'https://push.invalid/unknown', title: 't', body: 'b' } })).status, 404);
