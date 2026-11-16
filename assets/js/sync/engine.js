@@ -31,6 +31,7 @@ const setStatus = (status, error = '') => {
 
 let config = null, keys = null, running = null, again = null;
 let pushTimer = null, retryTimer = null, retries = 0, lastPull = 0, localRevision = 0, leaving = false;
+let resumedAt = Date.now(), settledAt = 0;
 
 function deviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
@@ -53,6 +54,10 @@ const readConfig = () => { try { return JSON.parse(localStorage.getItem(CONFIG_K
 const writeConfig = () => (config ? localStorage.setItem(CONFIG_KEY, JSON.stringify(config)) : localStorage.removeItem(CONFIG_KEY));
 
 export const syncEnabled = () => Boolean(config);
+
+// True once this device has tried to fetch the other devices' changes since it was opened or brought back,
+// so automatic actions are based on the newest data available.
+export const syncSettled = () => !config || settledAt >= resumedAt;
 
 function markDirty() {
   localRevision++;
@@ -114,7 +119,7 @@ function scheduleRetry() {
 
 export function syncNow(options = {}) {
   if (!keys) return Promise.resolve();
-  if (navigator.onLine === false) { setStatus('offline'); return Promise.resolve(); }
+  if (navigator.onLine === false) { settledAt = Date.now(); setStatus('offline'); return Promise.resolve(); }
   if (running) { again = { ...again, ...options }; return running; }
   setStatus('syncing');
   running = (async () => {
@@ -129,9 +134,11 @@ export function syncNow(options = {}) {
       clearTimeout(retryTimer);
       if (wasRemoved()) return wipeRemovedDevice();
       registerDevice();
+      settledAt = Date.now();
       setStatus('ok');
     } catch (e) {
       const offline = navigator.onLine === false || e.name === 'TypeError' || e.name === 'TimeoutError';
+      settledAt = Date.now();
       setStatus(offline ? 'offline' : 'error', e.message);
       scheduleRetry();
     } finally {
@@ -156,6 +163,14 @@ function flush() {
   clearTimeout(pushTimer);
   pushTimer = null;
   syncNow({ keepalive: true });
+}
+
+// Clock-in and clock-out go out right away instead of after the usual short delay.
+export function syncImmediately() {
+  if (!keys || !pushTimer) return;
+  clearTimeout(pushTimer);
+  pushTimer = null;
+  syncNow();
 }
 
 function defaultDeviceName() {
@@ -217,7 +232,7 @@ export async function initSync() {
   window.addEventListener('online', () => { syncNow({ forcePull: true }); startLive(); });
   window.addEventListener('offline', () => { if (keys) setStatus('offline'); closeLive(); });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { flush(); closeLive(); } else { syncNow(); startLive(); }
+    if (document.hidden) { flush(); closeLive(); } else { resumedAt = Date.now(); syncNow({ forcePull: true }); startLive(); }
   });
   window.addEventListener('pagehide', flush);
   setInterval(() => {
