@@ -7,6 +7,7 @@ import { t, tn, monthName, formatNumber } from '../i18n/index.js';
 import { $, $$, tone, stat, cardHead, codeLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { exportYearPdf } from '../features/report.js';
+import { exportCSV } from '../features/export.js';
 import { nav, goTo } from '../ui/nav.js';
 
 function monthRows(y, n) {
@@ -63,7 +64,8 @@ export function renderYear(view) {
       ${stat(t('year.overtime'), fmtDur(bal, true), t('year.approxDays', { n: formatNumber(bal / dayMin) }), tone(bal))}
     </section>
     ${calendar(+y, n)}
-    <div class="btn-row"><button class="btn btn-raised" id="printYear">${ICON.print}${t('month.print')}</button></div>
+    <div class="btn-row"><button class="btn btn-raised" id="printYear">${ICON.print}${t('month.print')}</button>
+      <button class="btn btn-raised" id="csvYear">${t('settings.csvShort')}</button></div>
     <section class="card">
       ${cardHead(t('year.months'))}
       <table>
@@ -88,4 +90,5 @@ export function renderYear(view) {
 
   $$('[data-m]', view).forEach(el => (el.onclick = () => { nav.month = { y, m: +el.dataset.m }; goTo('month'); }));
   $('#printYear', view).onclick = () => exportYearPdf(+y);
+  $('#csvYear', view).onclick = () => exportCSV(+y);
 }

@@ -68,7 +68,7 @@ export default {
     syncIntro: 'Speichert jede Änderung automatisch in eine Datei, z. B. in iCloud Drive.',
     syncNew: 'Neue Datei', syncOpen: 'Vorhandene verbinden', syncAllow: 'Erlauben', syncDisconnect: 'Trennen',
     syncSavedAt: 'Zuletzt gespeichert {time} Uhr', syncConnected: 'Verbunden', syncNeedsPermission: 'Zugriff muss neu erlaubt werden',
-    backupSave: 'Backup sichern', backupLoad: 'Backup laden', exportCsv: 'Als CSV für Excel exportieren',
+    backupSave: 'Backup sichern', backupLoad: 'Backup laden', exportCsv: '{year} als CSV für Excel exportieren', csvShort: 'CSV für Excel',
     privacy: 'Die Daten liegen im Browser auf diesem Gerät. Es gibt keinen Server, nichts wird hochgeladen.',
     person: 'Person', name: 'Name', pnr: 'Personal-Nr.', state: 'Bundesland für Feiertage', halfDays: 'Heiligabend & Silvester als halbe Tage',
     schedule: 'Soll-Arbeitszeit', scheduleUnit: 'Stunden pro Tag', addPeriod: 'Zeitraum', from: 'ab', deletePeriod: 'Zeitraum löschen',

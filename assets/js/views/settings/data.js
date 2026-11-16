@@ -1,10 +1,10 @@
 import { resetState } from '../../core/store.js';
 import { canFileSync, sync, connectFile, reconnectFile, disconnectFile } from '../../core/file-sync.js';
-import { now, hhmm } from '../../core/session.js';
+import { hhmm } from '../../core/session.js';
 import { t } from '../../i18n/index.js';
 import { $, esc, cardHead } from '../../ui/dom.js';
 import { applyTheme } from '../../ui/theme.js';
-import { rerender } from '../../ui/nav.js';
+import { rerender, nav } from '../../ui/nav.js';
 import { saveBackup, loadBackup, exportCSV } from '../../features/export.js';
 
 function syncBlock() {
@@ -28,7 +28,7 @@ export const storage = {
     ${syncBlock()}
     <div class="btn-row section-actions"><button class="btn" id="backup">${t('settings.backupSave')}</button>
       <button class="btn" id="restore">${t('settings.backupLoad')}</button></div>
-    <button class="btn btn-block section-actions" id="csv">${t('settings.exportCsv')}</button>
+    <button class="btn btn-block section-actions" id="csv">${t('settings.exportCsv', { year: nav.year })}</button>
     <input type="file" id="restoreFile" accept="application/json,.json" hidden>
     <p class="hint">${t('settings.privacy')}</p></section>`,
   bind: view => {
@@ -39,7 +39,7 @@ export const storage = {
     $('#backup', view).onclick = saveBackup;
     $('#restore', view).onclick = () => $('#restoreFile', view).click();
     $('#restoreFile', view).onchange = async e => { if (await loadBackup(e.target.files[0])) { applyTheme(); rerender(); } };
-    $('#csv', view).onclick = () => exportCSV(now().getFullYear());
+    $('#csv', view).onclick = () => exportCSV(nav.year);
   },
 };
 
