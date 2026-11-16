@@ -1,16 +1,14 @@
 import { DEFAULT_STATE } from './defaults.js';
 import { snapshot, stamp } from '../sync/merge.js';
 import { invalidateCalc } from './calc.js';
+import { normalizeState } from './validate.js';
+export { isValidState } from './validate.js';
 import { t } from '../i18n/index.js';
 
 const KEY = 'stempeluhr-v1';
 const listeners = new Set();
 
-function withDefaults(s) {
-  const d = DEFAULT_STATE.settings;
-  s.settings = { ...d, ...s.settings, remind: { ...d.remind, ...(s.settings.remind || {}) } };
-  return s;
-}
+const withDefaults = s => normalizeState(s);
 
 function load() {
   let s = null;
@@ -31,8 +29,9 @@ function persist() {
   }
 }
 
-export function save() {
-  lastSnapshot = stamp(store.state, lastSnapshot);
+// `at` lets a change count as older than now, e.g. an automatic clock-out that must not beat a real one.
+export function save({ at = Date.now() } = {}) {
+  lastSnapshot = stamp(store.state, lastSnapshot, at);
   persist();
   listeners.forEach(fn => fn(store.state));
 }
@@ -44,10 +43,6 @@ export function applyMerged(state) {
 }
 
 export const onSave = fn => listeners.add(fn);
-
-export function isValidState(data) {
-  return Boolean(data && data.days && data.settings);
-}
 
 export function replaceState(data) {
   store.state = withDefaults({ ...data, meta: store.state.meta });

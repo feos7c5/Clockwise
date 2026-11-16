@@ -3,7 +3,9 @@ export const DEVICE_SETTINGS = ['theme', 'accent', 'language', 'remind'];
 export const sharedSettings = settings =>
   Object.fromEntries(Object.entries(settings).filter(([k]) => !DEVICE_SETTINGS.includes(k)));
 
-const emptyMeta = () => ({ days: {}, settings: 0 });
+const emptyMeta = () => ({ days: {}, settings: 0, blocks: {}, gone: {} });
+const GONE_KEEP_MS = 180 * 86_400_000;
+const newId = () => [...globalThis.crypto.getRandomValues(new Uint8Array(4))].map(b => b.toString(16).padStart(2, '0')).join('');
 
 export function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
@@ -14,19 +16,42 @@ export function canonical(value) {
 }
 
 export function snapshot(state) {
-  const days = {};
-  for (const [ds, day] of Object.entries(state.days)) days[ds] = canonical(day);
-  return { days, settings: canonical(sharedSettings(state.settings)) };
+  const days = {}, blocks = {};
+  for (const [ds, day] of Object.entries(state.days)) {
+    const plain = (day.blocks || []).map(({ id, ...b }) => b);
+    days[ds] = canonical({ ...day, blocks: plain });
+    blocks[ds] = Object.fromEntries((day.blocks || []).filter(b => b.id).map(({ id, ...b }) => [id, canonical(b)]));
+  }
+  return { days, blocks, settings: canonical(sharedSettings(state.settings)) };
 }
 
+// Records when each day and each single block last changed, and which blocks were deleted. That lets two
+// devices that edited the same day at the same time keep both of their changes.
 export function stamp(state, previous, now = Date.now()) {
   const meta = (state.meta ||= emptyMeta());
+  meta.blocks ||= {}; meta.gone ||= {};
+  for (const day of Object.values(state.days)) {
+    const ids = new Set((day.blocks || []).map(b => b.id));
+    for (const b of day.blocks || []) if (!b.id) { do b.id = newId(); while (ids.has(b.id)); ids.add(b.id); }
+  }
   const current = snapshot(state);
   for (const ds of new Set([...Object.keys(previous.days), ...Object.keys(current.days)])) {
     if (previous.days[ds] !== current.days[ds]) meta.days[ds] = now;
+    const before = previous.blocks?.[ds] || {}, after = current.blocks[ds] || {};
+    for (const id in after) if (before[id] !== after[id]) (meta.blocks[ds] ||= {})[id] = now;
+    for (const id in before) {
+      if (id in after) continue;
+      (meta.gone[ds] ||= {})[id] = now;
+      if (meta.blocks[ds]) delete meta.blocks[ds][id];
+    }
   }
+  for (const ds in meta.gone) {
+    for (const id in meta.gone[ds]) if (now - meta.gone[ds][id] > GONE_KEEP_MS) delete meta.gone[ds][id];
+    if (!Object.keys(meta.gone[ds]).length) delete meta.gone[ds];
+  }
+  for (const ds in meta.blocks) if (!current.days[ds] || !Object.keys(meta.blocks[ds]).length) delete meta.blocks[ds];
   if (previous.settings !== current.settings) meta.settings = now;
-  return current;
+  return snapshot(state);
 }
 
 export const payload = state => ({
@@ -47,16 +72,53 @@ export function mergeDevices(local = {}, remote = {}) {
   return out;
 }
 
+const maxMerge = (a = {}, b = {}) => {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) out[k] = Math.max(out[k] ?? 0, v);
+  return out;
+};
+
+// Day fields (type, note, break) come from the side that changed the day last; blocks are combined one by one,
+// so a block added on one device and a block edited on the other both survive.
+function mergeBlocks(ds, local, remote, lm, rm, lt, rt) {
+  const gone = maxMerge(lm.gone?.[ds], rm.gone?.[ds]);
+  const picks = new Map();
+  const add = (blocks, times, fallback, preferOnTie) => {
+    for (const b of blocks || []) {
+      const ts = times?.[b.id] ?? fallback, cur = picks.get(b.id);
+      if (!cur || ts > cur.ts || (ts === cur.ts && preferOnTie)) picks.set(b.id, { b, ts });
+    }
+  };
+  add(local.days[ds]?.blocks, lm.blocks?.[ds], lt, false);
+  add(remote.days[ds]?.blocks, rm.blocks?.[ds], rt, true);
+  const kept = [...picks.values()].filter(p => !(gone[p.b.id] >= p.ts));
+  kept.sort((a, b) => (a.b.in < b.b.in ? -1 : a.b.in > b.b.in ? 1 : 0));
+  return {
+    blocks: kept.map(p => structuredClone(p.b)),
+    times: Object.fromEntries(kept.filter(p => p.ts > 0).map(p => [p.b.id, p.ts])),
+    gone,
+  };
+}
+
 export function merge(local, remote) {
   const lm = local.meta || emptyMeta(), rm = remote.meta || emptyMeta();
-  const days = {}, metaDays = {};
+  const days = {}, metaDays = {}, metaBlocks = {}, metaGone = {};
   const all = new Set([...Object.keys(local.days), ...Object.keys(remote.days), ...Object.keys(lm.days), ...Object.keys(rm.days)]);
 
   for (const ds of all) {
     const lt = lm.days[ds] ?? 0, rt = rm.days[ds] ?? 0;
     const winner = lt > rt ? local : rt > lt ? remote : (ds in remote.days ? remote : local);
-    if (ds in winner.days) days[ds] = structuredClone(winner.days[ds]);
     if (Math.max(lt, rt) > 0) metaDays[ds] = Math.max(lt, rt);
+    const blockAware = lm.blocks?.[ds] || rm.blocks?.[ds] || lm.gone?.[ds] || rm.gone?.[ds];
+    if (!blockAware) {
+      if (ds in winner.days) days[ds] = structuredClone(winner.days[ds]);
+      continue;
+    }
+    const { blocks, times, gone } = mergeBlocks(ds, local, remote, lm, rm, lt, rt);
+    const base = winner.days[ds];
+    if (base || blocks.length) days[ds] = { ...structuredClone(base || {}), blocks };
+    if (Object.keys(times).length) metaBlocks[ds] = times;
+    if (Object.keys(gone).length) metaGone[ds] = gone;
   }
 
   const settingsFromLocal = (lm.settings || 0) > (rm.settings || 0);
@@ -67,7 +129,7 @@ export function merge(local, remote) {
     ...local,
     days,
     settings: structuredClone({ ...local.settings, ...shared, ...deviceOnly }),
-    meta: { days: metaDays, settings: Math.max(lm.settings || 0, rm.settings || 0) },
+    meta: { days: metaDays, settings: Math.max(lm.settings || 0, rm.settings || 0), blocks: metaBlocks, gone: metaGone },
     devices: mergeDevices(local.devices, remote.devices),
   };
 }

@@ -105,3 +105,65 @@ test('devices: union, newer entry wins, removal is final', () => {
   assert.equal(removed.b.removed, true);
   assert.equal(merge({ settings, days: {}, devices: local }, { settings, days: {}, devices: { a: { removed: true, updated: 1 } } }).devices.a.removed, true);
 });
+
+test('merge: blocks edited on two devices at the same time are both kept', () => {
+  const base = state({ '2026-11-16': { blocks: [{ id: 'a', in: '08:00', out: '12:00' }] } });
+  let snap = snapshot(base);
+  snap = stamp(base, snap, 100);
+  const phone = structuredClone(base), pc = structuredClone(base);
+  let ps = snapshot(phone), cs = snapshot(pc);
+  phone.days['2026-11-16'].blocks.push({ in: '12:30', out: null });
+  ps = stamp(phone, ps, 200);
+  pc.days['2026-11-16'].blocks[0].out = '11:45';
+  pc.days['2026-11-16'].note = 'Arzt';
+  cs = stamp(pc, cs, 300);
+  for (const m of [merge(phone, pc), merge(pc, phone)]) {
+    const d = m.days['2026-11-16'];
+    assert.deepEqual(d.blocks.map(b => `${b.in}-${b.out}`), ['08:00-11:45', '12:30-null']);
+    assert.equal(d.note, 'Arzt');
+  }
+});
+
+test('merge: a deleted block stays deleted, an older edit cannot revive it', () => {
+  const a = state({ '2026-11-16': { blocks: [{ id: 'a', in: '08:00', out: '12:00' }, { id: 'b', in: '13:00', out: '17:00' }] } });
+  let sa = stamp(a, snapshot(a), 100);
+  const b = structuredClone(a);
+  let sb = snapshot(b);
+  b.days['2026-11-16'].blocks[1].out = '16:00';
+  stamp(b, sb, 200);
+  a.days['2026-11-16'].blocks.splice(1, 1);
+  stamp(a, sa, 300);
+  for (const m of [merge(a, b), merge(b, a)]) assert.deepEqual(m.days['2026-11-16'].blocks.map(x => x.id), ['a']);
+});
+
+test('merge: a backdated automatic clock-out loses against a real clock-out', () => {
+  const start = state({ '2026-11-16': { blocks: [{ id: 'a', in: '08:00', out: null }] } });
+  stamp(start, { days: {}, blocks: {}, settings: '' }, 1000);
+  const pc = structuredClone(start), phone = structuredClone(start);
+  let s = snapshot(pc); pc.days['2026-11-16'].blocks[0].out = '17:00'; stamp(pc, s, 5000);
+  s = snapshot(phone); phone.days['2026-11-16'].blocks[0].out = '18:45'; stamp(phone, s, 1001);
+  for (const m of [merge(phone, pc), merge(pc, phone)]) assert.equal(m.days['2026-11-16'].blocks[0].out, '17:00');
+  const alone = merge(phone, start);
+  assert.equal(alone.days['2026-11-16'].blocks[0].out, '18:45');
+});
+
+test('merge: an old device without block data still wins with a newer day', () => {
+  const now = state({ '2026-11-16': { blocks: [{ id: 'L0', in: '08:00', out: '16:00' }] } });
+  stamp(now, { days: {}, blocks: {}, settings: '' }, 100);
+  const old = state({ '2026-11-16': { blocks: [{ id: 'L0', in: '08:00', out: '17:30' }] } });
+  old.meta = { days: { '2026-11-16': 900 }, settings: 0 };
+  assert.equal(merge(now, old).days['2026-11-16'].blocks[0].out, '17:30');
+});
+
+test('validation: damaged data is repaired instead of breaking the app', async () => {
+  const { normalizeState } = await import('../assets/js/core/validate.js');
+  const s = normalizeState({
+    settings: { periods: 'x', remind: { at: 'nope', forgot: 'ten' }, pauseMin: null, vacation: { 2026: '30', 2025: 28 } },
+    days: { 'bad': {}, '2026-11-16': { blocks: [null, { in: '25:00' }, { in: '08:00', out: 'x' }, { in: '09:00', out: '10:00', id: 'q' }], code: 'ZZ', pause: -5 }, '2026-11-17': 'oops' },
+  });
+  assert.deepEqual(s.days, { '2026-11-16': { blocks: [{ id: 'L2', in: '08:00', out: null }, { id: 'q', in: '09:00', out: '10:00' }] } });
+  assert.equal(s.settings.periods.length, 1);
+  assert.deepEqual(s.settings.remind, { on: false, at: '09:00', soll: true, forgot: 10 });
+  assert.equal(s.settings.pauseMin, 45);
+  assert.deepEqual(s.settings.vacation, { 2025: 28 });
+});
