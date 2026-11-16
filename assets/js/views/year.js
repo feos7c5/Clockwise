@@ -1,6 +1,6 @@
 import { iso, fmtDur, addDays } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
-import { sumRange, balance, vacationAccount, dayStats } from '../core/calc.js';
+import { sumRange, balance, vacationAccount, dayStats, avgWorkdayMin } from '../core/calc.js';
 import { store } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
 import { t, tn, monthName, formatNumber } from '../i18n/index.js';
@@ -50,7 +50,7 @@ export function renderYear(view) {
   const used = vac.used;
   const planned = entries.filter(([d]) => d > todayStr()).reduce((a, [, v]) => a + vacationValue(v.code), 0);
   const bal = balance(store.state, todayStr(), n);
-  const dayMin = s.periods.at(-1).min[0] || 480;
+  const dayMin = avgWorkdayMin(s, todayStr());
   const { rows, total } = monthRows(y, n);
   const usedText = t('year.vacationUsed', { used: formatNumber(used), total: formatNumber(vac.total) })
     + (vac.prorated ? ' · ' + t('year.prorated') : '')
