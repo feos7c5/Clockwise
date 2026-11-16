@@ -19,7 +19,7 @@ export function holidays(year, land, halfDays) {
   const E = easter(year);
   const fromEaster = n => new Date(year, E.getMonth(), E.getDate() + n);
   const D = (m, d) => new Date(year, m - 1, d);
-  const repentance = (() => { const d = D(11, 23); while (d.getDay() !== 3) d.setDate(d.getDate() - 1); return d; })();
+  const repentance = (() => { const d = D(11, 22); while (d.getDay() !== 3) d.setDate(d.getDate() - 1); return d; })();
 
   const list = [
     [D(1, 1), 'newYear'],
