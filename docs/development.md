@@ -52,10 +52,16 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 ## Notifications
 
 Reminders and the automatic clock-out reach the device even when the app is closed (on iPhone once it is
-added to the Home Screen). The app sends its upcoming notifications – clock-in reminder for the next 7 workdays,
-target reached, automatic clock-out – to the server whenever they change. A cron trigger checks every minute
-and delivers due ones via Web Push (VAPID, encrypted payload). The clock-out itself is written into the data
-the next time the app runs, backdated to the moment the limit was reached.
+added to the Home Screen). Each device shares its push address, reminder settings and language through the
+encrypted sync. Whenever the data changes on any device, that device sends the upcoming notifications of all
+devices – clock-in reminder for the next 7 workdays, target reached, automatic clock-out – to the server, so
+clocking out on one device cancels the reminders on the others. Each list replaces the previous one, and a
+notification that was already delivered is never sent twice. A cron trigger checks every minute and delivers
+due ones via Web Push (VAPID, encrypted payload); a second, daily one cleans up. Only the push services of
+Apple, Google, Mozilla and Microsoft are accepted as targets.
+
+The clock-out itself is written into the data once the device has synced, at the moment the limit was reached.
+It counts as only just newer than the clock-in, so a real clock-out made on another device always wins.
 
 One-time setup for the server:
 
@@ -70,9 +76,13 @@ npm run migrate:remote && npm run deploy
 ## Updates
 
 The service worker activates new versions immediately and the open app reloads itself (deferred while a
-dialog or input is in use). On every commit that touches the app, the `pre-commit` hook sets the version in
-`assets/js/version.js` (shown at the bottom of the settings) and derives the cache name in `sw.js` from the app
-files, so every change ships as a new version.
+dialog or input is in use). App files are served from the cache of the installed version, so the app starts
+instantly, also offline.
+
+`tools/build-meta.mjs` generates the list of offline files in `sw.js`, the module preloads in `index.html` and
+the cache name (a hash of all app files). The `pre-commit` hook runs it and, when the app changed, also sets
+the version in `assets/js/version.js` (shown at the bottom of the settings). CI runs it with `--check`, so a
+commit made without the hook fails visibly instead of never reaching installed apps.
 
 The server is a Cloudflare Worker with a D1 database in [`server/`](../server/) (about 130 lines).
 
@@ -106,8 +116,12 @@ python3 tools/excel_import.py Arbeitszeit.xlsx Import.json
 ## Commits
 
 [Conventional Commits](https://www.conventionalcommits.org/) – `feat:`, `fix:`, `docs:`,
-`refactor:`, `chore:` and so on. The hook in `.githooks/` checks the format:
+`refactor:`, `chore:` and so on. The hooks in `.githooks/` check the format and update the generated files;
+`npm install` turns them on:
 
 ```sh
-git config core.hooksPath .githooks
+npm install        # sets git config core.hooksPath .githooks
 ```
+
+CI (`.github/workflows/ci.yml`) runs the app tests, the generated-files check and the server tests against a
+local worker on every push.
