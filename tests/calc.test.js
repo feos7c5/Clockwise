@@ -161,3 +161,12 @@ test('cached balance equals a fresh day-by-day sum and follows changes', async (
   assert.equal(balance(state, '2026-11-16', now), 30 + sumRange(state, '2025-01-01', '2026-11-16', now).diff);
   assert.equal(avgWorkdayMin({ periods: [{ from: '2026-01-01', min: [480, 480, 480, 480, 300, 0, 0] }] }, '2026-11-16'), 444);
 });
+
+test('schedule edits made in place are picked up after a save', async () => {
+  const { contractMin, invalidateCalc } = await import('../assets/js/core/calc.js');
+  const s = { periods: [{ from: '2026-01-01', min: [480, 480, 480, 480, 480, 0, 0] }] };
+  assert.equal(contractMin(s, '2026-11-16'), 480);
+  s.periods.push({ from: '2026-11-01', min: [240, 240, 240, 240, 240, 0, 0] });
+  invalidateCalc();
+  assert.equal(contractMin(s, '2026-11-16'), 240);
+});

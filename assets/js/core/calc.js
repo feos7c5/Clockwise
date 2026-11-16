@@ -2,7 +2,8 @@ import { iso, parseISO, toMin, fromMin, range, addDays } from './time.js';
 import { holidayOn } from './holidays.js';
 import { CODES, vacationValue } from './codes.js';
 
-const sortedPeriods = new WeakMap();
+// Results that only depend on the data are cached until the next change (see invalidateCalc).
+let sortedPeriods = new WeakMap();
 const periodsOf = settings => {
   let sorted = sortedPeriods.get(settings.periods);
   if (!sorted) sortedPeriods.set(settings.periods, (sorted = [...settings.periods].sort((a, b) => a.from.localeCompare(b.from))));
@@ -97,9 +98,8 @@ export function sollMin(settings, ds, day, ist) {
   return hol.f * c.f * az;
 }
 
-// Results that only depend on the data are cached per state until the next change (see invalidateCalc).
 let generation = 0;
-export const invalidateCalc = () => { generation++; };
+export const invalidateCalc = () => { generation++; sortedPeriods = new WeakMap(); };
 const caches = new WeakMap();
 function cacheFor(state) {
   let c = caches.get(state);
