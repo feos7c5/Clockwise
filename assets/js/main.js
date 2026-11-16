@@ -17,6 +17,8 @@ import { startReminders, checkReminders } from './features/reminders.js';
 import { initSync, onSyncStatus, onRemoteData } from './sync/engine.js';
 import { onInstallChange } from './features/install.js';
 import { registerServiceWorker } from './features/update.js';
+import { saveBackup } from './features/export.js';
+import { esc } from './ui/dom.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
@@ -69,9 +71,26 @@ function render() {
   $('#title').textContent = title;
   $('#subtitle').textContent = subtitle;
   renderTabs();
-  view.render($('#view'));
+  try {
+    view.render($('#view'));
+  } catch (e) {
+    renderFailure(e);
+  }
   renderHeadActions(title, subtitle);
   markScrolled();
+  renderedMinute = Math.floor(Date.now() / 60_000);
+  renderPending = false;
+}
+
+// A broken view must never lock the user out of the app or their data.
+function renderFailure(e) {
+  console.error(e);
+  $('#view').innerHTML = `<div class="stack"><section class="card">
+    <p class="hint flush">${t('backup.renderFailed')}<br><small>${esc(e.message)}</small></p>
+    <div class="btn-row section-actions"><button class="btn" id="failSave">${t('backup.saveData')}</button>
+    <button class="btn btn-primary" id="failReload">${t('backup.reload')}</button></div></section></div>`;
+  $('#failSave').onclick = saveBackup;
+  $('#failReload').onclick = () => location.reload();
 }
 
 setRenderer(render);
@@ -87,15 +106,29 @@ window.addEventListener('scroll', () => { cancelAnimationFrame(scrollFrame); scr
 $$('.tabs button').forEach(b => (b.onclick = () => goTo(b.dataset.tab)));
 onSyncChange(() => { if (nav.tab === 'settings') render(); });
 const typing = () => document.activeElement?.matches('textarea, input, select');
-onSyncStatus(() => { if (nav.tab === 'settings' && !dialogOpen() && !typing()) render(); });
-onRemoteData(() => { if (!dialogOpen() && !typing()) render(); });
-onInstallChange(() => { if (nav.tab === 'today') render(); });
+
+// The page is rebuilt on a new minute or new data, but never while a finger is on the screen: a tap that
+// started on the old page would otherwise be lost.
+let renderedMinute = 0, renderPending = false, touching = false, touchTimer = 0;
+document.addEventListener('pointerdown', () => { clearTimeout(touchTimer); touching = true; }, true);
+const release = () => { clearTimeout(touchTimer); touchTimer = setTimeout(() => (touching = false), 400); };
+document.addEventListener('pointerup', release, true);
+document.addEventListener('pointercancel', release, true);
+const busy = () => touching || dialogOpen() || typing();
+const renderWhenIdle = () => { if (busy()) renderPending = true; else render(); };
+
+onSyncStatus(s => {
+  if (nav.tab === 'settings') renderWhenIdle();
+  if (s.status !== 'syncing') checkReminders();
+});
+onRemoteData(renderWhenIdle);
+onInstallChange(() => { if (nav.tab === 'today') renderWhenIdle(); });
 
 setInterval(() => {
-  if (nav.tab !== 'today' || document.hidden) return;
-  tickTimer();
-  const typing = document.activeElement?.matches('textarea, input');
-  if (now().getSeconds() === 0 && !typing && !dialogOpen()) render();
+  if (document.hidden) return;
+  if (nav.tab === 'today') tickTimer();
+  const minuteChanged = nav.tab === 'today' && Math.floor(Date.now() / 60_000) !== renderedMinute;
+  if ((minuteChanged || renderPending) && !busy()) render();
 }, 1000);
 
 document.addEventListener('visibilitychange', () => {
