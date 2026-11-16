@@ -167,3 +167,17 @@ test('validation: damaged data is repaired instead of breaking the app', async (
   assert.equal(s.settings.pauseMin, 45);
   assert.deepEqual(s.settings.vacation, { 2025: 28 });
 });
+
+test('encryption: large data is compressed and old uncompressed data still opens', async () => {
+  const { key } = await deriveKeys(newSecret());
+  const days = {};
+  for (let i = 0; i < 2000; i++) days[`d${i}`] = { blocks: [{ id: `L${i}`, in: '08:00', out: '16:30' }], note: 'Projekt' };
+  const blob = await seal(key, { days });
+  assert.ok(blob.startsWith('z.'));
+  assert.ok(blob.length < 30_000, `blob is ${blob.length} chars`);
+  assert.deepEqual(await unseal(key, blob), { days });
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const raw = await globalThis.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode('{"a":1}'));
+  const b64 = b => Buffer.from(b).toString('base64url');
+  assert.deepEqual(await unseal(key, `${b64(iv)}.${b64(new Uint8Array(raw))}`), { a: 1 });
+});

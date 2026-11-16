@@ -2,7 +2,11 @@ const enc = new TextEncoder();
 const dec = new TextDecoder();
 const subtle = () => globalThis.crypto.subtle;
 
-export const toB64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export function toB64url(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 export const fromB64url = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 
 export const newSecret = () => toB64url(globalThis.crypto.getRandomValues(new Uint8Array(32)));
@@ -15,15 +19,24 @@ export async function deriveKeys(secret) {
   return { token, key };
 }
 
+const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+const canZip = () => typeof CompressionStream === 'function';
+
+// Data is compressed before encryption ("z." prefix), so years of entries stay small enough to be sent
+// reliably, even while the app is being closed.
 export async function seal(key, value) {
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
-  const data = await subtle().encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(value)));
-  return `${toB64url(iv)}.${toB64url(new Uint8Array(data))}`;
+  let plain = enc.encode(JSON.stringify(value));
+  if (canZip()) plain = await pipe(plain, new CompressionStream('gzip'));
+  const data = await subtle().encrypt({ name: 'AES-GCM', iv }, key, plain);
+  return `${canZip() ? 'z.' : ''}${toB64url(iv)}.${toB64url(new Uint8Array(data))}`;
 }
 
 export async function unseal(key, blob) {
-  const [iv, data] = blob.split('.');
-  const plain = await subtle().decrypt({ name: 'AES-GCM', iv: fromB64url(iv) }, key, fromB64url(data));
+  const zipped = blob.startsWith('z.');
+  const [iv, data] = (zipped ? blob.slice(2) : blob).split('.');
+  let plain = new Uint8Array(await subtle().decrypt({ name: 'AES-GCM', iv: fromB64url(iv) }, key, fromB64url(data)));
+  if (zipped) plain = await pipe(plain, new DecompressionStream('gzip'));
   return JSON.parse(dec.decode(plain));
 }
 
