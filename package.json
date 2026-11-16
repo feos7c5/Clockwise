@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "start": "python3 tools/serve.py",
     "test": "node --test tests/*.test.js"
   },

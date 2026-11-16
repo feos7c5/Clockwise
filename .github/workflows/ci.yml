@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: npm test
+      - name: Service worker and version are up to date
+        run: node tools/build-meta.mjs --check
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npx wrangler d1 migrations apply clockwise-sync --local
+      - name: Start the worker locally
+        run: |
+          npx wrangler dev --local --port 8787 --var PUSH_TEST_HOSTS:push.invalid > wrangler.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:8787/ > /dev/null && exit 0; sleep 1; done
+          cat wrangler.log; exit 1
+      - name: Tests
+        run: npm test
