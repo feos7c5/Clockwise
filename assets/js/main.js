@@ -65,6 +65,7 @@ function renderTabs() {
 
 function render() {
   setLanguage(store.state.settings.language);
+  $('.rotate span').textContent = t('common.rotate');
   document.body.dataset.tab = nav.tab;
   const view = VIEWS[nav.tab];
   const [title, subtitle] = view.title();
@@ -145,3 +146,8 @@ initSync();
 startReminders();
 
 registerServiceWorker();
+
+// Phones stay upright: Android can lock an installed app, iOS cannot (there the CSS hint in base.css takes over).
+if (Math.min(screen.width, screen.height) < 600 && matchMedia('(display-mode: standalone)').matches) {
+  screen.orientation?.lock?.('portrait').catch(() => {});
+}

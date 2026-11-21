@@ -5,7 +5,7 @@ export default {
   nav: { today: 'Today', month: 'Month', year: 'Year', settings: 'Settings', main: 'Main navigation', back: 'Back', forward: 'Forward', current: 'Today' },
   head: { balance: 'Balance', yearOverview: 'Year overview' },
   common: {
-    dismiss: 'Dismiss', hours: '{v} h', close: 'Close', cancel: 'Cancel', save: 'Save', edit: 'Edit',
+    rotate: 'Please hold upright', dismiss: 'Dismiss', hours: '{v} h', close: 'Close', cancel: 'Cancel', save: 'Save', edit: 'Edit',
     note: 'Note', dayType: 'Day type', normal: 'Regular', ist: 'Actual', soll: 'Target', diff: 'Diff',
     balance: 'Balance', total: 'Total', istSoll: 'Actual {ist} · Target {soll}',
   },

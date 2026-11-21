@@ -5,7 +5,7 @@ export default {
   nav: { today: 'Heute', month: 'Monat', year: 'Jahr', settings: 'Einstellungen', main: 'Hauptnavigation', back: 'Zurück', forward: 'Weiter', current: 'Heute' },
   head: { balance: 'Saldo', yearOverview: 'Jahresübersicht' },
   common: {
-    dismiss: 'Ausblenden', hours: '{v} h', close: 'Schließen', cancel: 'Abbrechen', save: 'Speichern', edit: 'Bearbeiten',
+    rotate: 'Bitte hochkant halten', dismiss: 'Ausblenden', hours: '{v} h', close: 'Schließen', cancel: 'Abbrechen', save: 'Speichern', edit: 'Bearbeiten',
     note: 'Bemerkung', dayType: 'Tagesart', normal: 'Normal', ist: 'Ist', soll: 'Soll', diff: 'Diff',
     balance: 'Saldo', total: 'Gesamt', istSoll: 'Ist {ist} · Soll {soll}',
   },
