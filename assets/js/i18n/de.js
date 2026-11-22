@@ -7,7 +7,7 @@ export default {
   tags: {
     choose: 'Auswählen', since: 'seit {time}',
     days: 'Tage',
-    showOlder: 'Ältere ({n})', search: 'Suchen',
+    showOlder: 'Weitere ({n})', search: 'Suchen',
     more: 'Weitere ({n})',
     recent: 'Zuletzt benutzt', all: 'Alle', clear: 'Keine Zuordnung', searchOrCreate: 'Suchen oder neu anlegen', create: '„{name}“ anlegen',
     title: 'Kategorien', addClass: 'Klasse', addTag: 'Eintrag', className: 'Name der Klasse', removeClass: 'Klasse entfernen',

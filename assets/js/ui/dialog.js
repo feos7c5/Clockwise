@@ -4,12 +4,16 @@ import { t } from '../i18n/index.js';
 
 const el = () => $('#dialog');
 
-let lockedAt = 0;
-function lockScroll() {
+// While any dialog or sheet is open the page behind it stays put (iOS scrolls it otherwise). Counted, because
+// the picker sheet can open on top of a dialog.
+let locks = 0, lockedAt = 0;
+export function lockScroll() {
+  if (locks++) return;
   lockedAt = window.scrollY;
   Object.assign(document.body.style, { position: 'fixed', top: `-${lockedAt}px`, left: '0', right: '0' });
 }
-function unlockScroll() {
+export function unlockScroll() {
+  if (!locks || --locks) return;
   Object.assign(document.body.style, { position: '', top: '', left: '', right: '' });
   window.scrollTo(0, lockedAt);
 }

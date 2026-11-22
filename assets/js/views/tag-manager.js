@@ -7,14 +7,16 @@ import { ICON } from '../ui/icons.js';
 import { rerender } from '../ui/nav.js';
 import { showDialog, dialogHead, closeDialog } from '../ui/dialog.js';
 
-const ACTIVE_DAYS = 90;
+const ACTIVE_DAYS = 90, SHOWN = 12;
 const chip = x => `<button type="button" class="tagchip" data-tag="${x.id}"><i class="tag-dot" style="background:${tagColor(x)}"></i>${esc(x.name)}</button>`;
 
-// Entries used (or created) in the last three months are shown; older ones wait behind "more", with a search.
+// At most 12 entries used (or created) in the last three months are shown, newest use first; all others wait
+// behind "more", with a search – so even hundreds of projects stay a short list.
 function classBlock(c, used) {
   const since = iso(addDays(parseISO(todayStr()), -ACTIVE_DAYS)), recentlyMade = Date.now() - ACTIVE_DAYS * 86_400_000;
   const all = tagsIn(c.id);
-  const active = all.filter(x => (used[x.id] ? used[x.id] >= since : (x.u || 0) >= recentlyMade));
+  const fresh = x => (used[x.id] ? used[x.id] >= since : (x.u || 0) >= recentlyMade);
+  const active = all.filter(fresh).sort((a, b) => (used[b.id] || '9').localeCompare(used[a.id] || '9')).slice(0, SHOWN);
   const older = all.filter(x => !active.includes(x));
   const more = older.length ? `<button type="button" class="tagchip add" data-older="${c.id}">${t('tags.showOlder', { n: older.length })}</button>` : '';
   return `<div class="tagclass" data-class="${c.id}">

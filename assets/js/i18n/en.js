@@ -7,7 +7,7 @@ export default {
   tags: {
     choose: 'Choose', since: 'since {time}',
     days: 'Days',
-    showOlder: 'Older ({n})', search: 'Search',
+    showOlder: 'More ({n})', search: 'Search',
     more: 'More ({n})',
     recent: 'Recently used', all: 'All', clear: 'No assignment', searchOrCreate: 'Search or create', create: 'Create “{name}”',
     title: 'Categories', addClass: 'Class', addTag: 'Entry', className: 'Name of the class', removeClass: 'Remove class',

@@ -150,6 +150,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 
 /* Categories (tags): colour dot, picker chips, chips in the settings. */
 .tag-dot { flex: none; display: inline-block; width: .625rem; height: .625rem; border-radius: 50%; }
+.tag-dot.hollow { box-shadow: inset 0 0 0 2px var(--line); }
 .tag-picks { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
 .block-tags { margin: var(--sp-2) 0 var(--sp-3); }
 .block-edit + .block-tags + .block-edit { margin-top: var(--sp-2); }
@@ -176,17 +177,21 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 dialog.sheet {
   width: min(32rem, 100%); max-width: 100%; max-height: min(80vh, 40rem); margin: auto auto 0; padding: 0;
   border: 0; border-radius: var(--r-lg) var(--r-lg) 0 0; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-float);
-  display: none; flex-direction: column; overscroll-behavior: contain;
+  display: none; flex-direction: column; overscroll-behavior: contain; transition: transform .2s ease;
 }
+dialog.sheet:focus { outline: none; }
 dialog.sheet[open] { display: flex; }
 dialog.sheet::backdrop { background: rgba(0, 0, 0, .35); }
 @media (min-width: 40rem), (orientation: landscape) and (max-height: 500px) { dialog.sheet { margin: auto; border-radius: var(--r-lg); } }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3) var(--sp-3) 0 var(--sp-5); }
+.sheet-head { position: relative; display: flex; align-items: center; justify-content: space-between; padding: var(--sp-4) var(--sp-3) 0 var(--sp-5); touch-action: none; }
+.sheet-grab { position: absolute; top: var(--sp-2); left: 50%; width: 2.25rem; height: .3125rem; margin-left: -1.125rem; border-radius: var(--r-full); background: var(--line); }
+@media (min-width: 40rem), (orientation: landscape) and (max-height: 500px) { .sheet-grab { display: none; } .sheet-head { padding-top: var(--sp-3); } }
 .sheet-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
 .sheet-search { position: relative; display: block; margin: var(--sp-3) var(--sp-5); }
 .sheet-search svg { position: absolute; left: var(--sp-3); top: 50%; width: 1.125rem; height: 1.125rem; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
 .sheet-search input { padding-left: 2.5rem; }
-.sheet-list { overflow-y: auto; padding: 0 var(--sp-3) calc(var(--sp-4) + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+.sheet-head, .sheet-search { flex: none; }
+.sheet-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--sp-3) calc(var(--sp-4) + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
 .pick-label { padding: var(--sp-3) var(--sp-2) var(--sp-1); font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .pick-label:empty { padding: var(--sp-2) 0 0; }
 .pickrow {
@@ -209,16 +214,15 @@ input.inline-add.block { width: 100%; height: var(--ctl-md); margin-top: var(--s
 .card-head input.inline-add { width: 10rem; }
 
 /* Today: the current assignment, one row per class. */
-.assign { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-4); }
+.assign { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); margin: 0 0 var(--sp-4); }
 .assign-row {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 3.25rem; padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 3.25rem; padding: var(--sp-2) var(--sp-3);
   border: 0; border-radius: var(--r-md); background: var(--fill); text-align: left; cursor: pointer;
 }
-.assign-bar { flex: none; align-self: stretch; width: .3125rem; border-radius: var(--r-full); }
+.assign-row .tag-dot { width: .75rem; height: .75rem; }
 .assign-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
-.assign-text small { font-size: var(--fs-xs); color: var(--muted); font-weight: var(--fw-medium); }
+.assign-text small { font-size: var(--fs-xs); color: var(--muted); font-weight: var(--fw-medium); font-variant-numeric: tabular-nums; }
 .assign-text b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-md); font-weight: var(--fw-semibold); }
 .assign-row.empty b { color: var(--muted); font-weight: var(--fw-medium); }
-.assign-since { flex: none; font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
 .assign-row > svg { flex: none; width: 1.125rem; height: 1.125rem; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .assign-row:active { transform: scale(.99); }
