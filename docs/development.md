@@ -90,8 +90,12 @@ The service worker activates new versions immediately and the open app reloads i
 dialog or input is in use). App files are served from the cache of the installed version, so the app starts
 instantly, also offline.
 
-`tools/build-meta.mjs` generates the list of offline files in `sw.js`, the module preloads in `index.html` and
-the cache name (a hash of all app files). The `pre-commit` hook runs it and, when the app changed, also sets
+`tools/build-meta.mjs` generates the list of offline files in `sw.js`, the cache name (a hash of all app files)
+and, in `index.html`, an import map that gives every module a per-version address (`store.js?v=1.117`), the
+same for the style sheets, plus module preloads. Because all addresses change with each version, a page can
+never run with scripts or styles of another version: after an update Safari otherwise reused copies it still
+had in memory and showed the new page with the old code. The import map is inline, so its hash is written into
+the content security policy. The `pre-commit` hook runs it and, when the app changed, also sets
 the version in `assets/js/version.js` (shown at the bottom of the settings). CI runs it with `--check`, so a
 commit made without the hook fails visibly instead of never reaching installed apps.
 
