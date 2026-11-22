@@ -2,8 +2,18 @@ export default {
   weekdays: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
   weekdaysMonFirst: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
 
-  nav: { today: 'Heute', month: 'Monat', year: 'Jahr', settings: 'Einstellungen', main: 'Hauptnavigation', back: 'Zurück', forward: 'Weiter', current: 'Heute' },
+  nav: { today: 'Heute', overview: 'Übersicht', stats: 'Auswertung', month: 'Monat', year: 'Jahr', settings: 'Einstellungen', main: 'Hauptnavigation', back: 'Zurück', forward: 'Weiter', current: 'Heute' },
   head: { balance: 'Saldo', yearOverview: 'Jahresübersicht' },
+  tags: {
+    title: 'Kategorien', addClass: 'Klasse', addTag: 'Eintrag', className: 'Name der Klasse', removeClass: 'Klasse entfernen',
+    hint: 'Ordne Zeitabschnitte zu, z. B. nach Projekt oder Tätigkeit. Je Klasse ist ein Eintrag pro Abschnitt möglich. Die Verteilung zeigt der Reiter „Auswertung“.',
+    newClassPrompt: 'Name der Klasse, z. B. Projekt', newTagPrompt: 'Name des neuen Eintrags', newTag: '+ Neu …',
+    editTag: 'Eintrag bearbeiten', name: 'Name', color: 'Farbe', archive: 'Archivieren',
+    confirmArchive: 'Eintrag archivieren? Er verschwindet aus der Auswahl, erfasste Zeiten bleiben zugeordnet.',
+    confirmRemoveClass: 'Klasse entfernen? Sie verschwindet aus Auswahl und Auswertung, die Zuordnungen bleiben gespeichert.',
+    unassigned: 'Ohne Zuordnung', noTimes: 'Keine Zeiten in diesem Zeitraum.',
+    statsHint: 'Gebuchte Arbeitszeit ohne Pausen. Die Pause eines Tages wird anteilig auf seine Abschnitte verteilt.',
+  },
   common: {
     dismiss: 'Ausblenden', hours: '{v} h', close: 'Schließen', cancel: 'Abbrechen', save: 'Speichern', edit: 'Bearbeiten',
     note: 'Bemerkung', dayType: 'Tagesart', normal: 'Normal', ist: 'Ist', soll: 'Soll', diff: 'Diff',
@@ -143,6 +153,7 @@ export default {
 
   print: {
     file: 'Arbeitszeitnachweis-{year}-{month}.pdf', created: 'Erstellt mit Clockwise am {date}',
+    statsFile: 'Auswertung-{from}-{to}.pdf', statsTitle: 'Auswertung nach Kategorien', hours: 'Stunden', share: 'Anteil',
     title: 'Arbeitszeitnachweis {month} {year}', pnr: 'Personal-Nr. {pnr}',
     day: 'Tag', clockIn: 'Kommt', clockOut: 'Geht', pause: 'Pause',
     carryPrev: 'Übertrag Vormonat', target: 'Soll-Arbeitszeit', actual: 'Ist-Arbeitszeit', carryNext: 'Übertrag nächster Monat',

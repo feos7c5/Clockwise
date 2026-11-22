@@ -2,8 +2,18 @@ export default {
   weekdays: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
   weekdaysMonFirst: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
 
-  nav: { today: 'Today', month: 'Month', year: 'Year', settings: 'Settings', main: 'Main navigation', back: 'Back', forward: 'Forward', current: 'Today' },
+  nav: { today: 'Today', overview: 'Overview', stats: 'Analysis', month: 'Month', year: 'Year', settings: 'Settings', main: 'Main navigation', back: 'Back', forward: 'Forward', current: 'Today' },
   head: { balance: 'Balance', yearOverview: 'Year overview' },
+  tags: {
+    title: 'Categories', addClass: 'Class', addTag: 'Entry', className: 'Name of the class', removeClass: 'Remove class',
+    hint: 'Assign time blocks, e.g. to a project or an activity. Each block can have one entry per class. The “Analysis” tab shows the distribution.',
+    newClassPrompt: 'Name of the class, e.g. Project', newTagPrompt: 'Name of the new entry', newTag: '+ New …',
+    editTag: 'Edit entry', name: 'Name', color: 'Colour', archive: 'Archive',
+    confirmArchive: 'Archive this entry? It disappears from the picker, recorded times stay assigned.',
+    confirmRemoveClass: 'Remove this class? It disappears from the picker and the analysis, the assignments stay saved.',
+    unassigned: 'Not assigned', noTimes: 'No times in this period.',
+    statsHint: 'Booked working time without breaks. The break of a day is spread over its blocks by their length.',
+  },
   common: {
     dismiss: 'Dismiss', hours: '{v} h', close: 'Close', cancel: 'Cancel', save: 'Save', edit: 'Edit',
     note: 'Note', dayType: 'Day type', normal: 'Regular', ist: 'Actual', soll: 'Target', diff: 'Diff',
@@ -142,6 +152,7 @@ export default {
 
   print: {
     file: 'Timesheet-{year}-{month}.pdf', created: 'Created with Clockwise on {date}',
+    statsFile: 'Analysis-{from}-{to}.pdf', statsTitle: 'Analysis by category', hours: 'Hours', share: 'Share',
     title: 'Time sheet {month} {year}', pnr: 'Employee no. {pnr}',
     day: 'Day', clockIn: 'In', clockOut: 'Out', pause: 'Break',
     carryPrev: 'Carried over from previous month', target: 'Target hours', actual: 'Actual hours', carryNext: 'Carried over to next month',

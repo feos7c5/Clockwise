@@ -3,7 +3,9 @@ import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, grossMin, pauseMin, pauseWarning, reachMin } from '../core/calc.js';
 import { store, getDay, cleanDay, save } from '../core/store.js';
-import { now, todayStr, nowMin, running, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock } from '../core/session.js';
+import { now, todayStr, nowMin, running, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock, chooseTag } from '../core/session.js';
+import { hasTagClasses, nextTags } from '../core/tags.js';
+import { tagSelects, bindTagSelects, tagLabels } from '../ui/tag-select.js';
 import { t, weekdayShort, formatLongDate } from '../i18n/index.js';
 import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
@@ -22,8 +24,10 @@ export function liveSeconds(ds) {
   const nowS = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds() + (ds === todayStr() ? 0 : 86400);
   let gross = 0;
   for (const b of day.blocks) {
-    const start = toMin(b.in) * 60 + (b.out ? 0 : b.s || 0);
-    let end = b.out ? toMin(b.out) * 60 : nowS;
+    // A running block counts from its exact second (which, after a tag change, may lie a few seconds ahead).
+    if (!b.out) { gross += nowS - (toMin(b.in) * 60 + (b.s || 0)); continue; }
+    const start = toMin(b.in) * 60;
+    let end = toMin(b.out) * 60;
     if (end < start) end += 86400;
     gross += end - start;
   }
@@ -105,7 +109,7 @@ function weekCard(n) {
 
 function entriesCard(day, gross) {
   const list = day.blocks.length
-    ? `<ul class="list">${day.blocks.map(b => `<li><span>${b.in} – ${b.out || t('today.running')}</span>
+    ? `<ul class="list">${day.blocks.map(b => `<li><span>${b.in} – ${b.out || t('today.running')}<span class="tag-labels">${tagLabels(b)}</span></span>
         <span class="muted">${b.out ? fmtDur(grossMin({ blocks: [b] })) + ' h' : ''}</span></li>`).join('')}
         <li><span class="muted">${t('today.pauseDeduction')}</span><span class="muted">${Math.floor(pauseMin(store.state.settings, day, gross))} min</span></li></ul>`
     : `<div class="empty-text">${t('today.noEntries')}</div>`;
@@ -164,6 +168,7 @@ export function renderToday(view) {
       <div class="timer" id="timer">${fmtSec(liveSeconds(activeDs))}</div>
       <div class="timer-sub">${t('today.ofTarget', { dur: fmtDur(st.soll) })}</div>
       <div class="progress"><i style="width:${progress}%"></i></div>
+      ${hasTagClasses() ? `<div class="tag-picks">${tagSelects(r ? r.block.t : nextTags())}</div>` : ''}
       <div class="btn-row">${stampButtons(r, brk)}</div>
       ${warn ? `<div class="warn">${t('today.pauseWarning')}</div>` : ''}
     </section>
@@ -175,6 +180,7 @@ export function renderToday(view) {
 
   $$('[data-act]', view).forEach(b => (b.onclick = () => onStamp(b.dataset.act)));
   $('#editToday', view).onclick = () => openDayDialog(activeDs);
+  bindTagSelects(view, (classId, tagId) => { chooseTag(classId, tagId); syncImmediately(); rerender(); });
   $('#forgotten', view)?.addEventListener('click', e => openDayDialog(e.currentTarget.dataset.ds));
   $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
   bindInstallNotice(view);

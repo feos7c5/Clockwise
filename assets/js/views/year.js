@@ -88,7 +88,7 @@ export function renderYear(view) {
     </section>
   </div>`;
 
-  $$('[data-m]', view).forEach(el => (el.onclick = () => { nav.month = { y, m: +el.dataset.m }; goTo('month'); }));
+  $$('[data-m]', view).forEach(el => (el.onclick = () => { nav.month = { y, m: +el.dataset.m }; nav.scope = 'month'; goTo('overview'); }));
   $('#printYear', view).onclick = () => exportYearPdf(+y);
   $('#csvYear', view).onclick = () => exportCSV(+y);
 }

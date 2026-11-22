@@ -1,0 +1,56 @@
+import { iso, parseISO, fmtDur } from '../core/time.js';
+import { tagTotals } from '../core/calc.js';
+import { store } from '../core/store.js';
+import { tagClasses, tagOf, tagColor } from '../core/tags.js';
+import { now } from '../core/session.js';
+import { t, weekdayShort, formatDate } from '../i18n/index.js';
+import { $, $$, esc, cardHead } from '../ui/dom.js';
+import { ICON } from '../ui/icons.js';
+import { nav } from '../ui/nav.js';
+import { showDialog, dialogHead } from '../ui/dialog.js';
+import { exportStatsPdf } from '../features/report.js';
+
+export function statsPeriod() {
+  if (nav.scope === 'year') return [`${nav.year}-01-01`, `${nav.year}-12-31`];
+  const { y, m } = nav.month;
+  return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))];
+}
+
+// Rows of one class, largest first, "not assigned" last.
+export function classRows(classId, minutes) {
+  return Object.entries(minutes).filter(([, min]) => Math.round(min) > 0)
+    .map(([id, min]) => ({ id, min, tag: tagOf(id), name: id ? tagOf(id)?.name || '?' : t('tags.unassigned') }))
+    .sort((a, b) => (!a.id - !b.id) || b.min - a.min);
+}
+
+function classCard(c, minutes, total) {
+  const rows = classRows(c.id, minutes).map(r => {
+    const pct = total ? (r.min / total) * 100 : 0, color = r.id ? tagColor(r.tag) : 'var(--muted)';
+    return `<button class="tagrow ${r.id ? '' : 'none'}" data-class="${c.id}" data-tag="${r.id}">
+      <i class="tag-dot" style="background:${color}"></i><span class="tag-name">${esc(r.name)}</span>
+      <span class="tag-val">${fmtDur(Math.round(r.min))} h</span><span class="tag-pct">${Math.round(pct)} %</span>
+      <span class="tag-bar"><i style="width:${pct}%;background:${color}"></i></span></button>`;
+  }).join('');
+  return `<section class="card">${cardHead(esc(c.name), `<span class="muted">${fmtDur(Math.round(total))} h</span>`)}
+    ${rows || `<div class="empty-text">${t('tags.noTimes')}</div>`}</section>`;
+}
+
+function openDays(name, days) {
+  const list = Object.entries(days).sort(([a], [b]) => a.localeCompare(b)).map(([ds, min]) => {
+    const d = parseISO(ds);
+    return `<li><span>${weekdayShort(d.getDay())} ${formatDate(d)}</span><span>${fmtDur(Math.round(min))} h</span></li>`;
+  }).join('');
+  showDialog(`${dialogHead(esc(name))}<ul class="list">${list}</ul>`);
+}
+
+export function renderStats(view) {
+  const [from, to] = statsPeriod();
+  const { byClass, days, total } = tagTotals(store.state, from, to, now());
+  view.innerHTML = `<div class="stack">
+    ${tagClasses().map(c => classCard(c, byClass[c.id] || {}, total)).join('')}
+    <div class="btn-row"><button class="btn btn-raised" id="printStats" ${total ? '' : 'disabled'}>${ICON.print}${t('month.print')}</button></div>
+    <p class="hint">${t('tags.statsHint')}</p>
+  </div>`;
+  $$('.tagrow', view).forEach(b => (b.onclick = () => openDays($('.tag-name', b).textContent, days[b.dataset.class]?.[b.dataset.tag] || {})));
+  $('#printStats', view).onclick = () => exportStatsPdf(from, to);
+}

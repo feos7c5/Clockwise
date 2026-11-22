@@ -20,7 +20,7 @@ export const dialogHead = title => `
     <button type="button" class="btn btn-icon btn-ghost" data-close aria-label="${t('common.close')}">${ICON.close}</button>
   </div>`;
 
-export function showDialog(html, bind) {
+export function showDialog(html, bind = () => {}) {
   const dlg = el();
   dlg.innerHTML = `<form class="dlg" method="dialog" tabindex="-1">${html}</form>`;
   $$('[data-close]', dlg).forEach(b => (b.onclick = () => dlg.close()));

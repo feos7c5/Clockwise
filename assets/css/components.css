@@ -142,3 +142,32 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .device-info { min-width: 0; }
 .device-name { font-weight: var(--fw-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fingerprint { font-size: var(--fs-sm); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+
+/* Categories (tags): colour dot, picker chips, chips in the settings. */
+.tag-dot { flex: none; display: inline-block; width: .625rem; height: .625rem; border-radius: 50%; }
+.tag-picks { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
+.tag-pick { position: relative; display: inline-flex; align-items: center; max-width: 100%; }
+.tag-pick .tag-dot { position: absolute; left: var(--sp-3); pointer-events: none; }
+.tag-pick select {
+  width: auto; max-width: 100%; height: var(--ctl-sm); padding-left: calc(var(--sp-3) + 1.125rem);
+  border-radius: var(--r-full); font-weight: var(--fw-medium); color: var(--muted);
+}
+.tag-pick.set select { color: var(--ink); }
+.block-tags { margin: var(--sp-2) 0 var(--sp-3); }
+.block-edit + .block-tags + .block-edit { margin-top: var(--sp-2); }
+.tag-labels { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin-top: 2px; }
+.tag-labels:empty { display: none; }
+.tag-label { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-sm); color: var(--muted); }
+.tagchip {
+  display: inline-flex; align-items: center; gap: var(--sp-2); height: var(--ctl-sm); padding: 0 var(--sp-3);
+  border: 0; border-radius: var(--r-full); background: var(--fill); font-size: var(--fs-sm); font-weight: var(--fw-medium); cursor: pointer;
+}
+.tagchip.add { background: none; color: var(--accent); padding-left: var(--sp-1); }
+.tagchip svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.tagclass + .tagclass { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--line); }
+.tagclass-head { display: grid; grid-template-columns: 1fr var(--ctl-md); gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); }
+.tagclass-head input { font-weight: var(--fw-semibold); }
+.swatches { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.swatch { width: 2rem; height: 2rem; border: 0; border-radius: 50%; cursor: pointer; }
+.swatch.on { outline: 2px solid var(--ink); outline-offset: 2px; }
+.clock .tag-picks { margin: 0 0 var(--sp-4); }

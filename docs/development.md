@@ -49,6 +49,16 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 - **Few requests:** uploads go straight to the server with the last known version (a conflict returns the
   newer state to merge). Polling happens on open and every 2 minutes while visible; unchanged data answers 304.
 
+## Categories
+
+Optional and invisible until the user creates a class in the settings (`core/tags.js`). A class (e.g. "Project",
+"Activity") has tags; a block carries at most one tag per class (`block.t = { classId: tagId }`), so every class
+adds up to the whole worked time. While clocked in, choosing another tag ends the running block and continues
+with a new one, without a gap. `tagTotals` in `core/calc.js` spreads the break of a day over its blocks by their
+length. Classes and tags are never deleted, only archived, and are merged one by one across devices (`state.tags`,
+only part of the synced data once in use). The "Analysis" tab only exists while there is a class; month and
+year share the "Overview" tab and one month/year switch with it.
+
 ## Notifications
 
 Reminders and the automatic clock-out reach the device even when the app is closed (on iPhone once it is

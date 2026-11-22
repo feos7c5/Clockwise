@@ -8,7 +8,9 @@ import { $, $$, tone } from './ui/dom.js';
 import { ICON } from './ui/icons.js';
 import { applyTheme } from './ui/theme.js';
 import { dialogOpen } from './ui/dialog.js';
-import { nav, TABS, setRenderer, goTo, stepPeriod, resetPeriod, isCurrentPeriod } from './ui/nav.js';
+import { nav, TABS, setRenderer, goTo, setScope, stepPeriod, resetPeriod, isCurrentPeriod } from './ui/nav.js';
+import { hasTagClasses } from './core/tags.js';
+import { renderStats } from './views/stats.js';
 import { renderToday, tickTimer } from './views/today.js';
 import { renderMonth } from './views/month.js';
 import { renderYear } from './views/year.js';
@@ -22,17 +24,35 @@ import { esc } from './ui/dom.js';
 
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
-  month: { render: renderMonth, title: () => [monthName(nav.month.m), String(nav.month.y)] },
-  year: { render: renderYear, title: () => [String(nav.year), t('head.yearOverview')] },
+  overview: {
+    render: view => (nav.scope === 'month' ? renderMonth : renderYear)(view),
+    title: () => (nav.scope === 'month' ? [monthName(nav.month.m), String(nav.month.y)] : [String(nav.year), t('head.yearOverview')]),
+  },
+  stats: {
+    render: renderStats,
+    title: () => [t('nav.stats'), nav.scope === 'month' ? `${monthName(nav.month.m)} ${nav.month.y}` : String(nav.year)],
+  },
   settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
+
+const PERIOD_TABS = ['overview', 'stats'];
+const visibleTabs = () => TABS.filter(tab => tab !== 'stats' || hasTagClasses());
+
+// Month or year: one switch for the overview and the evaluation, at the top of both.
+function renderScopeSwitch() {
+  const stack = $('#view .stack');
+  if (!stack || !PERIOD_TABS.includes(nav.tab)) return;
+  stack.insertAdjacentHTML('afterbegin', `<div class="seg">${['month', 'year'].map(s =>
+    `<button data-scope="${s}" class="${nav.scope === s ? 'on' : ''}">${t(`nav.${s}`)}</button>`).join('')}</div>`);
+  $$('[data-scope]', stack).forEach(b => (b.onclick = () => setScope(b.dataset.scope)));
+}
 
 function headActionsHtml() {
   if (nav.tab === 'today') {
     const b = balance(store.state, todayStr(), now());
     return `<div class="chip"><span class="muted">${t('head.balance')}</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
   }
-  if (nav.tab === 'month' || nav.tab === 'year') {
+  if (PERIOD_TABS.includes(nav.tab)) {
     return `<div class="nav-group">
       <button class="btn btn-icon btn-sm" data-nav="prev" aria-label="${t('nav.back')}">${ICON.left}</button>
       <button class="btn btn-sm" data-nav="now" ${isCurrentPeriod() ? 'disabled' : ''}>${t('nav.current')}</button>
@@ -45,7 +65,8 @@ function renderHeadActions(title, subtitle) {
   const html = headActionsHtml();
   $('#headRight').innerHTML = html;
   $('#compactRight').innerHTML = html;
-  $('#compactTitle').textContent = nav.tab === 'month' ? `${title} ${subtitle}` : title;
+  const both = nav.tab === 'stats' || (nav.tab === 'overview' && nav.scope === 'month');
+  $('#compactTitle').textContent = both ? `${title} ${subtitle}` : title;
 }
 
 const NAV_ACTIONS = { prev: () => stepPeriod(-1), next: () => stepPeriod(1), now: resetPeriod };
@@ -56,8 +77,11 @@ for (const el of [$('#headRight'), $('#compactRight')]) {
 function renderTabs() {
   const tabs = $('.tabs');
   tabs.setAttribute('aria-label', t('nav.main'));
-  tabs.style.setProperty('--tab', TABS.indexOf(nav.tab));
+  const visible = visibleTabs();
+  tabs.style.setProperty('--tabs', visible.length);
+  tabs.style.setProperty('--tab', visible.indexOf(nav.tab));
   $$('.tabs button').forEach(b => {
+    b.hidden = !visible.includes(b.dataset.tab);
     b.classList.toggle('on', b.dataset.tab === nav.tab);
     $('span', b).textContent = t(`nav.${b.dataset.tab}`);
   });
@@ -65,6 +89,7 @@ function renderTabs() {
 
 function render() {
   setLanguage(store.state.settings.language);
+  if (!visibleTabs().includes(nav.tab)) nav.tab = 'today';
   document.body.dataset.tab = nav.tab;
   const view = VIEWS[nav.tab];
   const [title, subtitle] = view.title();
@@ -73,6 +98,7 @@ function render() {
   renderTabs();
   try {
     view.render($('#view'));
+    renderScopeSwitch();
   } catch (e) {
     renderFailure(e);
   }

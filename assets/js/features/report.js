@@ -1,7 +1,8 @@
 import { iso, parseISO, range, fmtDur, pad, addDays } from '../core/time.js';
 import { vacationValue } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
-import { dayStats, sumRange, balance, pauseMin, grossMin, vacationAccount } from '../core/calc.js';
+import { dayStats, sumRange, balance, pauseMin, grossMin, vacationAccount, tagTotals } from '../core/calc.js';
+import { tagClasses, tagOf, tagColor } from '../core/tags.js';
 import { store } from '../core/store.js';
 import { now, todayStr } from '../core/session.js';
 import { t, weekdayShort, formatDayMonth, formatDate, monthName, formatNumber } from '../i18n/index.js';
@@ -186,3 +187,44 @@ export function buildYearPdf(y) {
 }
 
 export const exportYearPdf = y => shareOrDownload(t('print.yearFile', { year: y }), buildYearPdf(y), 'application/pdf');
+
+const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+// Evaluation by category for a period: one table per class with hours and share of each tag.
+export function buildStatsPdf(from, to) {
+  const n = now(), s = store.state.settings, doc = new PdfDoc();
+  const { byClass, total } = tagTotals(store.state, from, to, n);
+  doc.text(M, 62, t('print.statsTitle'), { size: 16, bold: true });
+  const meta = [`${formatDate(parseISO(from))} – ${formatDate(parseISO(to))}`, s.name, s.pnr && t('print.pnr', { pnr: s.pnr })].filter(Boolean).join(' · ');
+  doc.text(M, 80, meta, { size: 9, gray: 0.4 });
+  const RIGHT = A4.w - M, HOURS = RIGHT - 70;
+  let y = 116;
+  const room = need => { if (y + need > A4.h - 60) { doc.newPage(); y = 62; } };
+
+  for (const c of tagClasses()) {
+    const rows = Object.entries(byClass[c.id] || {}).filter(([, min]) => Math.round(min) > 0)
+      .map(([id, min]) => ({ id, min, tag: tagOf(id) })).sort((a, b) => (!a.id - !b.id) || b.min - a.min);
+    room(60);
+    doc.text(M, y, c.name, { size: 11, bold: true });
+    doc.text(HOURS, y, t('print.hours'), { size: 8, bold: true, gray: 0.45, align: 'right' });
+    doc.text(RIGHT, y, t('print.share'), { size: 8, bold: true, gray: 0.45, align: 'right' });
+    doc.line(M, y + 5, RIGHT, y + 5, { gray: 0.6 });
+    y += 19;
+    for (const r of rows) {
+      room(LINE + 4);
+      if (r.id) doc.rect(M, y - 7, 7, 7, rgb(tagColor(r.tag)));
+      doc.text(M + 13, y, r.id ? r.tag?.name || '?' : t('tags.unassigned'), { gray: r.id ? 0 : 0.45 });
+      doc.text(HOURS, y, fmtDur(Math.round(r.min)), { align: 'right' });
+      doc.text(RIGHT, y, `${Math.round((r.min / total) * 100)} %`, { align: 'right' });
+      doc.line(M, y + 4, RIGHT, y + 4, { gray: 0.9 });
+      y += LINE + 4;
+    }
+    doc.text(M, y, t('common.total'), { bold: true });
+    doc.text(HOURS, y, fmtDur(Math.round(total)), { bold: true, align: 'right' });
+    y += 34;
+  }
+  doc.text(M, A4.h - 28, t('print.created', { date: formatDate(n) }), { size: 7, gray: 0.6 });
+  return doc.toBytes();
+}
+
+export const exportStatsPdf = (from, to) => shareOrDownload(t('print.statsFile', { from, to }), buildStatsPdf(from, to), 'application/pdf');

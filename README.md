@@ -22,6 +22,7 @@
 - Vacation, sick days, home office and business trips
 - Public holidays for all German states
 - Monthly time sheet as PDF and export for Excel
+- Optional categories such as project or activity, with their own analysis
 - Sync between your devices, end-to-end encrypted, no account needed
 - Light and dark mode, English and German
 - Works offline

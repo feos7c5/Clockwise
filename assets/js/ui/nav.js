@@ -1,10 +1,12 @@
 import { now } from '../core/session.js';
 
-export const TABS = ['today', 'month', 'year', 'settings'];
-const hashTab = location.hash.slice(1);
+// "overview" shows the month or the year (nav.scope); "stats" only exists once categories are in use.
+export const TABS = ['today', 'overview', 'stats', 'settings'];
+const hash = location.hash.slice(1);
 
 export const nav = {
-  tab: TABS.includes(hashTab) ? hashTab : 'today',
+  tab: TABS.includes(hash) ? hash : hash === 'month' || hash === 'year' ? 'overview' : 'today',
+  scope: hash === 'year' ? 'year' : 'month',
   month: { y: now().getFullYear(), m: now().getMonth() },
   year: now().getFullYear(),
 };
@@ -20,8 +22,13 @@ export function goTo(tab) {
   window.scrollTo(0, 0);
 }
 
+export function setScope(scope) {
+  nav.scope = scope;
+  rerender();
+}
+
 export function stepPeriod(dir) {
-  if (nav.tab === 'month') {
+  if (nav.scope === 'month') {
     const d = new Date(nav.month.y, nav.month.m + dir, 1);
     nav.month = { y: d.getFullYear(), m: d.getMonth() };
   } else {
@@ -39,7 +46,7 @@ export function resetPeriod() {
 
 export function isCurrentPeriod() {
   const n = now();
-  return nav.tab === 'month'
+  return nav.scope === 'month'
     ? nav.month.y === n.getFullYear() && nav.month.m === n.getMonth()
     : nav.year === n.getFullYear();
 }
