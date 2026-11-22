@@ -171,3 +171,4 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .swatch { width: 2rem; height: 2rem; border: 0; border-radius: 50%; cursor: pointer; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 2px; }
 .clock .tag-picks { margin: 0 0 var(--sp-4); }
+.intro-title { margin: 0 0 var(--sp-2); font-size: var(--fs-md); font-weight: var(--fw-semibold); }

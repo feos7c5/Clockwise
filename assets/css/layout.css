@@ -63,7 +63,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter) var
 }
 .tabs svg { width: 1.375rem; height: 1.375rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s; }
 .tabs button.on { color: var(--accent); font-weight: var(--fw-semibold); }
-.tabs button[hidden] { display: none; }
 .tabs button:active svg { transform: scale(.88); }
 @media (prefers-reduced-motion: reduce) { .tabs::before { transition: none; } }
 

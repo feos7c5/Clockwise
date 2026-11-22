@@ -6,7 +6,9 @@ export default {
   head: { balance: 'Balance', yearOverview: 'Year overview' },
   tags: {
     title: 'Categories', addClass: 'Class', addTag: 'Entry', className: 'Name of the class', removeClass: 'Remove class',
-    hint: 'Assign time blocks, e.g. to a project or an activity. Each block can have one entry per class. The “Analysis” tab shows the distribution.',
+    hint: 'Each time block can have one entry per class. You choose it below the clock and when editing a day.',
+    introTitle: 'Analyse your time by category', addFirstClass: 'Create a class',
+    introText: 'Create classes such as “Project” or “Activity” and assign your time blocks. This tab then shows how your working time is distributed. If you don’t need it, just leave it empty.',
     newClassPrompt: 'Name of the class, e.g. Project', newTagPrompt: 'Name of the new entry', newTag: '+ New …',
     editTag: 'Edit entry', name: 'Name', color: 'Colour', archive: 'Archive',
     confirmArchive: 'Archive this entry? It disappears from the picker, recorded times stay assigned.',

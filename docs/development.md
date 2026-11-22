@@ -56,8 +56,9 @@ Optional and invisible until the user creates a class in the settings (`core/tag
 adds up to the whole worked time. While clocked in, choosing another tag ends the running block and continues
 with a new one, without a gap. `tagTotals` in `core/calc.js` spreads the break of a day over its blocks by their
 length. Classes and tags are never deleted, only archived, and are merged one by one across devices (`state.tags`,
-only part of the synced data once in use). The "Analysis" tab only exists while there is a class; month and
-year share the "Overview" tab and one month/year switch with it.
+only part of the synced data once in use). The "Analysis" tab shows the distribution and is also where classes
+and tags are managed; without a class it explains the feature. Month and year share the "Overview" tab and one
+month/year switch with it.
 
 ## Notifications
 

@@ -1,6 +1,6 @@
 import { now } from '../core/session.js';
 
-// "overview" shows the month or the year (nav.scope); "stats" only exists once categories are in use.
+// "overview" shows the month or the year (nav.scope); "stats" is the analysis by category and its setup.
 export const TABS = ['today', 'overview', 'stats', 'settings'];
 const hash = location.hash.slice(1);
 

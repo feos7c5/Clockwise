@@ -6,7 +6,9 @@ export default {
   head: { balance: 'Saldo', yearOverview: 'Jahresübersicht' },
   tags: {
     title: 'Kategorien', addClass: 'Klasse', addTag: 'Eintrag', className: 'Name der Klasse', removeClass: 'Klasse entfernen',
-    hint: 'Ordne Zeitabschnitte zu, z. B. nach Projekt oder Tätigkeit. Je Klasse ist ein Eintrag pro Abschnitt möglich. Die Verteilung zeigt der Reiter „Auswertung“.',
+    hint: 'Je Klasse ist ein Eintrag pro Zeitabschnitt möglich. Die Auswahl steht unter der Uhr und beim Bearbeiten eines Tages.',
+    introTitle: 'Zeit nach Kategorien auswerten', addFirstClass: 'Klasse anlegen',
+    introText: 'Lege Klassen an, z. B. „Projekt“ oder „Tätigkeit“, und ordne deine Zeitabschnitte zu. Hier siehst du dann, wie sich deine Arbeitszeit verteilt. Wer das nicht braucht, lässt es einfach leer.',
     newClassPrompt: 'Name der Klasse, z. B. Projekt', newTagPrompt: 'Name des neuen Eintrags', newTag: '+ Neu …',
     editTag: 'Eintrag bearbeiten', name: 'Name', color: 'Farbe', archive: 'Archivieren',
     confirmArchive: 'Eintrag archivieren? Er verschwindet aus der Auswahl, erfasste Zeiten bleiben zugeordnet.',

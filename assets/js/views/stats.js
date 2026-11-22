@@ -1,7 +1,8 @@
 import { iso, parseISO, fmtDur } from '../core/time.js';
 import { tagTotals } from '../core/calc.js';
 import { store } from '../core/store.js';
-import { tagClasses, tagOf, tagColor } from '../core/tags.js';
+import { tagClasses, hasTagClasses, tagOf, tagColor } from '../core/tags.js';
+import { tagManager, tagIntro } from './tag-manager.js';
 import { now } from '../core/session.js';
 import { t, weekdayShort, formatDate } from '../i18n/index.js';
 import { $, $$, esc, cardHead } from '../ui/dom.js';
@@ -44,13 +45,19 @@ function openDays(name, days) {
 }
 
 export function renderStats(view) {
+  if (!hasTagClasses()) {
+    view.innerHTML = `<div class="stack">${tagIntro.html()}</div>`;
+    return tagIntro.bind(view);
+  }
   const [from, to] = statsPeriod();
   const { byClass, days, total } = tagTotals(store.state, from, to, now());
   view.innerHTML = `<div class="stack">
     ${tagClasses().map(c => classCard(c, byClass[c.id] || {}, total)).join('')}
     <div class="btn-row"><button class="btn btn-raised" id="printStats" ${total ? '' : 'disabled'}>${ICON.print}${t('month.print')}</button></div>
     <p class="hint">${t('tags.statsHint')}</p>
+    ${tagManager.html()}
   </div>`;
+  tagManager.bind(view);
   $$('.tagrow', view).forEach(b => (b.onclick = () => openDays($('.tag-name', b).textContent, days[b.dataset.class]?.[b.dataset.tag] || {})));
   $('#printStats', view).onclick = () => exportStatsPdf(from, to);
 }

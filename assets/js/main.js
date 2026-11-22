@@ -30,18 +30,17 @@ const VIEWS = {
   },
   stats: {
     render: renderStats,
-    title: () => [t('nav.stats'), nav.scope === 'month' ? `${monthName(nav.month.m)} ${nav.month.y}` : String(nav.year)],
+    title: () => [t('nav.stats'), !hasTagClasses() ? '' : nav.scope === 'month' ? `${monthName(nav.month.m)} ${nav.month.y}` : String(nav.year)],
   },
   settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
 
 const PERIOD_TABS = ['overview', 'stats'];
-const visibleTabs = () => TABS.filter(tab => tab !== 'stats' || hasTagClasses());
 
 // Month or year: one switch for the overview and the evaluation, at the top of both.
 function renderScopeSwitch() {
   const stack = $('#view .stack');
-  if (!stack || !PERIOD_TABS.includes(nav.tab)) return;
+  if (!stack || !PERIOD_TABS.includes(nav.tab) || (nav.tab === 'stats' && !hasTagClasses())) return;
   stack.insertAdjacentHTML('afterbegin', `<div class="seg">${['month', 'year'].map(s =>
     `<button data-scope="${s}" class="${nav.scope === s ? 'on' : ''}">${t(`nav.${s}`)}</button>`).join('')}</div>`);
   $$('[data-scope]', stack).forEach(b => (b.onclick = () => setScope(b.dataset.scope)));
@@ -52,7 +51,7 @@ function headActionsHtml() {
     const b = balance(store.state, todayStr(), now());
     return `<div class="chip"><span class="muted">${t('head.balance')}</span><span class="${tone(b)}">${fmtDur(b, true)} h</span></div>`;
   }
-  if (PERIOD_TABS.includes(nav.tab)) {
+  if (nav.tab === 'overview' || (nav.tab === 'stats' && hasTagClasses())) {
     return `<div class="nav-group">
       <button class="btn btn-icon btn-sm" data-nav="prev" aria-label="${t('nav.back')}">${ICON.left}</button>
       <button class="btn btn-sm" data-nav="now" ${isCurrentPeriod() ? 'disabled' : ''}>${t('nav.current')}</button>
@@ -77,11 +76,8 @@ for (const el of [$('#headRight'), $('#compactRight')]) {
 function renderTabs() {
   const tabs = $('.tabs');
   tabs.setAttribute('aria-label', t('nav.main'));
-  const visible = visibleTabs();
-  tabs.style.setProperty('--tabs', visible.length);
-  tabs.style.setProperty('--tab', visible.indexOf(nav.tab));
+  tabs.style.setProperty('--tab', TABS.indexOf(nav.tab));
   $$('.tabs button').forEach(b => {
-    b.hidden = !visible.includes(b.dataset.tab);
     b.classList.toggle('on', b.dataset.tab === nav.tab);
     $('span', b).textContent = t(`nav.${b.dataset.tab}`);
   });
@@ -89,7 +85,6 @@ function renderTabs() {
 
 function render() {
   setLanguage(store.state.settings.language);
-  if (!visibleTabs().includes(nav.tab)) nav.tab = 'today';
   document.body.dataset.tab = nav.tab;
   const view = VIEWS[nav.tab];
   const [title, subtitle] = view.title();
