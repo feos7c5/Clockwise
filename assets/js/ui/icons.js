@@ -2,6 +2,8 @@ const svg = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>
 
 export const ICON = {
   left: svg('<path d="M15 18l-6-6 6-6"/>'),
+  search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   right: svg('<path d="M9 18l6-6-6-6"/>'),
   bell: svg('<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'),
   plus: svg('<path d="M12 5v14M5 12h14"/>'),

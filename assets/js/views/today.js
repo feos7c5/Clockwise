@@ -5,7 +5,7 @@ import { dayStats, balance, grossMin, pauseMin, pauseWarning, reachMin } from '.
 import { store, getDay, cleanDay, save } from '../core/store.js';
 import { now, todayStr, nowMin, running, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock, chooseTag } from '../core/session.js';
 import { hasTagClasses, nextTags } from '../core/tags.js';
-import { tagSelects, bindTagSelects, tagLabels } from '../ui/tag-select.js';
+import { tagChips, bindTagChips, tagLabels } from '../ui/tag-select.js';
 import { t, weekdayShort, formatLongDate } from '../i18n/index.js';
 import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
@@ -168,7 +168,7 @@ export function renderToday(view) {
       <div class="timer" id="timer">${fmtSec(liveSeconds(activeDs))}</div>
       <div class="timer-sub">${t('today.ofTarget', { dur: fmtDur(st.soll) })}</div>
       <div class="progress"><i style="width:${progress}%"></i></div>
-      ${hasTagClasses() ? `<div class="tag-picks">${tagSelects(r ? r.block.t : nextTags())}</div>` : ''}
+      ${hasTagClasses() ? `<div class="tag-picks">${tagChips(r ? r.block.t : nextTags())}</div>` : ''}
       <div class="btn-row">${stampButtons(r, brk)}</div>
       ${warn ? `<div class="warn">${t('today.pauseWarning')}</div>` : ''}
     </section>
@@ -180,7 +180,7 @@ export function renderToday(view) {
 
   $$('[data-act]', view).forEach(b => (b.onclick = () => onStamp(b.dataset.act)));
   $('#editToday', view).onclick = () => openDayDialog(activeDs);
-  bindTagSelects(view, (classId, tagId) => { chooseTag(classId, tagId); syncImmediately(); rerender(); });
+  bindTagChips(view, () => (running() ? running().block.t || {} : nextTags()), (classId, tagId) => { chooseTag(classId, tagId); syncImmediately(); rerender(); });
   $('#forgotten', view)?.addEventListener('click', e => openDayDialog(e.currentTarget.dataset.ds));
   $('#onboardJoin', view)?.addEventListener('click', openJoinDialog);
   bindInstallNotice(view);

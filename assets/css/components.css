@@ -151,13 +151,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 /* Categories (tags): colour dot, picker chips, chips in the settings. */
 .tag-dot { flex: none; display: inline-block; width: .625rem; height: .625rem; border-radius: 50%; }
 .tag-picks { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
-.tag-pick { position: relative; display: inline-flex; align-items: center; max-width: 100%; }
-.tag-pick .tag-dot { position: absolute; left: var(--sp-3); pointer-events: none; }
-.tag-pick select {
-  width: auto; max-width: 100%; height: var(--ctl-sm); padding-left: calc(var(--sp-3) + 1.125rem);
-  border-radius: var(--r-full); font-weight: var(--fw-medium); color: var(--muted);
-}
-.tag-pick.set select { color: var(--ink); }
 .block-tags { margin: var(--sp-2) 0 var(--sp-3); }
 .block-edit + .block-tags + .block-edit { margin-top: var(--sp-2); }
 .tag-labels { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin-top: 2px; }
@@ -177,3 +170,41 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 2px; }
 .clock .tag-picks { margin: 0 0 var(--sp-4); }
 .intro-title { margin: 0 0 var(--sp-2); font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+
+/* Assignment chips and the picker sheet. */
+.tagchip.pick { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tagchip.pick.empty { background: none; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); padding-left: var(--sp-2); }
+dialog.sheet {
+  width: min(32rem, 100%); max-width: 100%; max-height: min(80vh, 40rem); margin: auto auto 0; padding: 0;
+  border: 0; border-radius: var(--r-lg) var(--r-lg) 0 0; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-float);
+  display: none; flex-direction: column; overscroll-behavior: contain;
+}
+dialog.sheet[open] { display: flex; }
+dialog.sheet::backdrop { background: rgba(0, 0, 0, .35); }
+@media (min-width: 40rem), (orientation: landscape) and (max-height: 500px) { dialog.sheet { margin: auto; border-radius: var(--r-lg); } }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3) var(--sp-3) 0 var(--sp-5); }
+.sheet-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+.sheet-search { position: relative; display: block; margin: var(--sp-3) var(--sp-5); }
+.sheet-search svg { position: absolute; left: var(--sp-3); top: 50%; width: 1.125rem; height: 1.125rem; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.sheet-search input { padding-left: 2.5rem; }
+.sheet-list { overflow-y: auto; padding: 0 var(--sp-3) calc(var(--sp-4) + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+.pick-label { padding: var(--sp-3) var(--sp-2) var(--sp-1); font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.pick-label:empty { padding: var(--sp-2) 0 0; }
+.pickrow {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 3rem; padding: 0 var(--sp-2);
+  border: 0; border-radius: var(--r-md); background: none; text-align: left; font-size: var(--fs-md); cursor: pointer;
+}
+.pickrow span { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pickrow .tag-dot { width: .75rem; height: .75rem; }
+.pickrow svg { flex: none; width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pickrow.on { background: var(--fill); font-weight: var(--fw-semibold); }
+.pickrow.on svg { color: var(--accent); }
+.pickrow.create, .pickrow.create svg { color: var(--accent); font-weight: var(--fw-semibold); }
+.pickrow.none { color: var(--muted); }
+@media (hover: hover) { .pickrow:hover { background: var(--fill); } }
+.older { margin-top: var(--sp-3); }
+.older .sheet-search { margin: 0 0 var(--sp-3); }
+.tagchip[hidden] { display: none; }
+input.inline-add { width: 12rem; height: var(--ctl-sm); border-radius: var(--r-full); font-size: var(--fs-sm); padding: 0 var(--sp-3); }
+input.inline-add.block { width: 100%; height: var(--ctl-md); margin-top: var(--sp-4); border-radius: var(--r-md); font-size: max(1rem, 16px); }
+.card-head input.inline-add { width: 10rem; }

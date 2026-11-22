@@ -10,7 +10,7 @@ import { ICON } from '../ui/icons.js';
 import { showDialog, dialogHead, closeDialog } from '../ui/dialog.js';
 import { rerender } from '../ui/nav.js';
 import { hasTagClasses, setBlockTag } from '../core/tags.js';
-import { tagSelects, bindTagSelects } from '../ui/tag-select.js';
+import { tagChips, bindTagChips } from '../ui/tag-select.js';
 
 function blockRows(blocks) {
   if (!blocks.length) return '';
@@ -20,7 +20,7 @@ function blockRows(blocks) {
       <input type="time" data-i="${i}" data-k="in" value="${b.in || ''}" aria-label="${t('dayDialog.clockIn')}">
       <input type="time" data-i="${i}" data-k="out" value="${b.out || ''}" aria-label="${t('dayDialog.clockOut')}">
       <button type="button" class="btn btn-icon btn-ghost" data-del="${i}" aria-label="${t('dayDialog.removeBlock')}">${ICON.close}</button>
-    </div>${hasTagClasses() ? `<div class="tag-picks block-tags" data-block="${i}">${tagSelects(b.t)}</div>` : ''}`).join('');
+    </div>${hasTagClasses() ? `<div class="tag-picks block-tags" data-block="${i}">${tagChips(b.t)}</div>` : ''}`).join('');
 }
 
 const label = b => `${b.in}–${b.out || '…'}`;
@@ -98,7 +98,8 @@ export function openDayDialog(ds) {
         };
       });
       $$('[data-del]', dlg).forEach(b => (b.onclick = () => { draft.blocks.splice(+b.dataset.del, 1); draw(); }));
-      bindTagSelects(dlg, (classId, tagId, sel) => { setBlockTag(draft.blocks[sel.closest('[data-block]').dataset.block], classId, tagId); draw(); });
+      const blockOf = b => draft.blocks[b.closest('[data-block]').dataset.block];
+      bindTagChips(dlg, b => blockOf(b).t || {}, (classId, tagId, b) => { setBlockTag(blockOf(b), classId, tagId); draw(); });
       $('#addBlock', dlg).onclick = () => {
         const last = draft.blocks[draft.blocks.length - 1];
         draft.blocks.push({ in: last?.out || '08:00', out: null, ...(last?.t ? { t: { ...last.t } } : {}) });

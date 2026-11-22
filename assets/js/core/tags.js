@@ -96,3 +96,22 @@ export function setBlockTag(block, classId, tagId) {
   if (tagId) t[classId] = tagId; else delete t[classId];
   if (Object.keys(t).length) block.t = t; else delete block.t;
 }
+
+// Day on which each tag was last used.
+export function lastUsed() {
+  const out = {};
+  for (const [ds, day] of Object.entries(store.state.days)) {
+    for (const b of day.blocks) for (const id of Object.values(b.t || {})) if (!out[id] || ds > out[id]) out[id] = ds;
+  }
+  return out;
+}
+
+export function recentTags(classId, n = 5, used = lastUsed()) {
+  return tagsIn(classId).filter(x => used[x.id]).sort((a, b) => used[b.id].localeCompare(used[a.id])).slice(0, n);
+}
+
+export const findTags = (classId, query) => {
+  const q = clean(query).toLocaleLowerCase();
+  return tagsIn(classId).filter(x => x.name.toLocaleLowerCase().includes(q));
+};
+export const exactTag = (classId, query) => tagsIn(classId).find(x => same(x.name, clean(query))) || null;
