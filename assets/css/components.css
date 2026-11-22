@@ -168,7 +168,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .swatches { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 .swatch { width: 2rem; height: 2rem; border: 0; border-radius: 50%; cursor: pointer; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 2px; }
-.clock .tag-picks { margin: 0 0 var(--sp-4); }
 .intro-title { margin: 0 0 var(--sp-2); font-size: var(--fs-md); font-weight: var(--fw-semibold); }
 
 /* Assignment chips and the picker sheet. */
@@ -208,3 +207,18 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, .35); }
 input.inline-add { width: 12rem; height: var(--ctl-sm); border-radius: var(--r-full); font-size: var(--fs-sm); padding: 0 var(--sp-3); }
 input.inline-add.block { width: 100%; height: var(--ctl-md); margin-top: var(--sp-4); border-radius: var(--r-md); font-size: max(1rem, 16px); }
 .card-head input.inline-add { width: 10rem; }
+
+/* Today: the current assignment, one row per class. */
+.assign { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-4); }
+.assign-row {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 3.25rem; padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  border: 0; border-radius: var(--r-md); background: var(--fill); text-align: left; cursor: pointer;
+}
+.assign-bar { flex: none; align-self: stretch; width: .3125rem; border-radius: var(--r-full); }
+.assign-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.assign-text small { font-size: var(--fs-xs); color: var(--muted); font-weight: var(--fw-medium); }
+.assign-text b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.assign-row.empty b { color: var(--muted); font-weight: var(--fw-medium); }
+.assign-since { flex: none; font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.assign-row > svg { flex: none; width: 1.125rem; height: 1.125rem; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.assign-row:active { transform: scale(.99); }

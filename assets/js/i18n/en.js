@@ -5,6 +5,7 @@ export default {
   nav: { today: 'Today', overview: 'Overview', stats: 'Analysis', month: 'Month', year: 'Year', settings: 'Settings', main: 'Main navigation', back: 'Back', forward: 'Forward', current: 'Today' },
   head: { balance: 'Balance', yearOverview: 'Year overview' },
   tags: {
+    choose: 'Choose', since: 'since {time}',
     days: 'Days',
     showOlder: 'Older ({n})', search: 'Search',
     more: 'More ({n})',

@@ -92,6 +92,17 @@ export function chooseTag(classId, tagId) {
   save();
 }
 
+// Start of the current stretch of work: blocks that follow each other without a gap (e.g. after changing the
+// project) count as one. With `classId`, only as long as that class keeps the same entry.
+export function runningSince(classId = null) {
+  const r = running();
+  if (!r) return '';
+  const blocks = store.state.days[r.ds].blocks, tag = b => b.t?.[classId] || '';
+  let i = r.i;
+  while (i > 0 && blocks[i - 1].out === blocks[i].in && !blocks[i - 1].brk && (!classId || tag(blocks[i - 1]) === tag(r.block))) i--;
+  return blocks[i].in;
+}
+
 export function openBlocks() {
   const out = [];
   for (const [ds, day] of Object.entries(store.state.days)) {

@@ -3,9 +3,9 @@ import { QUICK_CODES } from '../core/codes.js';
 import { holidayOn } from '../core/holidays.js';
 import { dayStats, balance, grossMin, pauseMin, pauseWarning, reachMin } from '../core/calc.js';
 import { store, getDay, cleanDay, save } from '../core/store.js';
-import { now, todayStr, nowMin, running, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock, chooseTag } from '../core/session.js';
+import { now, todayStr, nowMin, running, runningSince, onBreak, breakMinutes, missingStamp, stamp, forgottenBlock, chooseTag } from '../core/session.js';
 import { hasTagClasses, nextTags } from '../core/tags.js';
-import { tagChips, bindTagChips, tagLabels } from '../ui/tag-select.js';
+import { tagPanel, bindTagChips, tagLabels } from '../ui/tag-select.js';
 import { t, weekdayShort, formatLongDate } from '../i18n/index.js';
 import { $, $$, esc, tone, fmtSec, stat, cardHead, codeLabel, holidayLabel } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
@@ -44,7 +44,7 @@ function statusLine(r, brk, day, ds) {
   let dot = '', text = t('today.notClockedIn');
   if (r) {
     dot = 'on';
-    text = t('today.clockedInSince', { time: r.block.in }) + (r.ds !== ds ? ' ' + t('today.yesterday') : '');
+    text = t('today.clockedInSince', { time: runningSince() }) + (r.ds !== ds ? ' ' + t('today.yesterday') : '');
   } else if (brk) {
     dot = 'brk';
     text = t('today.onBreakSince', { time: brk.out, dur: fmtDur(breakMinutes()) });
@@ -168,7 +168,7 @@ export function renderToday(view) {
       <div class="timer" id="timer">${fmtSec(liveSeconds(activeDs))}</div>
       <div class="timer-sub">${t('today.ofTarget', { dur: fmtDur(st.soll) })}</div>
       <div class="progress"><i style="width:${progress}%"></i></div>
-      ${hasTagClasses() ? `<div class="tag-picks">${tagChips(r ? r.block.t : nextTags())}</div>` : ''}
+      ${hasTagClasses() ? tagPanel(r ? r.block.t : nextTags(), r ? runningSince : null) : ''}
       <div class="btn-row">${stampButtons(r, brk)}</div>
       ${warn ? `<div class="warn">${t('today.pauseWarning')}</div>` : ''}
     </section>

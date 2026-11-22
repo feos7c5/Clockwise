@@ -15,8 +15,19 @@ export function tagChips(current = {}) {
   }).join('');
 }
 
+// Today: one clear row per class – colour, class name, entry and, while clocked in, since when this part runs.
+export function tagPanel(current = {}, since = null) {
+  return `<div class="assign">${tagClasses().map(c => {
+    const tag = tagOf(current[c.id]);
+    return `<button type="button" class="assign-row pick ${tag ? '' : 'empty'}" data-class="${c.id}">
+      <i class="assign-bar" style="background:${tag ? tagColor(tag) : 'var(--line)'}"></i>
+      <span class="assign-text"><small>${esc(c.name)}</small><b>${tag ? esc(tag.name) : t('tags.choose')}</b></span>
+      ${tag && since ? `<span class="assign-since">${t('tags.since', { time: since(c.id) })}</span>` : ''}${ICON.right}</button>`;
+  }).join('')}</div>`;
+}
+
 export function bindTagChips(root, current, onPick) {
-  $$('.tagchip.pick', root).forEach(b => (b.onclick = () => {
+  $$('.pick[data-class]', root).forEach(b => (b.onclick = () => {
     const classId = b.dataset.class;
     openTagPicker(classId, current(b)[classId] || '', tagId => onPick(classId, tagId, b));
   }));
