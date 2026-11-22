@@ -22,15 +22,18 @@ import { registerServiceWorker } from './features/update.js';
 import { saveBackup } from './features/export.js';
 import { esc } from './ui/dom.js';
 
+// Overview and analysis share the header: the period small on top, the topic below.
+const periodLabel = () => (nav.scope === 'month' ? `${monthName(nav.month.m)} ${nav.month.y}` : String(nav.year));
+
 const VIEWS = {
   today: { render: renderToday, title: () => [t('nav.today'), formatLongDate(now())] },
   overview: {
     render: view => (nav.scope === 'month' ? renderMonth : renderYear)(view),
-    title: () => (nav.scope === 'month' ? [monthName(nav.month.m), String(nav.month.y)] : [String(nav.year), t('head.yearOverview')]),
+    title: () => [t('nav.overview'), periodLabel()],
   },
   stats: {
     render: renderStats,
-    title: () => [t('nav.stats'), !hasTagClasses() ? '' : nav.scope === 'month' ? `${monthName(nav.month.m)} ${nav.month.y}` : String(nav.year)],
+    title: () => [t('nav.stats'), hasTagClasses() ? periodLabel() : ''],
   },
   settings: { render: renderSettings, title: () => [t('nav.settings'), ''] },
 };
@@ -64,7 +67,7 @@ function renderHeadActions(title, subtitle) {
   const html = headActionsHtml();
   $('#headRight').innerHTML = html;
   $('#compactRight').innerHTML = html;
-  const both = nav.tab === 'stats' || (nav.tab === 'overview' && nav.scope === 'month');
+  const both = PERIOD_TABS.includes(nav.tab) && subtitle;
   $('#compactTitle').textContent = both ? `${title} ${subtitle}` : title;
 }
 
