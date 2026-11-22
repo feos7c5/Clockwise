@@ -56,12 +56,27 @@ export function stamp(state, previous, now = Date.now()) {
   return snapshot(state);
 }
 
+const hasTags = tags => Boolean(tags && (Object.keys(tags.classes || {}).length || Object.keys(tags.items || {}).length));
+
+// Categories are only part of the data once someone uses them, so nothing changes for everyone else.
 export const payload = state => ({
   version: 1,
   days: state.days,
   settings: sharedSettings(state.settings),
   meta: state.meta || emptyMeta(),
   devices: state.devices || {},
+  ...(hasTags(state.tags) ? { tags: state.tags } : {}),
+});
+
+// Classes and tags are merged one by one: the newer version of each wins, nothing is ever removed.
+const newest = (local = {}, remote = {}) => {
+  const out = structuredClone(local);
+  for (const [id, r] of Object.entries(remote)) if (!out[id] || (r.u || 0) >= (out[id].u || 0)) out[id] = structuredClone(r);
+  return out;
+};
+export const mergeTags = (local, remote) => ({
+  classes: newest(local?.classes, remote?.classes),
+  items: newest(local?.items, remote?.items),
 });
 
 export function mergeDevices(local = {}, remote = {}) {
@@ -137,5 +152,6 @@ export function merge(local, remote) {
     settings: structuredClone({ ...local.settings, ...shared, ...deviceOnly }),
     meta: { days: metaDays, settings: Math.max(lm.settings || 0, rm.settings || 0), blocks: metaBlocks, gone: metaGone },
     devices: mergeDevices(local.devices, remote.devices),
+    ...(hasTags(local.tags) || hasTags(remote.tags) ? { tags: mergeTags(local.tags, remote.tags) } : {}),
   };
 }

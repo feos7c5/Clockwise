@@ -6,6 +6,7 @@ import { CODES } from './codes.js';
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ID_RE = /^[\w-]{1,24}$/;
 
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const obj = v => (isObject(v) ? v : {});
@@ -35,6 +36,8 @@ function cleanDay(day) {
     const block = { id: b.id, in: b.in, out: time(b.out) };
     if (b.brk === true && block.out) block.brk = true;
     if (Number.isInteger(b.s) && b.s > 0 && b.s < 60) block.s = b.s;
+    const tags = Object.entries(obj(b.t)).filter(([c, t]) => ID_RE.test(c) && typeof t === 'string' && ID_RE.test(t));
+    if (tags.length) block.t = Object.fromEntries(tags);
     out.blocks.push(block);
   });
   if (typeof day.code === 'string' && CODES[day.code]) out.code = day.code;
@@ -76,6 +79,21 @@ function cleanMeta(m) {
   return { days: numberMap(src.days), settings: num(src.settings, 0), blocks: nested(src.blocks), gone: nested(src.gone) };
 }
 
+// Categories for blocks (see core/tags.js): classes and their tags, each with the time of its last change.
+function cleanTags(tags) {
+  const src = obj(tags), classes = {}, items = {};
+  const name = v => (typeof v === 'string' ? v.trim().slice(0, 40) : '');
+  for (const [id, c] of Object.entries(obj(src.classes))) {
+    if (!ID_RE.test(id) || !isObject(c) || !name(c.name)) continue;
+    classes[id] = { name: name(c.name), pos: num(c.pos, 0), u: num(c.u, 0), ...(c.off === true ? { off: true } : {}) };
+  }
+  for (const [id, i] of Object.entries(obj(src.items))) {
+    if (!ID_RE.test(id) || !isObject(i) || !name(i.name) || typeof i.c !== 'string' || !ID_RE.test(i.c)) continue;
+    items[id] = { c: i.c, name: name(i.name), col: Math.max(0, Math.round(num(i.col, 0))), u: num(i.u, 0), ...(i.off === true ? { off: true } : {}) };
+  }
+  return { classes, items };
+}
+
 export function normalizeState(input) {
   const src = obj(input);
   const days = {};
@@ -86,6 +104,7 @@ export function normalizeState(input) {
   }
   const out = { ...src, version: 1, settings: cleanSettings(src.settings), days };
   if (src.meta !== undefined) out.meta = cleanMeta(src.meta);
+  if (src.tags !== undefined) out.tags = cleanTags(src.tags);
   if (src.devices !== undefined) out.devices = Object.fromEntries(Object.entries(obj(src.devices)).filter(([, d]) => isObject(d)));
   return out;
 }

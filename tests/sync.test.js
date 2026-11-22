@@ -210,3 +210,29 @@ test('encryption: small data stays uncompressed for older app versions', async (
   const blob = await seal(key, { days: { '2026-11-16': { blocks: [] } } });
   assert.ok(!blob.startsWith('z.'));
 });
+
+test('merge: classes and tags from both devices are kept, the newer edit of each wins', async () => {
+  const { mergeTags, payload } = await import('../assets/js/sync/merge.js');
+  const a = state({}), b = state({});
+  assert.ok(!('tags' in payload(a)));
+  a.tags = { classes: { p: { name: 'Projekt', pos: 0, u: 10 } }, items: { x: { c: 'p', name: 'Kunde A', col: 0, u: 10 }, y: { c: 'p', name: 'Alt', col: 1, u: 10 } } };
+  b.tags = { classes: { p: { name: 'Projekte', pos: 0, u: 20 }, t: { name: 'Tätigkeit', pos: 1, u: 15 } }, items: { y: { c: 'p', name: 'Alt', col: 1, u: 30, off: true }, z: { c: 't', name: 'Meeting', col: 0, u: 15 } } };
+  for (const m of [merge(a, b), merge(b, a)]) {
+    assert.equal(m.tags.classes.p.name, 'Projekte');
+    assert.deepEqual(Object.keys(m.tags.classes).sort(), ['p', 't']);
+    assert.deepEqual(Object.keys(m.tags.items).sort(), ['x', 'y', 'z']);
+    assert.equal(m.tags.items.y.off, true);
+  }
+  assert.deepEqual(mergeTags(undefined, undefined), { classes: {}, items: {} });
+});
+
+test('validation: block tags and tag definitions survive, broken ones are dropped', async () => {
+  const { normalizeState } = await import('../assets/js/core/validate.js');
+  const s = normalizeState({
+    settings: {},
+    days: { '2026-11-16': { blocks: [{ in: '08:00', out: '09:00', t: { p: 'x', bad: 5, 'a b': 'y' } }] } },
+    tags: { classes: { p: { name: ' Projekt ', pos: 0, u: 1 }, q: { name: '' } }, items: { x: { c: 'p', name: 'A', col: 2, u: 1 }, w: { name: 'ohne Klasse' } } },
+  });
+  assert.deepEqual(s.days['2026-11-16'].blocks[0].t, { p: 'x' });
+  assert.deepEqual(s.tags, { classes: { p: { name: 'Projekt', pos: 0, u: 1 } }, items: { x: { c: 'p', name: 'A', col: 2, u: 1 } } });
+});

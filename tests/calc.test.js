@@ -170,3 +170,22 @@ test('schedule edits made in place are picked up after a save', async () => {
   invalidateCalc();
   assert.equal(contractMin(s, '2026-11-16'), 240);
 });
+
+test('tag totals: each class adds up to the booked time, the break is spread by block length', async () => {
+  const { tagTotals } = await import('../assets/js/core/calc.js');
+  const state = {
+    settings,
+    tags: { classes: { p: { name: 'Projekt' }, a: { name: 'Tätigkeit' } }, items: {} },
+    days: {
+      '2026-11-16': { blocks: [{ in: '08:00', out: '12:00', t: { p: 'x', a: 'm' } }, { in: '12:00', out: '17:00', t: { p: 'y' } }] },
+      '2026-11-17': { blocks: [{ in: '08:00', out: '10:00', t: { p: 'x' } }] },
+    },
+  };
+  const r = tagTotals(state, '2026-11-01', '2026-11-30', new Date(2026, 10, 20, 12, 0));
+  assert.equal(r.total, 540 - 45 + 120 - 45);
+  assert.equal(Math.round(r.byClass.p.x), Math.round((240 / 540) * 495) + 75);
+  assert.equal(Math.round(r.byClass.p.y), Math.round((300 / 540) * 495));
+  for (const c of ['p', 'a']) assert.equal(Math.round(Object.values(r.byClass[c]).reduce((x, y) => x + y, 0)), r.total);
+  assert.equal(Math.round(r.byClass.a['']), r.total - Math.round((240 / 540) * 495));
+  assert.deepEqual(Object.keys(r.days.p.x), ['2026-11-16', '2026-11-17']);
+});

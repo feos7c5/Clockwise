@@ -2,6 +2,7 @@ import { iso, toMin, fromMin, addDays, parseISO } from './time.js';
 import { sollMin, reachMin } from './calc.js';
 import { store, getDay, save } from './store.js';
 import { syncSettled } from '../sync/engine.js';
+import { nextTags, clearNextTags, setNextTag, setBlockTag } from './tags.js';
 
 export const now = () => new Date();
 export const todayStr = () => iso(now());
@@ -55,6 +56,9 @@ export function stamp(kind) {
     // `s` is the second of clocking in: only the live clock uses it, all times and reports stay in minutes.
     const block = { in: t, out: null };
     if (n.getSeconds()) block.s = n.getSeconds();
+    const tags = nextTags();
+    if (Object.keys(tags).length) block.t = tags;
+    clearNextTags();
     getDay(todayStr()).blocks.push(block);
   } else if (kind === 'pause' && r) {
     r.block.out = t;
@@ -63,6 +67,27 @@ export function stamp(kind) {
     r.block.out = t;
   } else if (kind === 'end' && brk) {
     delete brk.brk;
+  }
+  save();
+}
+
+// Changes the tag of one class. While clocked in, the running block ends now and a new one continues with the
+// new tag – without a gap, so worked time, break and the live clock are unaffected. While clocked out, the
+// choice is remembered for the next clock-in.
+export function chooseTag(classId, tagId) {
+  const r = running();
+  if (!r) return setNextTag(classId, tagId);
+  if ((r.block.t?.[classId] || '') === (tagId || '')) return;
+  const t = hhmm(now());
+  if (r.ds === todayStr() && r.block.in === t) {
+    setBlockTag(r.block, classId, tagId);
+  } else {
+    const next = { in: t, out: null };
+    if (r.block.t) next.t = { ...r.block.t };
+    if (r.block.s) next.s = r.block.s;
+    setBlockTag(next, classId, tagId);
+    r.block.out = t;
+    getDay(todayStr()).blocks.push(next);
   }
   save();
 }
