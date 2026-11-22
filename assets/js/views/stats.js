@@ -4,7 +4,7 @@ import { store } from '../core/store.js';
 import { tagClasses, hasTagClasses, tagOf, tagColor } from '../core/tags.js';
 import { tagManager, tagIntro } from './tag-manager.js';
 import { now } from '../core/session.js';
-import { t, weekdayShort, formatDate } from '../i18n/index.js';
+import { t, weekdayShort, monthName } from '../i18n/index.js';
 import { $, $$, esc, cardHead } from '../ui/dom.js';
 import { ICON } from '../ui/icons.js';
 import { nav } from '../ui/nav.js';
@@ -27,21 +27,33 @@ export function classRows(classId, minutes) {
 function classCard(c, minutes, total) {
   const rows = classRows(c.id, minutes).map(r => {
     const pct = total ? (r.min / total) * 100 : 0, color = r.id ? tagColor(r.tag) : 'var(--muted)';
-    return `<button class="tagrow ${r.id ? '' : 'none'}" data-class="${c.id}" data-tag="${r.id}">
+    const tag = r.id ? 'button' : 'div';
+    return `<${tag} class="tagrow ${r.id ? '' : 'none'}" data-class="${c.id}" data-tag="${r.id}">
       <i class="tag-dot" style="background:${color}"></i><span class="tag-name">${esc(r.name)}</span>
       <span class="tag-val">${fmtDur(Math.round(r.min))} h</span><span class="tag-pct">${Math.round(pct)} %</span>
-      <span class="tag-bar"><i style="width:${pct}%;background:${color}"></i></span></button>`;
+      <span class="tag-bar"><i style="width:${pct}%;background:${color}"></i></span></${tag}>`;
   }).join('');
   return `<section class="card">${cardHead(esc(c.name), `<span class="muted">${fmtDur(Math.round(total))} h</span>`)}
     ${rows || `<div class="empty-text">${t('tags.noTimes')}</div>`}</section>`;
 }
 
 function openDays(name, days) {
-  const list = Object.entries(days).sort(([a], [b]) => a.localeCompare(b)).map(([ds, min]) => {
-    const d = parseISO(ds);
-    return `<li><span>${weekdayShort(d.getDay())} ${formatDate(d)}</span><span>${fmtDur(Math.round(min))} h</span></li>`;
+  const byMonth = new Map();
+  for (const [ds, min] of Object.entries(days).sort(([x], [y]) => x.localeCompare(y))) {
+    const key = ds.slice(0, 7);
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key).push([ds, min]);
+  }
+  const groups = [...byMonth].map(([key, list]) => {
+    const total = list.reduce((sum, [, min]) => sum + min, 0), [y, m] = key.split('-').map(Number);
+    const rows = list.map(([ds, min]) => {
+      const d = parseISO(ds);
+      return `<li><span><span class="muted">${weekdayShort(d.getDay())}</span> ${d.getDate()}.</span><span>${fmtDur(Math.round(min))} h</span></li>`;
+    }).join('');
+    return `<div class="dayfold"><div class="dayfold-head"><b>${monthName(m - 1)} ${y}</b><span>${fmtDur(Math.round(total))} h</span></div>
+      <ul class="list compact">${rows}</ul></div>`;
   }).join('');
-  showDialog(`${dialogHead(esc(name))}<ul class="list">${list}</ul>`);
+  showDialog(`${dialogHead(esc(name))}${groups}`, undefined, { light: true });
 }
 
 export function renderStats(view) {
@@ -58,6 +70,6 @@ export function renderStats(view) {
     ${tagManager.html()}
   </div>`;
   tagManager.bind(view);
-  $$('.tagrow', view).forEach(b => (b.onclick = () => openDays($('.tag-name', b).textContent, days[b.dataset.class]?.[b.dataset.tag] || {})));
+  $$('button.tagrow', view).forEach(b => (b.onclick = () => openDays($('.tag-name', b).textContent, days[b.dataset.class]?.[b.dataset.tag] || {})));
   $('#printStats', view).onclick = () => exportStatsPdf(from, to);
 }

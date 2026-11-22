@@ -20,8 +20,10 @@ export const dialogHead = title => `
     <button type="button" class="btn btn-icon btn-ghost" data-close aria-label="${t('common.close')}">${ICON.close}</button>
   </div>`;
 
-export function showDialog(html, bind = () => {}) {
+// `light`: nothing to save in it, so a tap beside the dialog closes it too.
+export function showDialog(html, bind = () => {}, { light = false } = {}) {
   const dlg = el();
+  dlg.onclick = light ? e => { if (e.target === dlg) dlg.close(); } : null;
   dlg.innerHTML = `<form class="dlg" method="dialog" tabindex="-1">${html}</form>`;
   $$('[data-close]', dlg).forEach(b => (b.onclick = () => dlg.close()));
   bind(dlg);

@@ -99,7 +99,12 @@ dialog {
 dialog { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .dlg { padding: var(--sp-5); }
-.dlg-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-4) 0; }
+.dlg-head {
+  position: sticky; z-index: 2; top: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-4); padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-5);
+  background: var(--surface); border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
 .dlg-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
 .blocks-head, .block-edit { display: grid; grid-template-columns: 1fr 1fr var(--ctl-md); gap: var(--sp-2); align-items: center; }
 .blocks-head { margin-bottom: var(--sp-1); font-size: var(--fs-sm); color: var(--muted); }

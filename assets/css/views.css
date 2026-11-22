@@ -107,3 +107,10 @@ button.notice.tappable { width: 100%; border: 0; font: inherit; color: inherit; 
 .tagrow .tag-pct { text-align: right; font-size: var(--fs-sm); color: var(--muted); }
 .tagrow .tag-bar { grid-column: 1 / -1; height: .375rem; border-radius: var(--r-full); background: var(--fill); overflow: hidden; }
 .tagrow .tag-bar i { display: block; height: 100%; border-radius: inherit; }
+
+/* Days behind a tag, one block per month. */
+.dayfold + .dayfold { margin-top: var(--sp-4); }
+.dayfold-head { display: flex; justify-content: space-between; padding-bottom: var(--sp-2); border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.dayfold-head span { font-weight: var(--fw-semibold); }
+.list.compact li { padding: var(--sp-2) 0; font-size: var(--fs-sm); }
+.tagrow.none { cursor: default; }
