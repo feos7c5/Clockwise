@@ -221,7 +221,21 @@ export function buildStatsPdf(from, to) {
     }
     doc.text(M, y, t('common.total'), { bold: true });
     doc.text(HOURS, y, fmtDur(Math.round(total)), { bold: true, align: 'right' });
-    y += 34;
+    y += 22;
+    // Per entry of the first class: how it splits into the other classes (e.g. project → activities).
+    if (c.id === tagClasses()[0].id) {
+      for (const r of rows.filter(x => x.id)) {
+        const split = tagTotals(store.state, from, to, n, { classId: c.id, tagId: r.id });
+        const parts = tagClasses().filter(o => o.id !== c.id).flatMap(o => Object.entries(split.byClass[o.id] || {})
+          .filter(([id, min]) => id && Math.round(min) > 0).sort((a, b) => b[1] - a[1])
+          .map(([id, min]) => `${tagOf(id)?.name || '?'} ${fmtDur(Math.round(min))}`));
+        if (!parts.length) continue;
+        room(LINE + 2);
+        doc.text(M, y, fit(`${r.tag?.name || '?'}: ${parts.join(' · ')}`, 8, RIGHT - M), { size: 8, gray: 0.35 });
+        y += LINE;
+      }
+    }
+    y += 12;
   }
   doc.text(M, A4.h - 28, t('print.created', { date: formatDate(n) }), { size: 7, gray: 0.6 });
   return doc.toBytes();

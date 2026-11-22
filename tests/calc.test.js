@@ -189,3 +189,17 @@ test('tag totals: each class adds up to the booked time, the break is spread by 
   assert.equal(Math.round(r.byClass.a['']), r.total - Math.round((240 / 540) * 495));
   assert.deepEqual(Object.keys(r.days.p.x), ['2026-11-16', '2026-11-17']);
 });
+
+test('tag totals for one entry split it over the other classes', async () => {
+  const { tagTotals } = await import('../assets/js/core/calc.js');
+  const state = {
+    settings,
+    tags: { classes: { p: { name: 'Projekt' }, a: { name: 'Tätigkeit' } }, items: {} },
+    days: { '2026-11-16': { blocks: [{ in: '08:00', out: '12:00', t: { p: 'x', a: 'o' } }, { in: '12:00', out: '17:00', t: { p: 'x', a: 'w' } }, { in: '17:00', out: '18:00', t: { p: 'y', a: 'w' } }] } },
+  };
+  const all = tagTotals(state, '2026-11-01', '2026-11-30', new Date(2026, 10, 20));
+  const x = tagTotals(state, '2026-11-01', '2026-11-30', new Date(2026, 10, 20), { classId: 'p', tagId: 'x' });
+  assert.equal(Math.round(x.total), Math.round(all.byClass.p.x));
+  assert.equal(Math.round(x.byClass.a.o + x.byClass.a.w), Math.round(x.total));
+  assert.equal(Math.round(x.byClass.a.o), Math.round((240 / 600) * 555));
+});

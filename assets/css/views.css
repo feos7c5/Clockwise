@@ -114,3 +114,10 @@ button.notice.tappable { width: 100%; border: 0; font: inherit; color: inherit; 
 .dayfold-head span { font-weight: var(--fw-semibold); }
 .list.compact li { padding: var(--sp-2) 0; font-size: var(--fs-sm); }
 .tagrow.none { cursor: default; }
+.tagrow.more .tag-name { color: var(--accent); font-weight: var(--fw-semibold); }
+.tag-more svg { width: .875rem; height: .875rem; fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; }
+.more-rows > .tagrow:first-child { border-top: 1px solid var(--line); }
+.split { margin-bottom: var(--sp-4); }
+.split .tagrow { cursor: default; }
+.dlg-head h3 .tag-dot { vertical-align: middle; width: .75rem; height: .75rem; }
+.dlg-head h3 .muted { font-weight: var(--fw-regular); font-size: var(--fs-md); }

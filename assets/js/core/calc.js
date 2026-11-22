@@ -212,8 +212,9 @@ export function vacationAccount(state, year) {
 
 // Worked minutes per tag, for every class: { classId: { tagId | '': minutes } }, plus the total and the days
 // behind each tag. The break of a day is spread over its blocks by their length, so every class adds up to
-// exactly the booked time. Blocks without a tag of a class are counted under ''.
-export function tagTotals(state, from, to, now) {
+// exactly the booked time. Blocks without a tag of a class are counted under ''. With `only` ({ classId, tagId })
+// just the blocks of that tag count, e.g. how the time of one project splits into activities.
+export function tagTotals(state, from, to, now, only = null) {
   const byClass = {}, days = {};
   const today = iso(now), yesterday = iso(addDays(now, -1)), nowMin = now.getHours() * 60 + now.getMinutes();
   let total = 0;
@@ -224,10 +225,11 @@ export function tagTotals(state, from, to, now) {
     const gross = grossMin(day, live);
     if (!gross) continue;
     const worked = Math.max(0, gross - pauseMin(state.settings, day, gross));
-    total += worked;
+    if (!only) total += worked;
     for (const b of day.blocks) {
       const share = (grossMin({ blocks: [b] }, live) / gross) * worked;
-      if (!share) continue;
+      if (!share || (only && (b.t?.[only.classId] || '') !== only.tagId)) continue;
+      if (only) total += share;
       for (const classId of Object.keys(state.tags?.classes || {})) {
         const tagId = b.t?.[classId] || '';
         ((byClass[classId] ||= {})[tagId] ||= 0);

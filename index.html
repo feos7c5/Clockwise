@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GFHA7ftjmej8ohkAAgrJ5G2zsFJPA+II+LNNB8GyoDI='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://clockwise-sync.clockwise-sync.workers.dev wss://clockwise-sync.clockwise-sync.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-kC5+LEhQb/+4CO6qQkJAgIyXEku2jaN48tH3GkhXy9o='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://clockwise-sync.clockwise-sync.workers.dev wss://clockwise-sync.clockwise-sync.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Clockwise</title>
   <meta name="description" content="Time tracking for your working hours">
@@ -15,12 +15,12 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
-  <link rel="stylesheet" href="assets/css/tokens.css?v=1.119">
-  <link rel="stylesheet" href="assets/css/base.css?v=1.119">
-  <link rel="stylesheet" href="assets/css/components.css?v=1.119">
-  <link rel="stylesheet" href="assets/css/layout.css?v=1.119">
-  <link rel="stylesheet" href="assets/css/views.css?v=1.119">
-  <link rel="stylesheet" href="assets/css/themes.css?v=1.119">
+  <link rel="stylesheet" href="assets/css/tokens.css?v=1.120">
+  <link rel="stylesheet" href="assets/css/base.css?v=1.120">
+  <link rel="stylesheet" href="assets/css/components.css?v=1.120">
+  <link rel="stylesheet" href="assets/css/layout.css?v=1.120">
+  <link rel="stylesheet" href="assets/css/views.css?v=1.120">
+  <link rel="stylesheet" href="assets/css/themes.css?v=1.120">
   <style>
     .boot { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; animation: boot-in .2s .25s both; }
     .boot i { width: 1.75rem; height: 1.75rem; border-radius: 50%; border: 2.5px solid var(--fill, #262629); border-top-color: var(--accent, #8fbfa6); animation: boot-spin .8s linear infinite; }
@@ -28,57 +28,57 @@
     @keyframes boot-spin { to { transform: rotate(1turn); } }
   </style>
   <!-- modules:start -->
-  <script type="importmap">{"imports":{"./assets/js/core/calc.js":"./assets/js/core/calc.js?v=1.119","./assets/js/core/codes.js":"./assets/js/core/codes.js?v=1.119","./assets/js/core/defaults.js":"./assets/js/core/defaults.js?v=1.119","./assets/js/core/file-sync.js":"./assets/js/core/file-sync.js?v=1.119","./assets/js/core/holidays.js":"./assets/js/core/holidays.js?v=1.119","./assets/js/core/session.js":"./assets/js/core/session.js?v=1.119","./assets/js/core/store.js":"./assets/js/core/store.js?v=1.119","./assets/js/core/tags.js":"./assets/js/core/tags.js?v=1.119","./assets/js/core/time.js":"./assets/js/core/time.js?v=1.119","./assets/js/core/validate.js":"./assets/js/core/validate.js?v=1.119","./assets/js/features/export.js":"./assets/js/features/export.js?v=1.119","./assets/js/features/install.js":"./assets/js/features/install.js?v=1.119","./assets/js/features/pdf.js":"./assets/js/features/pdf.js?v=1.119","./assets/js/features/push.js":"./assets/js/features/push.js?v=1.119","./assets/js/features/reminders.js":"./assets/js/features/reminders.js?v=1.119","./assets/js/features/report.js":"./assets/js/features/report.js?v=1.119","./assets/js/features/update.js":"./assets/js/features/update.js?v=1.119","./assets/js/i18n/de.js":"./assets/js/i18n/de.js?v=1.119","./assets/js/i18n/en.js":"./assets/js/i18n/en.js?v=1.119","./assets/js/i18n/index.js":"./assets/js/i18n/index.js?v=1.119","./assets/js/main.js":"./assets/js/main.js?v=1.119","./assets/js/sync/api.js":"./assets/js/sync/api.js?v=1.119","./assets/js/sync/config.js":"./assets/js/sync/config.js?v=1.119","./assets/js/sync/crypto.js":"./assets/js/sync/crypto.js?v=1.119","./assets/js/sync/engine.js":"./assets/js/sync/engine.js?v=1.119","./assets/js/sync/live.js":"./assets/js/sync/live.js?v=1.119","./assets/js/sync/merge.js":"./assets/js/sync/merge.js?v=1.119","./assets/js/ui/dialog.js":"./assets/js/ui/dialog.js?v=1.119","./assets/js/ui/dom.js":"./assets/js/ui/dom.js?v=1.119","./assets/js/ui/icons.js":"./assets/js/ui/icons.js?v=1.119","./assets/js/ui/nav.js":"./assets/js/ui/nav.js?v=1.119","./assets/js/ui/notice.js":"./assets/js/ui/notice.js?v=1.119","./assets/js/ui/tag-select.js":"./assets/js/ui/tag-select.js?v=1.119","./assets/js/ui/theme.js":"./assets/js/ui/theme.js?v=1.119","./assets/js/version.js":"./assets/js/version.js?v=1.119","./assets/js/views/absence-dialog.js":"./assets/js/views/absence-dialog.js?v=1.119","./assets/js/views/cloud-dialogs.js":"./assets/js/views/cloud-dialogs.js?v=1.119","./assets/js/views/day-dialog.js":"./assets/js/views/day-dialog.js?v=1.119","./assets/js/views/install-notice.js":"./assets/js/views/install-notice.js?v=1.119","./assets/js/views/month.js":"./assets/js/views/month.js?v=1.119","./assets/js/views/settings/cloud.js":"./assets/js/views/settings/cloud.js?v=1.119","./assets/js/views/settings/data.js":"./assets/js/views/settings/data.js?v=1.119","./assets/js/views/settings/general.js":"./assets/js/views/settings/general.js?v=1.119","./assets/js/views/settings/index.js":"./assets/js/views/settings/index.js?v=1.119","./assets/js/views/settings/worktime.js":"./assets/js/views/settings/worktime.js?v=1.119","./assets/js/views/stats.js":"./assets/js/views/stats.js?v=1.119","./assets/js/views/tag-manager.js":"./assets/js/views/tag-manager.js?v=1.119","./assets/js/views/today.js":"./assets/js/views/today.js?v=1.119","./assets/js/views/year.js":"./assets/js/views/year.js?v=1.119"}}</script>
-  <link rel="modulepreload" href="assets/js/core/calc.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/codes.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/defaults.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/file-sync.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/holidays.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/session.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/store.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/tags.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/time.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/core/validate.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/export.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/install.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/pdf.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/push.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/reminders.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/report.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/features/update.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/i18n/de.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/i18n/en.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/i18n/index.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/main.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/api.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/config.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/crypto.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/engine.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/live.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/sync/merge.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/dialog.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/dom.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/icons.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/nav.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/notice.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/tag-select.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/ui/theme.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/version.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/absence-dialog.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/cloud-dialogs.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/day-dialog.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/install-notice.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/month.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/settings/cloud.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/settings/data.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/settings/general.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/settings/index.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/settings/worktime.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/stats.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/tag-manager.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/today.js?v=1.119">
-  <link rel="modulepreload" href="assets/js/views/year.js?v=1.119">
-  <script type="module" src="assets/js/main.js?v=1.119"></script>
+  <script type="importmap">{"imports":{"./assets/js/core/calc.js":"./assets/js/core/calc.js?v=1.120","./assets/js/core/codes.js":"./assets/js/core/codes.js?v=1.120","./assets/js/core/defaults.js":"./assets/js/core/defaults.js?v=1.120","./assets/js/core/file-sync.js":"./assets/js/core/file-sync.js?v=1.120","./assets/js/core/holidays.js":"./assets/js/core/holidays.js?v=1.120","./assets/js/core/session.js":"./assets/js/core/session.js?v=1.120","./assets/js/core/store.js":"./assets/js/core/store.js?v=1.120","./assets/js/core/tags.js":"./assets/js/core/tags.js?v=1.120","./assets/js/core/time.js":"./assets/js/core/time.js?v=1.120","./assets/js/core/validate.js":"./assets/js/core/validate.js?v=1.120","./assets/js/features/export.js":"./assets/js/features/export.js?v=1.120","./assets/js/features/install.js":"./assets/js/features/install.js?v=1.120","./assets/js/features/pdf.js":"./assets/js/features/pdf.js?v=1.120","./assets/js/features/push.js":"./assets/js/features/push.js?v=1.120","./assets/js/features/reminders.js":"./assets/js/features/reminders.js?v=1.120","./assets/js/features/report.js":"./assets/js/features/report.js?v=1.120","./assets/js/features/update.js":"./assets/js/features/update.js?v=1.120","./assets/js/i18n/de.js":"./assets/js/i18n/de.js?v=1.120","./assets/js/i18n/en.js":"./assets/js/i18n/en.js?v=1.120","./assets/js/i18n/index.js":"./assets/js/i18n/index.js?v=1.120","./assets/js/main.js":"./assets/js/main.js?v=1.120","./assets/js/sync/api.js":"./assets/js/sync/api.js?v=1.120","./assets/js/sync/config.js":"./assets/js/sync/config.js?v=1.120","./assets/js/sync/crypto.js":"./assets/js/sync/crypto.js?v=1.120","./assets/js/sync/engine.js":"./assets/js/sync/engine.js?v=1.120","./assets/js/sync/live.js":"./assets/js/sync/live.js?v=1.120","./assets/js/sync/merge.js":"./assets/js/sync/merge.js?v=1.120","./assets/js/ui/dialog.js":"./assets/js/ui/dialog.js?v=1.120","./assets/js/ui/dom.js":"./assets/js/ui/dom.js?v=1.120","./assets/js/ui/icons.js":"./assets/js/ui/icons.js?v=1.120","./assets/js/ui/nav.js":"./assets/js/ui/nav.js?v=1.120","./assets/js/ui/notice.js":"./assets/js/ui/notice.js?v=1.120","./assets/js/ui/tag-select.js":"./assets/js/ui/tag-select.js?v=1.120","./assets/js/ui/theme.js":"./assets/js/ui/theme.js?v=1.120","./assets/js/version.js":"./assets/js/version.js?v=1.120","./assets/js/views/absence-dialog.js":"./assets/js/views/absence-dialog.js?v=1.120","./assets/js/views/cloud-dialogs.js":"./assets/js/views/cloud-dialogs.js?v=1.120","./assets/js/views/day-dialog.js":"./assets/js/views/day-dialog.js?v=1.120","./assets/js/views/install-notice.js":"./assets/js/views/install-notice.js?v=1.120","./assets/js/views/month.js":"./assets/js/views/month.js?v=1.120","./assets/js/views/settings/cloud.js":"./assets/js/views/settings/cloud.js?v=1.120","./assets/js/views/settings/data.js":"./assets/js/views/settings/data.js?v=1.120","./assets/js/views/settings/general.js":"./assets/js/views/settings/general.js?v=1.120","./assets/js/views/settings/index.js":"./assets/js/views/settings/index.js?v=1.120","./assets/js/views/settings/worktime.js":"./assets/js/views/settings/worktime.js?v=1.120","./assets/js/views/stats.js":"./assets/js/views/stats.js?v=1.120","./assets/js/views/tag-manager.js":"./assets/js/views/tag-manager.js?v=1.120","./assets/js/views/today.js":"./assets/js/views/today.js?v=1.120","./assets/js/views/year.js":"./assets/js/views/year.js?v=1.120"}}</script>
+  <link rel="modulepreload" href="assets/js/core/calc.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/codes.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/defaults.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/file-sync.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/holidays.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/session.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/store.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/tags.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/time.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/core/validate.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/export.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/install.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/pdf.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/push.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/reminders.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/report.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/features/update.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/i18n/de.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/i18n/en.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/i18n/index.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/main.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/api.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/config.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/crypto.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/engine.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/live.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/sync/merge.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/dialog.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/dom.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/icons.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/nav.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/notice.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/tag-select.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/ui/theme.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/version.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/absence-dialog.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/cloud-dialogs.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/day-dialog.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/install-notice.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/month.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/settings/cloud.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/settings/data.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/settings/general.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/settings/index.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/settings/worktime.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/stats.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/tag-manager.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/today.js?v=1.120">
+  <link rel="modulepreload" href="assets/js/views/year.js?v=1.120">
+  <script type="module" src="assets/js/main.js?v=1.120"></script>
   <!-- modules:end -->
 </head>
 <body>
