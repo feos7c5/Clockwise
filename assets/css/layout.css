@@ -70,3 +70,32 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--gutter) var
   :root { --gutter: var(--sp-6); }
 }
 .card-head.sub { margin-top: var(--sp-5); }
+
+/* Phone held sideways: little height, much width. The tab bar becomes a rail on the left, the header gets
+   smaller and the content uses the width. Tablets and computers are taller and keep the normal layout. */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  :root {
+    --rail-w: 3.5rem;
+    --side-left: max(env(safe-area-inset-left), var(--sp-3));
+    --side-right: max(env(safe-area-inset-right), var(--sp-3));
+    --top-shield: max(env(safe-area-inset-top), var(--sp-2));
+    --content-w: 60rem;
+  }
+  body { padding: 0 var(--side-right) var(--sp-4) calc(var(--side-left) + var(--rail-w) + var(--sp-3)); }
+  .status-shield { display: none; }
+  .top { padding-top: calc(var(--top-shield) + var(--sp-2)); padding-bottom: var(--sp-2); }
+  .top h1 { font-size: var(--fs-xl); }
+  .compact-bar { left: calc(var(--side-left) + var(--rail-w)); right: var(--side-right); }
+
+  .tabs {
+    top: 0; bottom: 0; left: var(--side-left); right: auto; margin: auto 0;
+    width: var(--rail-w); height: min(15rem, calc(100% - 2 * var(--sp-3)));
+    grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); border-radius: 2rem;
+  }
+  .tabs::before {
+    left: var(--pad); right: var(--pad); width: auto; height: calc((100% - 2 * var(--pad)) / 4); border-radius: 1.75rem;
+    transform: translateY(calc(var(--tab, 0) * 100%));
+  }
+  .tabs svg { width: 1.5rem; height: 1.5rem; }
+  .tabs button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}

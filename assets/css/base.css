@@ -25,15 +25,3 @@ svg { display: block; }
 .hint.flush { margin: 0; }
 td.note, th.note { text-align: left; }
 
-/* Phones are used upright. iOS cannot lock the orientation of a web app, so on a phone held sideways the app is
-   covered by a hint. Tablets and computers (taller than 500px in landscape, or without touch) are not affected. */
-.rotate { display: none; }
-@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
-  .rotate {
-    position: fixed; inset: 0; z-index: 1000; display: grid; place-content: center; justify-items: center; gap: var(--sp-3);
-    background: var(--bg); color: var(--muted); font-size: var(--fs-md); font-weight: var(--fw-semibold);
-  }
-  .rotate svg { width: 2.75rem; height: 2.75rem; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
-  body > :not(.rotate) { visibility: hidden; }
-  dialog[open]::backdrop { display: none; }
-}
