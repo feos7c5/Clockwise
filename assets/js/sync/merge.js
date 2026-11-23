@@ -68,7 +68,7 @@ export const payload = state => ({
   ...(hasTags(state.tags) ? { tags: state.tags } : {}),
 });
 
-// Classes and tags are merged one by one: the newer version of each wins, nothing is ever removed.
+// Classes and tags are merged one by one: the newer version of each wins – a deletion is a version too.
 const newest = (local = {}, remote = {}) => {
   const out = structuredClone(local);
   for (const [id, r] of Object.entries(remote)) if (!out[id] || (r.u || 0) >= (out[id].u || 0)) out[id] = structuredClone(r);

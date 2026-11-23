@@ -164,8 +164,19 @@ dialog::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(2px); }
 .tagchip.add { background: none; color: var(--accent); padding-left: var(--sp-1); }
 .tagchip svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .tagclass + .tagclass { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--line); }
-.tagclass-head { display: grid; grid-template-columns: 1fr var(--ctl-md); gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); }
-.tagclass-head input { font-weight: var(--fw-semibold); }
+.tagclass-head {
+  display: flex; align-items: center; gap: var(--sp-2); width: 100%; min-height: var(--ctl-sm); margin-bottom: var(--sp-2); padding: 0;
+  border: 0; background: none; color: var(--ink); text-align: left; font-size: var(--fs-md); font-weight: var(--fw-semibold); cursor: pointer;
+}
+.tagclass-head span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tagclass-head svg { flex: none; width: 1rem; height: 1rem; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tagchip.muted { background: none; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); }
+.tag-archive { margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--line); }
+.tag-archive .tagchip.add { padding-left: 0; color: var(--muted); }
+.tag-archive [data-archive] svg { transition: transform .15s; }
+.tag-archive [data-archive][aria-expanded="true"] svg { transform: rotate(90deg); }
+.archive-list .pick-label { padding-left: 0; }
+.btn.danger.armed { background: var(--minus); color: #fff; }
 .swatches { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 .swatch { width: 2rem; height: 2rem; border: 0; border-radius: 50%; cursor: pointer; }
 .swatch.on { outline: 2px solid var(--ink); outline-offset: 2px; }

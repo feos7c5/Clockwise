@@ -1,4 +1,7 @@
-import { tagClasses, tagsIn, tagOf, tagColor, TAG_COLORS, addClass, renameClass, archiveClass, addTag, renameTag, archiveTag, colorTag, lastUsed } from '../core/tags.js';
+import {
+  tagClasses, tagsIn, tagOf, classOf, tagColor, TAG_COLORS, addClass, renameClass, archiveClass, restoreClass, deleteClass, classUsed,
+  addTag, renameTag, archiveTag, restoreTag, deleteTag, colorTag, lastUsed, usedTags,
+} from '../core/tags.js';
 import { todayStr } from '../core/session.js';
 import { iso, addDays, parseISO } from '../core/time.js';
 import { t } from '../i18n/index.js';
@@ -20,12 +23,74 @@ function classBlock(c, used) {
   const older = all.filter(x => !active.includes(x));
   const more = older.length ? `<button type="button" class="tagchip add" data-older="${c.id}">${t('tags.showOlder', { n: older.length })}</button>` : '';
   return `<div class="tagclass" data-class="${c.id}">
-    <div class="tagclass-head"><input type="text" data-cname="${c.id}" value="${esc(c.name)}" maxlength="40" aria-label="${t('tags.className')}">
-      <button class="btn btn-icon btn-ghost" data-cdel="${c.id}" aria-label="${t('tags.removeClass')}">${ICON.close}</button></div>
+    <button type="button" class="tagclass-head" data-cedit="${c.id}"><span>${esc(c.name)}</span>${ICON.edit}</button>
     <div class="toggles">${active.map(chip).join('')}<button type="button" class="tagchip add" data-addtag="${c.id}">${ICON.plus}${t('tags.addTag')}</button>${more}</div>
     ${older.length ? `<div class="older" hidden>
       <label class="sheet-search">${ICON.search}<input type="text" data-filter placeholder="${t('tags.search')}" autocomplete="off"></label>
       <div class="toggles">${older.map(chip).join('')}</div></div>` : ''}</div>`;
+}
+
+// Archived classes and entries, out of the way but always restorable.
+function archive() {
+  const classes = tagClasses({ archived: true });
+  const groups = tagClasses().map(c => ({ c, tags: tagsIn(c.id, { archived: true }) })).filter(g => g.tags.length);
+  const n = classes.length + groups.reduce((sum, g) => sum + g.tags.length, 0);
+  if (!n) return '';
+  return `<div class="tag-archive">
+    <button type="button" class="tagchip add" data-archive aria-expanded="false">${t('tags.archived', { n })}${ICON.right}</button>
+    <div class="archive-list" hidden>
+      ${classes.length ? `<div class="pick-label">${t('tags.classes')}</div><div class="toggles">${classes.map(c =>
+        `<button type="button" class="tagchip muted" data-cedit="${c.id}">${esc(c.name)}</button>`).join('')}</div>` : ''}
+      ${groups.map(g => `<div class="pick-label">${esc(g.c.name)}</div><div class="toggles">${g.tags.map(x =>
+        `<button type="button" class="tagchip muted" data-tag="${x.id}"><i class="tag-dot" style="background:${tagColor(x)}"></i>${esc(x.name)}</button>`).join('')}</div>`).join('')}
+    </div></div>`;
+}
+
+// A destructive button asks once more on the button itself instead of in a popup.
+function confirmTap(button, question, action) {
+  let armed = false, timer = 0;
+  const label = button.innerHTML;
+  button.onclick = () => {
+    if (armed) { clearTimeout(timer); action(); return; }
+    armed = true;
+    button.classList.add('armed');
+    button.textContent = question;
+    timer = setTimeout(() => { armed = false; button.classList.remove('armed'); button.innerHTML = label; }, 4000);
+  };
+}
+
+// Never used: delete. Used: archive (and restore from the archive).
+function removeButtons(archived, used) {
+  if (archived) {
+    return `<button type="button" class="btn btn-ghost" id="restore">${t('tags.restore')}</button>
+      ${used ? '' : `<button type="button" class="btn btn-ghost danger" id="remove" data-mode="delete">${t('tags.delete')}</button>`}`;
+  }
+  return used
+    ? `<button type="button" class="btn btn-ghost danger" id="remove" data-mode="archive">${t('tags.archive')}</button>`
+    : `<button type="button" class="btn btn-ghost danger" id="remove" data-mode="delete">${t('tags.delete')}</button>`;
+}
+
+function bindRemove(dlg, { kind, id, archive: doArchive, restore, remove }) {
+  const done = () => { closeDialog(); rerender(); };
+  $('#restore', dlg)?.addEventListener('click', () => { restore(id); done(); });
+  const btn = $('#remove', dlg);
+  if (!btn) return;
+  const del = btn.dataset.mode === 'delete';
+  confirmTap(btn, t(del ? 'tags.confirmDelete' : 'tags.confirmArchiveShort'), () => { (del ? remove : doArchive)(id); done(); });
+  $('#removeHint', dlg).textContent = t(del ? `tags.deleteHint.${kind}` : `tags.archiveHint.${kind}`);
+}
+
+function openClassDialog(id) {
+  const c = classOf(id), archived = Boolean(c.off), used = classUsed(id);
+  showDialog(`${dialogHead(t('tags.editClass'))}
+    <label class="field"><span>${t('tags.name')}</span><input type="text" id="className" value="${esc(c.name)}" maxlength="40"></label>
+    <p class="hint" id="removeHint"></p>
+    <div class="dlg-foot">${removeButtons(archived, used)}<span class="spacer"></span>
+      <button type="button" class="btn btn-primary" id="classOk">${t('common.save')}</button></div>`, dlg => {
+    bindRemove(dlg, { kind: 'class', id, archive: archiveClass, restore: restoreClass, remove: deleteClass });
+    if (archived) $('#removeHint', dlg).textContent = t('tags.archivedHint.class');
+    $('#classOk', dlg).onclick = () => { renameClass(id, $('#className', dlg).value); closeDialog(); rerender(); };
+  });
 }
 
 // A button that turns into a text field; Enter (or leaving the field) creates the entry.
@@ -46,19 +111,19 @@ function inlineAdd(button, placeholder, create) {
 }
 
 function openTagDialog(id) {
+  const used = usedTags().has(id);
   const draw = () => {
-    const tag = tagOf(id);
+    const tag = tagOf(id), archived = Boolean(tag.off);
     const swatches = TAG_COLORS.map((col, i) => `<button type="button" class="swatch ${i === tag.col % TAG_COLORS.length ? 'on' : ''}" data-col="${i}" style="background:${col}" aria-label="${t('tags.color')} ${i + 1}"></button>`).join('');
     showDialog(`${dialogHead(t('tags.editTag'))}
       <label class="field"><span>${t('tags.name')}</span><input type="text" id="tagName" value="${esc(tag.name)}" maxlength="40"></label>
       <div class="field dlg-section"><span>${t('tags.color')}</span><div class="swatches">${swatches}</div></div>
-      <div class="dlg-foot">
-        <button type="button" class="btn btn-ghost danger" id="tagArchive">${t('tags.archive')}</button>
-        <span class="spacer"></span>
-        <button type="button" class="btn btn-primary" id="tagOk">${t('common.save')}</button>
-      </div>`, dlg => {
-      $$('[data-col]', dlg).forEach(b => (b.onclick = () => { colorTag(id, +b.dataset.col); draw(); }));
-      $('#tagArchive', dlg).onclick = () => { if (confirm(t('tags.confirmArchive'))) { archiveTag(id); closeDialog(); rerender(); } };
+      <p class="hint" id="removeHint"></p>
+      <div class="dlg-foot">${removeButtons(archived, used)}<span class="spacer"></span>
+        <button type="button" class="btn btn-primary" id="tagOk">${t('common.save')}</button></div>`, dlg => {
+      $$('[data-col]', dlg).forEach(b => (b.onclick = () => { renameTag(id, $('#tagName', dlg).value); colorTag(id, +b.dataset.col); draw(); }));
+      bindRemove(dlg, { kind: 'tag', id, archive: archiveTag, restore: restoreTag, remove: deleteTag });
+      if (archived) $('#removeHint', dlg).textContent = t('tags.archivedHint.tag');
       $('#tagOk', dlg).onclick = () => { renameTag(id, $('#tagName', dlg).value); closeDialog(); rerender(); };
     });
   };
@@ -79,12 +144,17 @@ export const tagManager = {
     return `<section class="card">
       ${cardHead(t('tags.title'), `<button class="btn btn-sm btn-ghost accent" id="addClass">${ICON.plus}${t('tags.addClass')}</button>`)}
       ${tagClasses().map(c => classBlock(c, used)).join('')}
+      ${archive()}
       <p class="hint">${t('tags.hint')}</p></section>`;
   },
   bind: view => {
     $('#addClass', view).onclick = e => inlineAdd(e.currentTarget, t('tags.newClassPrompt'), addClass);
-    $$('[data-cname]', view).forEach(inp => (inp.onchange = () => { renameClass(inp.dataset.cname, inp.value); rerender(); }));
-    $$('[data-cdel]', view).forEach(b => (b.onclick = () => { if (confirm(t('tags.confirmRemoveClass'))) { archiveClass(b.dataset.cdel); rerender(); } }));
+    $$('[data-cedit]', view).forEach(b => (b.onclick = () => openClassDialog(b.dataset.cedit)));
+    $('[data-archive]', view)?.addEventListener('click', e => {
+      const list = e.currentTarget.nextElementSibling;
+      list.hidden = !list.hidden;
+      e.currentTarget.setAttribute('aria-expanded', String(!list.hidden));
+    });
     $$('[data-addtag]', view).forEach(b => (b.onclick = () => inlineAdd(b, t('tags.newTagPrompt'), name => addTag(b.dataset.addtag, name))));
     $$('[data-older]', view).forEach(b => (b.onclick = () => {
       const box = b.closest('.tagclass').querySelector('.older');

@@ -236,3 +236,17 @@ test('validation: block tags and tag definitions survive, broken ones are droppe
   assert.deepEqual(s.days['2026-11-16'].blocks[0].t, { p: 'x' });
   assert.deepEqual(s.tags, { classes: { p: { name: 'Projekt', pos: 0, u: 1 } }, items: { x: { c: 'p', name: 'A', col: 2, u: 1 } } });
 });
+
+test('merge: deleting an unused entry reaches the other device, a later edit there wins back', async () => {
+  const { normalizeState } = await import('../assets/js/core/validate.js');
+  const a = state({}), b = state({});
+  a.tags = { classes: { p: { name: 'Projekt', pos: 0, u: 10 } }, items: { x: { c: 'p', name: 'Tippfehler', col: 0, u: 10 } } };
+  b.tags = normalizeState({ ...b, tags: { classes: { p: { gone: true, u: 20 } }, items: { x: { c: 'p', gone: true, u: 20 } } } }).tags;
+  assert.deepEqual(b.tags.items.x, { c: 'p', gone: true, u: 20 });
+  for (const m of [merge(a, b), merge(b, a)]) {
+    assert.equal(m.tags.classes.p.gone, true);
+    assert.equal(m.tags.items.x.gone, true);
+  }
+  a.tags.items.x.u = 30;
+  assert.equal(merge(a, b).tags.items.x.name, 'Tippfehler');
+});

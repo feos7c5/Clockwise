@@ -84,11 +84,15 @@ function cleanTags(tags) {
   const src = obj(tags), classes = {}, items = {};
   const name = v => (typeof v === 'string' ? v.trim().slice(0, 40) : '');
   for (const [id, c] of Object.entries(obj(src.classes))) {
-    if (!ID_RE.test(id) || !isObject(c) || !name(c.name)) continue;
+    if (!ID_RE.test(id) || !isObject(c)) continue;
+    if (c.gone === true) { classes[id] = { gone: true, u: num(c.u, 0) }; continue; }
+    if (!name(c.name)) continue;
     classes[id] = { name: name(c.name), pos: num(c.pos, 0), u: num(c.u, 0), ...(c.off === true ? { off: true } : {}) };
   }
   for (const [id, i] of Object.entries(obj(src.items))) {
-    if (!ID_RE.test(id) || !isObject(i) || !name(i.name) || typeof i.c !== 'string' || !ID_RE.test(i.c)) continue;
+    if (!ID_RE.test(id) || !isObject(i) || typeof i.c !== 'string' || !ID_RE.test(i.c)) continue;
+    if (i.gone === true) { items[id] = { c: i.c, gone: true, u: num(i.u, 0) }; continue; }
+    if (!name(i.name)) continue;
     items[id] = { c: i.c, name: name(i.name), col: Math.max(0, Math.round(num(i.col, 0))), u: num(i.u, 0), ...(i.off === true ? { off: true } : {}) };
   }
   return { classes, items };
