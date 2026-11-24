@@ -11,7 +11,9 @@ const LOOKUP_RE = /^[0-9a-f]{64}$/;
 const KEY_RE = /^[A-Za-z0-9_-]{16,128}$/;
 const TAG_RE = /^[\w-]{1,40}$/;
 const MAX_JOBS = 20;
-const PUSH_RETRY_MS = 15 * 60 * 1000;
+// A notice more than ten minutes late is worthless (or wrong: "7 h worked" after clocking out at 8 h). It is
+// neither sent nor retried after that, and the push service drops it once that time is up.
+const PUSH_STALE_MS = 10 * 60 * 1000;
 const PUSH_IDLE_MS = 60 * 86_400_000;
 const SENT_KEEP_MS = 2 * 86_400_000;
 const SEND_CRON = '* * * * *';
@@ -158,7 +160,7 @@ async function putPush(request, env) {
     env.DB.prepare('INSERT OR REPLACE INTO push_subs (id, endpoint, p256dh, auth, updated_at) VALUES (?, ?, ?, ?, ?)')
       .bind(id, sub.endpoint, sub.p256dh, sub.auth, now),
     env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ?').bind(id),
-    ...items.filter(j => j.at > now - PUSH_RETRY_MS).map(j => env.DB.prepare(`INSERT OR REPLACE INTO push_jobs (sub_id, tag, at, title, body)
+    ...items.filter(j => j.at > now - PUSH_STALE_MS).map(j => env.DB.prepare(`INSERT OR REPLACE INTO push_jobs (sub_id, tag, at, title, body)
       SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM push_sent WHERE sub_id = ? AND tag = ? AND at = ?)`)
       .bind(id, j.tag, j.at, j.title, j.body, id, j.tag, j.at)),
   ]);
@@ -169,7 +171,7 @@ async function testPush(request, env) {
   const { endpoint, title, body } = await readJson(request, 2_000);
   const sub = await env.DB.prepare('SELECT * FROM push_subs WHERE id = ?').bind(await sha256Hex(String(endpoint))).first();
   if (!sub) throw new HttpError(404, 'not_found');
-  return { status: await sendPush(sub, { title: String(title).slice(0, 100), body: String(body).slice(0, 300), tag: 'test' }, env).catch(() => 0) };
+  return { status: await sendPush(sub, { title: String(title).slice(0, 100), body: String(body).slice(0, 300), tag: 'test', at: Date.now() }, env, 60).catch(() => 0) };
 }
 
 const dropSub = (env, id) => env.DB.batch([
@@ -190,9 +192,11 @@ async function sendDuePushes(env) {
     const taken = await env.DB.prepare('DELETE FROM push_jobs WHERE sub_id = ? AND tag = ? AND at = ? RETURNING tag').bind(...keys).first();
     const unclaim = () => env.DB.prepare('DELETE FROM push_sent WHERE sub_id = ? AND tag = ? AND at = ?').bind(...keys).run();
     if (!claimed || !taken) return claimed ? unclaim() : null;
-    const status = await sendPush(job, { title: job.title, body: job.body, tag: job.tag }, env).catch(() => 0);
+    const left = Math.floor((job.at + PUSH_STALE_MS - now) / 1000);
+    if (left <= 0) return null;
+    const status = await sendPush(job, { title: job.title, body: job.body, tag: job.tag, at: job.at }, env, left).catch(() => 0);
     if (status === 404 || status === 410) return dropSub(env, job.sub_id);
-    if ((status < 200 || status >= 300) && now - job.at <= PUSH_RETRY_MS) {
+    if (status < 200 || status >= 300) {
       await unclaim();
       await env.DB.prepare('INSERT OR IGNORE INTO push_jobs (sub_id, tag, at, title, body) VALUES (?, ?, ?, ?, ?)').bind(...keys, job.title, job.body).run();
     }

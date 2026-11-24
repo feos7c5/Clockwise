@@ -8,8 +8,9 @@ import { syncSettled, publishDevice, ownDeviceId } from '../sync/engine.js';
 import { initPush, syncPush, pushActive, sendPushTest, currentSubscription } from './push.js';
 
 const FLAGS_KEY = 'stempeluhr-notified';
-const LOCAL_WINDOW_MS = 6 * 3600_000;
-const RECENT_MS = 15 * 60_000;
+// Same limit as on the server: a notice more than ten minutes late is not shown any more.
+const LOCAL_WINDOW_MS = 10 * 60_000;
+const RECENT_MS = 10 * 60_000;
 const LOOKAHEAD_DAYS = 7;
 
 export const notificationPermission = () => ('Notification' in window ? Notification.permission : 'unsupported');
@@ -70,13 +71,15 @@ function targets(n, others) {
   return list;
 }
 
-// Fallback while the server can't deliver: notify from the open app, once per item.
+// Fallback only when the server can't deliver (no push here, or it refused): notify from the open app, once
+// per item. While the server is still being asked – right after opening – nothing is shown, as the server
+// has most likely sent these already.
 async function notifyLocally(items) {
   let flags;
   try { flags = JSON.parse(localStorage.getItem(FLAGS_KEY)) || {}; } catch (e) { flags = {}; }
   const due = items.filter(i => i.at <= Date.now() && Date.now() - i.at < LOCAL_WINDOW_MS && !flags[i.tag]);
   for (const item of due) if (await notify(item)) flags[item.tag] = item.at;
-  for (const tag in flags) if (Date.now() - flags[tag] > LOCAL_WINDOW_MS) delete flags[tag];
+  for (const tag in flags) if (Date.now() - flags[tag] > 86_400_000) delete flags[tag];
   localStorage.setItem(FLAGS_KEY, JSON.stringify(flags));
 }
 
@@ -92,7 +95,7 @@ export async function checkReminders({ keepalive = false } = {}) {
     if (others) changedHere = false;
     await syncPush(targets(now(), others), { keepalive });
   }
-  if (!pushActive()) await notifyLocally(before);
+  if (pushActive() === false) await notifyLocally(before);
 }
 
 export async function sendTest() {

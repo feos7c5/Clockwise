@@ -57,14 +57,16 @@ export async function vapid(endpoint, env) {
   return `vapid t=${unsigned}.${b64url.encode(sig)}, k=${env.VAPID_PUBLIC_KEY}`;
 }
 
-export async function sendPush(sub, message, env) {
+// `ttl`: seconds the push service may hold the message for a device that is asleep or offline; after that it
+// is dropped instead of arriving late.
+export async function sendPush(sub, message, env, ttl) {
   const res = await fetch(sub.endpoint, {
     method: 'POST',
     headers: {
       Authorization: await vapid(sub.endpoint, env),
       'Content-Encoding': 'aes128gcm',
       'Content-Type': 'application/octet-stream',
-      TTL: '3600',
+      TTL: String(Math.max(0, Math.floor(ttl))),
       Urgency: 'high',
     },
     body: await encrypt(JSON.stringify(message), sub.p256dh, sub.auth),

@@ -5,7 +5,8 @@ const SENT_KEY = 'clockwise-push-sent';
 const RESEND_MS = 15 * 60_000;
 const SERVER_KEY = Uint8Array.from(atob(VAPID_KEY.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 
-let reg = null, sub = null, pending = null, active = false, running = null, queued = null, onSubscribed = async () => {};
+// active: null until the server has answered once – only a clear "no" lets the app notify by itself.
+let reg = null, sub = null, pending = null, active = null, running = null, queued = null, onSubscribed = async () => {};
 export const pushActive = () => active;
 export const currentSubscription = () => (sub ? sub.toJSON() : null);
 
@@ -31,7 +32,7 @@ export function subscribe() {
 }
 
 export async function initPush(resync) {
-  if (!supported()) return;
+  if (!supported()) { active = false; return; }
   onSubscribed = resync;
   reg = await navigator.serviceWorker.ready;
   sub = await reg.pushManager.getSubscription();

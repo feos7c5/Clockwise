@@ -113,4 +113,8 @@ test('push: schedule validation, test send', async () => {
 
   assert.deepEqual(await (await call('POST', '/v1/push/test', { body: { endpoint: subscription.endpoint, title: 't', body: 'b' } })).json(), { status: 0 });
   assert.equal((await call('POST', '/v1/push/test', { body: { endpoint: 'https://push.invalid/unknown', title: 't', body: 'b' } })).status, 404);
+  // Notices that are already more than ten minutes overdue are not even stored.
+  const late = { ...item, tag: 'late', at: Date.now() - 11 * 60_000 };
+  assert.equal((await call('PUT', '/v1/push', { body: { subscription, items: [late] } })).status, 204);
+
 });
