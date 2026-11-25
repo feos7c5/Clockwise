@@ -22,7 +22,7 @@ npm test    # unit tests (Node ≥ 20)
 │       ├── i18n/            translations (de, en) and Intl formatting
 │       ├── sync/            encryption, merging, sync flow
 │       ├── ui/              DOM helpers, icons, dialog, navigation, theme
-│       ├── views/           today, month, year, settings, dialogs
+│       ├── views/           today, month, year, analysis, categories, settings, dialogs
 │       └── features/        export, PDF report, reminders, install hint, updates
 ├── server/                  sync server (Cloudflare Worker + D1)
 ├── tests/                   node:test
@@ -51,12 +51,15 @@ Optional and account-free. On the first device: *Settings → Turn on sync*. On 
 
 ## Categories
 
-Optional and invisible until the user creates a class in the settings (`core/tags.js`). A class (e.g. "Project",
+Optional and invisible until the user creates a class in the "Analysis" tab (`core/tags.js`). A class (e.g. "Project",
 "Activity") has tags; a block carries at most one tag per class (`block.t = { classId: tagId }`), so every class
 adds up to the whole worked time. While clocked in, choosing another tag ends the running block and continues
 with a new one, without a gap. `tagTotals` in `core/calc.js` spreads the break of a day over its blocks by their
-length. Classes and tags are never deleted, only archived, and are merged one by one across devices (`state.tags`,
-only part of the synced data once in use). The "Analysis" tab shows the distribution and is also where classes
+length. Classes and tags that no block uses can be deleted (they leave a
+`gone` marker, so the deletion reaches every device); used ones can only be archived and restored, so old blocks
+keep their names. They are merged one by one across devices, the newer change wins (`state.tags`, only part of
+the synced data once in use). The picker is a bottom sheet with recent entries first, search and create in one
+field. The "Analysis" tab shows the distribution and is also where classes
 and tags are managed; without a class it explains the feature. Month and year share the "Overview" tab and one
 month/year switch with it.
 
@@ -70,6 +73,11 @@ clocking out on one device cancels the reminders on the others. Each list replac
 notification that was already delivered is never sent twice. A cron trigger checks every minute and delivers
 due ones via Web Push (VAPID, encrypted payload); a second, daily one cleans up. Only the push services of
 Apple, Google, Mozilla and Microsoft are accepted as targets.
+
+Late notices are worthless ("7 h worked" after clocking out at 8 h), so nothing is delivered more than ten
+minutes after its time: the server neither sends nor retries it, the push service drops it after that (TTL),
+and one that still arrives late is removed right away. The open app only notifies by itself when push is not
+available – not while it is still waiting for the server after being opened.
 
 The clock-out itself is written into the data once the device has synced, at the moment the limit was reached.
 It counts as only just newer than the clock-in, so a real clock-out made on another device always wins.
@@ -99,7 +107,7 @@ the content security policy. The `pre-commit` hook runs it and, when the app cha
 the version in `assets/js/version.js` (shown at the bottom of the settings). CI runs it with `--check`, so a
 commit made without the hook fails visibly instead of never reaching installed apps.
 
-The server is a Cloudflare Worker with a D1 database in [`server/`](../server/) (about 130 lines).
+The server is a Cloudflare Worker with a D1 database in [`server/`](../server/).
 
 ```sh
 cd server && npm install
