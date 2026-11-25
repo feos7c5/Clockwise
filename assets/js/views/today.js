@@ -59,7 +59,7 @@ function statusLine(r, brk, day, ds) {
 
 function stampButtons(r, brk) {
   if (r) return `<button class="btn btn-lg" data-act="pause">${ICON.pause}${t('today.pause')}</button>
-    <button class="btn btn-lg btn-ink" data-act="out">${ICON.stop}${t('today.clockOut')}</button>`;
+    <button class="btn btn-lg btn-primary" data-act="out">${ICON.stop}${t('today.clockOut')}</button>`;
   if (brk) return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}${t('today.resume')}</button>
     <button class="btn btn-lg" data-act="end">${t('today.finish')}</button>`;
   return `<button class="btn btn-lg btn-primary" data-act="in">${ICON.play}${t('today.clockIn')}</button>`;
