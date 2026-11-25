@@ -28,7 +28,7 @@ jobs:
           range=${prev:+$prev..}HEAD
           section() {
             lines=$(git log --format='%s' "$range" | grep -E "^$2(\([^)]*\))?!?: " | sed -E "s/^$2(\([^)]*\))?!?: /- /")
-            [ -n "$lines" ] && printf '## %s\n\n%s\n\n' "$1" "$lines"
+            if [ -n "$lines" ]; then printf "## %s\n\n%s\n\n" "$1" "$lines"; fi
           }
           {
             echo "Installed apps update themselves – this is the version shown at the bottom of the settings."
@@ -38,6 +38,6 @@ jobs:
             section New feat
             section Fixed fix
             section Faster perf
-            [ -n "$prev" ] && echo "**All changes:** https://github.com/${{ github.repository }}/compare/$prev...$tag"
+            if [ -n "$prev" ]; then echo "**All changes:** https://github.com/${{ github.repository }}/compare/$prev...$tag"; fi
           } > notes.md
           gh release create "$tag" --target "$GITHUB_SHA" --title "Clockwise $version" --notes-file notes.md --latest
