@@ -1,0 +1,43 @@
+# Publishes the current app version as a GitHub release – run it from the Actions tab ("Run workflow").
+# The notes list the commits since the previous release, new features first.
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -E "s/.*'([^']+)'.*/\1/" assets/js/version.js)
+          tag="v$version.0"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists"; exit 1
+          fi
+          prev=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          range=${prev:+$prev..}HEAD
+          section() {
+            lines=$(git log --format='%s' "$range" | grep -E "^$2(\([^)]*\))?!?: " | sed -E "s/^$2(\([^)]*\))?!?: /- /")
+            [ -n "$lines" ] && printf '## %s\n\n%s\n\n' "$1" "$lines"
+          }
+          {
+            echo "Installed apps update themselves – this is the version shown at the bottom of the settings."
+            echo
+            echo "![Clockwise $version](https://raw.githubusercontent.com/${{ github.repository }}/$tag/docs/screenshots.png)"
+            echo
+            section New feat
+            section Fixed fix
+            section Faster perf
+            [ -n "$prev" ] && echo "**All changes:** https://github.com/${{ github.repository }}/compare/$prev...$tag"
+          } > notes.md
+          gh release create "$tag" --target "$GITHUB_SHA" --title "Clockwise $version" --notes-file notes.md --latest
